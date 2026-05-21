@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Digital Wave</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: #ffffff;
+      color: #061735;
+      overflow-x: hidden;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 22px 8%;
+      border-bottom: 1px solid #e5f3ff;
+      background: #ffffff;
+    }
+
+    .logo {
+      width: 210px;
+      max-width: 100%;
+      display: block;
+    }
+
+    .domain-btn {
+      background: #0067d8;
+      color: #ffffff;
+      text-decoration: none;
+      padding: 13px 22px;
+      border-radius: 12px;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+      padding: 90px 8%;
+    }
+
+    .tagline,
+    .section-label {
+      color: #009fe3;
+      font-weight: bold;
+      letter-spacing: 2px;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      font-size: 60px;
+      line-height: 1.05;
+      margin-bottom: 25px;
+    }
+
+    h2 {
+      font-size: 42px;
+      margin-bottom: 40px;
+      line-height: 1.15;
+    }
+
+    p {
+      font-size: 18px;
+      line-height: 1.8;
+      color: #42516b;
+    }
+
+    .buttons {
+      margin-top: 35px;
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .primary,
+    .secondary {
+      padding: 15px 26px;
+      border-radius: 14px;
+      font-weight: bold;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .primary {
+      background: #0067d8;
+      color: #ffffff;
+    }
+
+    .secondary {
+      border: 1px solid #b9ddff;
+      color: #0067d8;
+      background: #ffffff;
+    }
+
+    .hero-card {
+      background: linear-gradient(135deg, #eef9ff, #ffffff, #dff7ff);
+      padding: 40px;
+      border-radius: 35px;
+      box-shadow: 0 20px 50px rgba(0, 80, 160, 0.15);
+    }
+
+    .hero-card img {
+      width: 180px;
+      max-width: 100%;
+      margin-bottom: 30px;
+      display: block;
+    }
+
+    .dashboard {
+      background: #ffffff;
+      border-radius: 28px;
+      padding: 28px;
+      box-shadow: 0 15px 35px rgba(0, 72, 155, 0.18);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 18px;
+      margin-bottom: 25px;
+    }
+
+    .stat-main,
+    .stat-small {
+      border-radius: 20px;
+      padding: 25px;
+    }
+
+    .stat-main {
+      background: #0067d8;
+      color: #ffffff;
+    }
+
+    .stat-main p {
+      color: #ffffff;
+    }
+
+    .stat-small {
+      background: #dff7ff;
+    }
+
+    .stat-number {
+      font-size: 38px;
+      font-weight: 900;
+      margin-top: 10px;
+    }
+
+    .chart {
+      display: flex;
+      align-items: end;
+      gap: 12px;
+      height: 140px;
+      background: #f5f9ff;
+      border-radius: 20px;
+      padding: 20px;
+    }
+
+    .bar {
+      flex: 1;
+      border-radius: 10px 10px 0 0;
+      background: linear-gradient(to top, #003d91, #00c8ff);
+    }
+
+    section {
+      padding: 80px 8%;
+    }
+
+    .services,
+    .process {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 22px;
+    }
+
+    .service-card {
+      border: 1px solid #dcefff;
+      border-radius: 26px;
+      padding: 30px;
+      box-shadow: 0 10px 25px rgba(0, 90, 180, 0.06);
+      background: #ffffff;
+    }
+
+    .service-card h3 {
+      color: #004aad;
+      margin-bottom: 14px;
+      font-size: 22px;
+    }
+
+    .dark {
+      background: #061735;
+      color: #ffffff;
+    }
+
+    .dark h2 {
+      color: #ffffff;
+    }
+
+    .why-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 25px;
+    }
+
+    .why-item {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 18px;
+      padding: 22px;
+      font-weight: bold;
+    }
+
+    .process-card {
+      background: #eef8ff;
+      border-radius: 24px;
+      padding: 30px;
+    }
+
+    .process-card span {
+      font-size: 36px;
+      color: #0067d8;
+      font-weight: 900;
+    }
+
+    .process-card h3 {
+      margin-top: 15px;
+      font-size: 22px;
+    }
+
+    .contact {
+      margin: 80px 8%;
+      padding: 55px;
+      border-radius: 35px;
+      background: linear-gradient(135deg, #003d91, #00b7ff);
+      color: #ffffff;
+    }
+
+    .contact h2 {
+      color: #ffffff;
+      margin-bottom: 25px;
+    }
+
+    .contact a {
+      display: inline-block;
+      background: #ffffff;
+      color: #004aad;
+      text-decoration: none;
+      padding: 15px 24px;
+      border-radius: 14px;
+      font-weight: bold;
+      margin-right: 12px;
+      margin-top: 12px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 30px;
+      color: #526078;
+      border-top: 1px solid #e5f3ff;
+    }
+
+    @media (max-width: 900px) {
+      header {
+        flex-direction: column;
+        gap: 18px;
+        padding: 20px 5%;
+        text-align: center;
+      }
+
+      .logo {
+        width: 190px;
+      }
+
+      .domain-btn {
+        width: 100%;
+        text-align: center;
+      }
+
+      .hero {
+        grid-template-columns: 1fr;
+        padding: 55px 5%;
+        gap: 35px;
+      }
+
+      h1 {
+        font-size: 42px;
+      }
+
+      h2 {
+        font-size: 32px;
+      }
+
+      p {
+        font-size: 16px;
+      }
+
+      .buttons {
+        flex-direction: column;
+      }
+
+      .primary,
+      .secondary {
+        width: 100%;
+        text-align: center;
+      }
+
+      .hero-card {
+        padding: 25px;
+        border-radius: 26px;
+      }
+
+      .hero-card img {
+        width: 150px;
+      }
+
+      .stats {
+        grid-template-columns: 1fr;
+      }
+
+      section {
+        padding: 55px 5%;
+      }
+
+      .services,
+      .process,
+      .why-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .contact {
+        margin: 55px 5%;
+        padding: 35px 25px;
+        border-radius: 26px;
+      }
+
+      .contact a {
+        width: 100%;
+        text-align: center;
+        margin-right: 0;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .logo {
+        width: 165px;
+      }
+
+      h1 {
+        font-size: 34px;
+      }
+
+      h2 {
+        font-size: 28px;
+      }
+
+      .tagline,
+      .section-label {
+        font-size: 12px;
+        letter-spacing: 1.5px;
+      }
+
+      .hero-card {
+        padding: 20px;
+      }
+
+      .dashboard {
+        padding: 20px;
+      }
+
+      .stat-number {
+        font-size: 30px;
+      }
+
+      .chart {
+        height: 110px;
+        gap: 8px;
+        padding: 15px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <img
+      src="https://www.image2url.com/r2/default/images/1779343914988-2305cfba-860c-4f06-bd25-3c313ccb1938.png"
+      alt="Digital Wave Logo"
+      class="logo"
+    />
+
+    <a href="https://digital-wave.solutions" class="domain-btn">
+      digital-wave.solutions
+    </a>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div>
+        <div class="tagline">SMART SOLUTIONS. STRONGER BUSINESSES.</div>
+
+        <h1>Build better systems for your business.</h1>
+
+        <p>
+          Digital Wave helps businesses create professional websites, CRM systems,
+          automation tools, dashboards, and custom software that improve operations
+          and support growth.
+        </p>
+
+        <div class="buttons">
+          <a href="#contact" class="primary">Start a Project</a>
+          <a href="#services" class="secondary">View Services</a>
+        </div>
+      </div>
+
+      <div class="hero-card">
+        <img
+          src="https://www.image2url.com/r2/default/images/1779343914988-2305cfba-860c-4f06-bd25-3c313ccb1938.png"
+          alt="Digital Wave Logo"
+        />
+
+        <div class="dashboard">
+          <div class="stats">
+            <div class="stat-main">
+              <p>CRM Leads</p>
+              <div class="stat-number">2,350</div>
+            </div>
+
+            <div class="stat-small">
+              <p>Growth</p>
+              <div class="stat-number">+48%</div>
+            </div>
+          </div>
+
+          <div class="chart">
+            <div class="bar" style="height:35%"></div>
+            <div class="bar" style="height:55%"></div>
+            <div class="bar" style="height:45%"></div>
+            <div class="bar" style="height:75%"></div>
+            <div class="bar" style="height:65%"></div>
+            <div class="bar" style="height:90%"></div>
+            <div class="bar" style="height:80%"></div>
+          </div>
+
+          <p style="margin-top:18px;font-weight:bold;">
+            Organized data. Clear dashboards. Faster decisions.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section id="services">
+      <div class="section-label">OUR SERVICES</div>
+
+      <h2>Digital solutions built around real business needs.</h2>
+
+      <div class="services">
+        <div class="service-card">
+          <h3>CRM Systems</h3>
+          <p>
+            Manage leads, customers, follow-ups, sales teams, tasks, and reports
+            from one organized platform.
+          </p>
+        </div>
+
+        <div class="service-card">
+          <h3>Website Development</h3>
+          <p>
+            Modern, responsive websites with clean design, fast performance,
+            and strong user experience.
+          </p>
+        </div>
+
+        <div class="service-card">
+          <h3>Custom Software</h3>
+          <p>
+            Tailored systems built around your company’s exact workflow, needs,
+            and business goals.
+          </p>
+        </div>
+
+        <div class="service-card">
+          <h3>Business Automation</h3>
+          <p>
+            Automate repeated work, reduce manual effort, and improve operational
+            efficiency.
+          </p>
+        </div>
+
+        <div class="service-card">
+          <h3>Dashboards & Reporting</h3>
+          <p>
+            Real-time dashboards and reports that help managers track performance
+            and make better decisions.
+          </p>
+        </div>
+
+        <div class="service-card">
+          <h3>System Maintenance</h3>
+          <p>
+            Ongoing support and maintenance to keep your systems secure, stable,
+            and up to date.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="dark">
+      <div class="section-label">WHY CHOOSE US</div>
+
+      <h2>We do not just build software. We build long-term systems.</h2>
+
+      <div class="why-grid">
+        <div class="why-item">Modern solutions</div>
+        <div class="why-item">Custom-built systems</div>
+        <div class="why-item">Simple user experience</div>
+        <div class="why-item">Scalable architecture</div>
+        <div class="why-item">Ongoing support</div>
+        <div class="why-item">Business-focused delivery</div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-label">OUR PROCESS</div>
+
+      <h2>Clear steps from idea to launch.</h2>
+
+      <div class="process">
+        <div class="process-card">
+          <span>01</span>
+          <h3>Understand the Business</h3>
+        </div>
+
+        <div class="process-card">
+          <span>02</span>
+          <h3>Plan the Solution</h3>
+        </div>
+
+        <div class="process-card">
+          <span>03</span>
+          <h3>Design the Interface</h3>
+        </div>
+
+        <div class="process-card">
+          <span>04</span>
+          <h3>Develop the System</h3>
+        </div>
+
+        <div class="process-card">
+          <span>05</span>
+          <h3>Test and Improve</h3>
+        </div>
+
+        <div class="process-card">
+          <span>06</span>
+          <h3>Launch and Support</h3>
+        </div>
+      </div>
+    </section>
+
+    <div id="contact" class="contact">
+      <div class="section-label" style="color:#dff7ff;">LET’S BUILD</div>
+
+      <h2>Turn your business idea into a professional digital solution.</h2>
+
+      <a href="mailto:info@digital-wave.solutions">
+        info@digital-wave.solutions
+      </a>
+
+      <a href="https://digital-wave.solutions">
+        Visit Website
+      </a>
+    </div>
+  </main>
+
+  <footer>
+    © 2026 Digital Wave — CRM · Websites · Software Development
+  </footer>
+
+</body>
+</html>
