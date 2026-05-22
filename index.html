@@ -3,594 +3,613 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Digital Wave</title>
-
+  <title>Digital Wave | Software, CRM & Websites</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: Arial, sans-serif;
+    :root {
+      --navy:#061735;
+      --navy2:#0D1B4B;
+      --blue:#1565DB;
+      --cyan:#00ADEF;
+      --ice:#F3F8FF;
+      --line:#D8E5F7;
+      --text:#0A1733;
+      --muted:#5D6B86;
+      --white:#fff;
+      --shadow:0 24px 70px rgba(6,23,53,.12);
+      --radius:28px;
     }
 
-    html {
-      scroll-behavior: smooth;
-    }
-
+    * { box-sizing:border-box; margin:0; padding:0; }
+    html { scroll-behavior:smooth; }
     body {
-      background: #ffffff;
-      color: #061735;
-      overflow-x: hidden;
+      font-family:Inter, Arial, sans-serif;
+      color:var(--text);
+      background:#fff;
+      overflow-x:hidden;
     }
 
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 22px 8%;
-      border-bottom: 1px solid #e5f3ff;
-      background: #ffffff;
-    }
+    a { text-decoration:none; color:inherit; }
+    .container { width:min(1180px, calc(100% - 40px)); margin:auto; }
 
-    .logo {
-      width: 210px;
-      max-width: 100%;
-      display: block;
+    .nav {
+      position:sticky;
+      top:0;
+      z-index:50;
+      background:rgba(255,255,255,.86);
+      backdrop-filter:blur(18px);
+      border-bottom:1px solid rgba(216,229,247,.75);
     }
-
-    .domain-btn {
-      background: #0067d8;
-      color: #ffffff;
-      text-decoration: none;
-      padding: 13px 22px;
-      border-radius: 12px;
-      font-weight: bold;
-      white-space: nowrap;
+    .nav-inner {
+      height:86px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:24px;
+    }
+    .logo { height:58px; width:auto; display:block; object-fit:contain; }
+    .links { display:flex; gap:26px; align-items:center; font-size:14px; font-weight:700; color:#243653; }
+    .links a:hover { color:var(--blue); }
+    .btn {
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:48px;
+      padding:0 22px;
+      border-radius:999px;
+      background:var(--blue);
+      color:#fff;
+      font-weight:800;
+      font-size:14px;
+      border:1px solid var(--blue);
+      box-shadow:0 14px 34px rgba(21,101,219,.25);
+    }
+    .btn.secondary {
+      background:#fff;
+      color:var(--navy);
+      border-color:var(--line);
+      box-shadow:none;
     }
 
     .hero {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 60px;
-      align-items: center;
-      padding: 90px 8%;
+      position:relative;
+      padding:96px 0 78px;
+      overflow:hidden;
     }
-
-    .tagline,
-    .section-label {
-      color: #009fe3;
-      font-weight: bold;
-      letter-spacing: 2px;
-      margin-bottom: 18px;
+    .hero::before {
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        radial-gradient(circle at 80% 10%, rgba(0,173,239,.16), transparent 34%),
+        radial-gradient(circle at 10% 20%, rgba(21,101,219,.11), transparent 30%);
+      pointer-events:none;
     }
-
-    h1 {
-      font-size: 60px;
-      line-height: 1.05;
-      margin-bottom: 25px;
+    .hero-grid {
+      position:relative;
+      display:grid;
+      grid-template-columns:1.02fr .98fr;
+      gap:58px;
+      align-items:center;
     }
-
-    h2 {
-      font-size: 42px;
-      margin-bottom: 40px;
-      line-height: 1.15;
+    .eyebrow {
+      display:inline-flex;
+      gap:10px;
+      align-items:center;
+      padding:8px 14px;
+      border-radius:999px;
+      background:var(--ice);
+      color:var(--blue);
+      font-weight:900;
+      font-size:12px;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      border:1px solid var(--line);
+      margin-bottom:22px;
     }
-
-    p {
-      font-size: 18px;
-      line-height: 1.8;
-      color: #42516b;
+    .hero h1 {
+      font-size:clamp(42px, 6vw, 78px);
+      line-height:.96;
+      letter-spacing:-.06em;
+      color:var(--navy);
+      font-weight:900;
+      margin-bottom:24px;
     }
-
-    .buttons {
-      margin-top: 35px;
-      display: flex;
-      gap: 15px;
-      flex-wrap: wrap;
+    .hero h1 span {
+      background:linear-gradient(90deg,var(--blue),var(--cyan));
+      -webkit-background-clip:text;
+      color:transparent;
     }
-
-    .primary,
-    .secondary {
-      padding: 15px 26px;
-      border-radius: 14px;
-      font-weight: bold;
-      text-decoration: none;
-      display: inline-block;
+    .hero p {
+      font-size:18px;
+      line-height:1.75;
+      color:var(--muted);
+      max-width:620px;
+      margin-bottom:30px;
     }
-
-    .primary {
-      background: #0067d8;
-      color: #ffffff;
+    .hero-actions { display:flex; gap:14px; flex-wrap:wrap; }
+    .hero-stats {
+      margin-top:34px;
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:14px;
+      max-width:620px;
     }
-
-    .secondary {
-      border: 1px solid #b9ddff;
-      color: #0067d8;
-      background: #ffffff;
+    .stat {
+      padding:18px;
+      border:1px solid var(--line);
+      border-radius:20px;
+      background:#fff;
     }
+    .stat strong { display:block; font-size:26px; color:var(--navy); letter-spacing:-.04em; }
+    .stat span { display:block; font-size:12px; color:var(--muted); margin-top:4px; font-weight:700; }
 
     .hero-card {
-      background: linear-gradient(135deg, #eef9ff, #ffffff, #dff7ff);
-      padding: 40px;
-      border-radius: 35px;
-      box-shadow: 0 20px 50px rgba(0, 80, 160, 0.15);
+      background:linear-gradient(145deg,var(--navy),#102E73 58%,var(--blue));
+      border-radius:38px;
+      padding:28px;
+      box-shadow:var(--shadow);
+      color:#fff;
+      min-height:560px;
+      position:relative;
+      overflow:hidden;
+    }
+    .hero-card::after {
+      content:"";
+      position:absolute;
+      right:-130px;
+      bottom:-160px;
+      width:420px;
+      height:420px;
+      border-radius:50%;
+      background:radial-gradient(circle, rgba(0,173,239,.36), transparent 68%);
+    }
+    .browser {
+      position:relative;
+      z-index:2;
+      background:#fff;
+      color:var(--navy);
+      border-radius:26px;
+      overflow:hidden;
+      box-shadow:0 26px 60px rgba(0,0,0,.22);
+    }
+    .browser-top {
+      height:54px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding:0 18px;
+      border-bottom:1px solid #E6EEF9;
+      background:#FAFCFF;
+    }
+    .dot { width:10px; height:10px; border-radius:50%; background:#D6E2F2; }
+    .browser-content { padding:28px; }
+    .mini-logo { width:150px; height:auto; margin-bottom:22px; }
+    .dashboard-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .dash-box { border:1px solid #E0EAF7; border-radius:18px; padding:18px; background:#fff; }
+    .dash-box strong { font-size:25px; color:var(--blue); }
+    .dash-box span { display:block; color:var(--muted); font-size:12px; margin-top:5px; font-weight:700; }
+    .wide-box { margin-top:14px; border-radius:20px; background:var(--ice); padding:20px; border:1px solid #DDEBFA; }
+    .bar { height:10px; border-radius:999px; background:linear-gradient(90deg,var(--blue),var(--cyan)); margin-top:10px; }
+    .bar:nth-child(2) { width:88%; }
+    .bar:nth-child(3) { width:64%; }
+    .bar:nth-child(4) { width:76%; }
+
+    section { padding:82px 0; }
+    .section-head {
+      display:flex;
+      justify-content:space-between;
+      align-items:end;
+      gap:28px;
+      margin-bottom:34px;
+    }
+    .section-head h2 {
+      font-size:clamp(30px,4vw,48px);
+      line-height:1;
+      letter-spacing:-.05em;
+      color:var(--navy);
+      max-width:680px;
+    }
+    .section-head p {
+      color:var(--muted);
+      line-height:1.7;
+      max-width:460px;
+      font-size:16px;
     }
 
-    .hero-card img {
-      width: 180px;
-      max-width: 100%;
-      margin-bottom: 30px;
-      display: block;
+    .services {
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:18px;
     }
-
-    .dashboard {
-      background: #ffffff;
-      border-radius: 28px;
-      padding: 28px;
-      box-shadow: 0 15px 35px rgba(0, 72, 155, 0.18);
+    .service {
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:30px;
+      box-shadow:0 14px 44px rgba(6,23,53,.06);
+      transition:.25s;
     }
-
-    .stats {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 18px;
-      margin-bottom: 25px;
+    .service:hover { transform:translateY(-6px); box-shadow:var(--shadow); }
+    .icon {
+      width:56px;
+      height:56px;
+      border-radius:18px;
+      display:grid;
+      place-items:center;
+      background:linear-gradient(145deg,var(--blue),var(--cyan));
+      color:#fff;
+      font-size:24px;
+      font-weight:900;
+      margin-bottom:22px;
     }
+    .service h3 { font-size:22px; color:var(--navy); margin-bottom:12px; letter-spacing:-.03em; }
+    .service p { color:var(--muted); line-height:1.7; font-size:15px; }
+    .service ul { list-style:none; margin-top:20px; display:grid; gap:10px; }
+    .service li { font-size:14px; color:#263B5E; font-weight:700; }
+    .service li::before { content:"✓"; color:var(--blue); margin-right:9px; }
 
-    .stat-main,
-    .stat-small {
-      border-radius: 20px;
-      padding: 25px;
+    .process-wrap {
+      background:linear-gradient(145deg,#F7FBFF,#fff);
+      border:1px solid var(--line);
+      border-radius:38px;
+      padding:34px;
     }
-
-    .stat-main {
-      background: #0067d8;
-      color: #ffffff;
-    }
-
-    .stat-main p {
-      color: #ffffff;
-    }
-
-    .stat-small {
-      background: #dff7ff;
-    }
-
-    .stat-number {
-      font-size: 38px;
-      font-weight: 900;
-      margin-top: 10px;
-    }
-
-    .chart {
-      display: flex;
-      align-items: end;
-      gap: 12px;
-      height: 140px;
-      background: #f5f9ff;
-      border-radius: 20px;
-      padding: 20px;
-    }
-
-    .bar {
-      flex: 1;
-      border-radius: 10px 10px 0 0;
-      background: linear-gradient(to top, #003d91, #00c8ff);
-    }
-
-    section {
-      padding: 80px 8%;
-    }
-
-    .services,
     .process {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 22px;
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:16px;
     }
+    .step {
+      padding:24px;
+      border-radius:24px;
+      background:#fff;
+      border:1px solid #E1ECFA;
+    }
+    .step b { color:var(--blue); font-size:13px; letter-spacing:.12em; }
+    .step h3 { margin:16px 0 10px; color:var(--navy); }
+    .step p { color:var(--muted); line-height:1.65; font-size:14px; }
 
-    .service-card {
-      border: 1px solid #dcefff;
-      border-radius: 26px;
-      padding: 30px;
-      box-shadow: 0 10px 25px rgba(0, 90, 180, 0.06);
-      background: #ffffff;
+    .portfolio {
+      display:grid;
+      grid-template-columns:1.1fr .9fr;
+      gap:18px;
     }
+    .case {
+      min-height:340px;
+      border-radius:34px;
+      padding:30px;
+      background:linear-gradient(145deg,var(--navy),#114AA4);
+      color:#fff;
+      position:relative;
+      overflow:hidden;
+    }
+    .case.light { background:#fff; color:var(--navy); border:1px solid var(--line); }
+    .case h3 { font-size:28px; letter-spacing:-.04em; max-width:430px; }
+    .case p { margin-top:14px; color:rgba(255,255,255,.68); line-height:1.7; max-width:520px; }
+    .case.light p { color:var(--muted); }
+    .mockup {
+      position:absolute;
+      right:24px;
+      bottom:24px;
+      width:42%;
+      min-width:220px;
+      background:#fff;
+      border-radius:22px;
+      padding:18px;
+      box-shadow:0 24px 50px rgba(0,0,0,.2);
+    }
+    .case.light .mockup { background:var(--ice); box-shadow:none; border:1px solid var(--line); }
+    .mockup img { width:130px; margin-bottom:16px; }
+    .mockup-line { height:9px; background:#DCE9FA; border-radius:999px; margin:10px 0; }
+    .mockup-line.blue { background:linear-gradient(90deg,var(--blue),var(--cyan)); width:70%; }
 
-    .service-card h3 {
-      color: #004aad;
-      margin-bottom: 14px;
-      font-size: 22px;
+    .cta {
+      padding:72px;
+      border-radius:42px;
+      background:linear-gradient(135deg,var(--navy),var(--blue));
+      color:#fff;
+      position:relative;
+      overflow:hidden;
     }
-
-    .dark {
-      background: #061735;
-      color: #ffffff;
+    .cta::after {
+      content:"";
+      position:absolute;
+      right:-120px;
+      bottom:-170px;
+      width:420px;
+      height:420px;
+      border-radius:50%;
+      background:rgba(0,173,239,.28);
     }
-
-    .dark h2 {
-      color: #ffffff;
-    }
-
-    .why-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 25px;
-    }
-
-    .why-item {
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 18px;
-      padding: 22px;
-      font-weight: bold;
-    }
-
-    .process-card {
-      background: #eef8ff;
-      border-radius: 24px;
-      padding: 30px;
-    }
-
-    .process-card span {
-      font-size: 36px;
-      color: #0067d8;
-      font-weight: 900;
-    }
-
-    .process-card h3 {
-      margin-top: 15px;
-      font-size: 22px;
-    }
+    .cta-content { position:relative; z-index:2; max-width:760px; }
+    .cta h2 { font-size:clamp(34px,5vw,62px); line-height:1; letter-spacing:-.06em; margin-bottom:20px; }
+    .cta p { color:rgba(255,255,255,.72); line-height:1.75; font-size:17px; margin-bottom:28px; }
 
     .contact {
-      margin: 80px 8%;
-      padding: 55px;
-      border-radius: 35px;
-      background: linear-gradient(135deg, #003d91, #00b7ff);
-      color: #ffffff;
+      display:grid;
+      grid-template-columns:.9fr 1.1fr;
+      gap:24px;
+      align-items:start;
     }
+    .contact-card {
+      border:1px solid var(--line);
+      border-radius:34px;
+      padding:30px;
+      background:#fff;
+      box-shadow:0 14px 44px rgba(6,23,53,.06);
+    }
+    .contact-card img { width:180px; margin-bottom:24px; }
+    .contact-item { padding:16px 0; border-top:1px solid #E5EEF9; }
+    .contact-item strong { display:block; color:var(--navy); margin-bottom:5px; }
+    .contact-item span { color:var(--muted); }
 
-    .contact h2 {
-      color: #ffffff;
-      margin-bottom: 25px;
+    form {
+      display:grid;
+      gap:14px;
     }
-
-    .contact a {
-      display: inline-block;
-      background: #ffffff;
-      color: #004aad;
-      text-decoration: none;
-      padding: 15px 24px;
-      border-radius: 14px;
-      font-weight: bold;
-      margin-right: 12px;
-      margin-top: 12px;
+    input, textarea {
+      width:100%;
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:17px 18px;
+      font:inherit;
+      outline:none;
+      background:#fff;
     }
+    textarea { min-height:150px; resize:vertical; }
+    input:focus, textarea:focus { border-color:var(--blue); box-shadow:0 0 0 4px rgba(21,101,219,.1); }
 
     footer {
-      text-align: center;
-      padding: 30px;
-      color: #526078;
-      border-top: 1px solid #e5f3ff;
+      padding:34px 0;
+      border-top:1px solid var(--line);
+      color:var(--muted);
+      font-size:14px;
     }
+    .footer-inner { display:flex; justify-content:space-between; gap:20px; align-items:center; }
+    .footer-inner img { height:42px; }
 
-    @media (max-width: 900px) {
-      header {
-        flex-direction: column;
-        gap: 18px;
-        padding: 20px 5%;
-        text-align: center;
-      }
-
-      .logo {
-        width: 190px;
-      }
-
-      .domain-btn {
-        width: 100%;
-        text-align: center;
-      }
-
-      .hero {
-        grid-template-columns: 1fr;
-        padding: 55px 5%;
-        gap: 35px;
-      }
-
-      h1 {
-        font-size: 42px;
-      }
-
-      h2 {
-        font-size: 32px;
-      }
-
-      p {
-        font-size: 16px;
-      }
-
-      .buttons {
-        flex-direction: column;
-      }
-
-      .primary,
-      .secondary {
-        width: 100%;
-        text-align: center;
-      }
-
-      .hero-card {
-        padding: 25px;
-        border-radius: 26px;
-      }
-
-      .hero-card img {
-        width: 150px;
-      }
-
-      .stats {
-        grid-template-columns: 1fr;
-      }
-
-      section {
-        padding: 55px 5%;
-      }
-
-      .services,
-      .process,
-      .why-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .contact {
-        margin: 55px 5%;
-        padding: 35px 25px;
-        border-radius: 26px;
-      }
-
-      .contact a {
-        width: 100%;
-        text-align: center;
-        margin-right: 0;
-      }
+    @media (max-width:900px) {
+      .links { display:none; }
+      .hero-grid, .portfolio, .contact { grid-template-columns:1fr; }
+      .hero-card { min-height:auto; }
+      .services, .process { grid-template-columns:1fr; }
+      .section-head { display:block; }
+      .section-head p { margin-top:16px; }
+      .hero-stats { grid-template-columns:1fr; }
+      .cta { padding:42px 26px; }
+      .mockup { position:relative; right:auto; bottom:auto; width:100%; margin-top:28px; }
     }
+  
+.case{
+  display:grid !important;
+  grid-template-columns:1fr 300px !important;
+  gap:28px !important;
+  align-items:center !important;
+}
+.case-text{
+  position:relative;
+  z-index:3;
+  max-width:100%;
+}
+.case .mockup{
+  position:relative !important;
+  right:auto !important;
+  bottom:auto !important;
+  width:100% !important;
+  min-width:0 !important;
+  z-index:2;
+}
+.case h3,.case p{
+  max-width:none !important;
+}
+@media (max-width:900px){
+  .case{
+    grid-template-columns:1fr !important;
+  }
+}
 
-    @media (max-width: 480px) {
-      .logo {
-        width: 165px;
-      }
-
-      h1 {
-        font-size: 34px;
-      }
-
-      h2 {
-        font-size: 28px;
-      }
-
-      .tagline,
-      .section-label {
-        font-size: 12px;
-        letter-spacing: 1.5px;
-      }
-
-      .hero-card {
-        padding: 20px;
-      }
-
-      .dashboard {
-        padding: 20px;
-      }
-
-      .stat-number {
-        font-size: 30px;
-      }
-
-      .chart {
-        height: 110px;
-        gap: 8px;
-        padding: 15px;
-      }
-    }
-  </style>
+</style>
 </head>
-
 <body>
 
-  <header>
-    <img
-      src="https://www.image2url.com/r2/default/images/1779343914988-2305cfba-860c-4f06-bd25-3c313ccb1938.png"
-      alt="Digital Wave Logo"
-      class="logo"
-    />
+  <nav class="nav">
+    <div class="container nav-inner">
+      <a href="#"><img class="logo" src="https://www.image2url.com/r2/default/images/1779461802947-d68543a7-4041-4984-931b-52210614ec5b.png" alt="Digital Wave logo"></a>
+      <div class="links">
+        <a href="#services">Services</a>
+        <a href="#process">Process</a>
+        <a href="#work">Work</a>
+        <a href="#contact">Contact</a>
+      </div>
+      <a class="btn" href="#contact">Start a Project</a>
+    </div>
+  </nav>
 
-    <a href="https://digital-wave.solutions" class="domain-btn">
-      digital-wave.solutions
-    </a>
-  </header>
-
-  <main>
-    <section class="hero">
+  <header class="hero">
+    <div class="container hero-grid">
       <div>
-        <div class="tagline">SMART SOLUTIONS. STRONGER BUSINESSES.</div>
-
-        <h1>Build better systems for your business.</h1>
-
-        <p>
-          Digital Wave helps businesses create professional websites, CRM systems,
-          automation tools, dashboards, and custom software that improve operations
-          and support growth.
-        </p>
-
-        <div class="buttons">
-          <a href="#contact" class="primary">Start a Project</a>
-          <a href="#services" class="secondary">View Services</a>
+        <div class="eyebrow">CRM · Websites · Software Development</div>
+        <h1>Build digital systems that <span>drive growth.</span></h1>
+        <p>Digital Wave designs and develops professional websites, CRM systems, dashboards, and custom software that help businesses organize operations, attract clients, and scale with confidence.</p>
+        <div class="hero-actions">
+          <a class="btn" href="#contact">Get a Free Consultation</a>
+          <a class="btn secondary" href="#services">View Services</a>
+        </div>
+        <div class="hero-stats">
+          <div class="stat"><strong>01</strong><span>Strategy-first approach</span></div>
+          <div class="stat"><strong>03</strong><span>Core service lines</span></div>
+          <div class="stat"><strong>24/7</strong><span>Digital presence</span></div>
         </div>
       </div>
 
       <div class="hero-card">
-        <img
-          src="https://www.image2url.com/r2/default/images/1779343914988-2305cfba-860c-4f06-bd25-3c313ccb1938.png"
-          alt="Digital Wave Logo"
-        />
-
-        <div class="dashboard">
-          <div class="stats">
-            <div class="stat-main">
-              <p>CRM Leads</p>
-              <div class="stat-number">2,350</div>
+        <div class="browser">
+          <div class="browser-top">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          </div>
+          <div class="browser-content">
+            <img class="mini-logo" src="https://www.image2url.com/r2/default/images/1779461802947-d68543a7-4041-4984-931b-52210614ec5b.png" alt="Digital Wave logo">
+            <h3 style="font-size:28px;letter-spacing:-.04em;margin-bottom:8px">Business Command Center</h3>
+            <p style="color:var(--muted);line-height:1.6;margin-bottom:20px">Track leads, clients, projects, invoices, and performance from one clean dashboard.</p>
+            <div class="dashboard-grid">
+              <div class="dash-box"><strong>128</strong><span>Leads Managed</span></div>
+              <div class="dash-box"><strong>42</strong><span>Active Clients</span></div>
+              <div class="dash-box"><strong>87%</strong><span>Task Progress</span></div>
+              <div class="dash-box"><strong>19</strong><span>Open Projects</span></div>
             </div>
-
-            <div class="stat-small">
-              <p>Growth</p>
-              <div class="stat-number">+48%</div>
+            <div class="wide-box">
+              <strong>Monthly Growth Overview</strong>
+              <div class="bar"></div><div class="bar"></div><div class="bar"></div>
             </div>
           </div>
-
-          <div class="chart">
-            <div class="bar" style="height:35%"></div>
-            <div class="bar" style="height:55%"></div>
-            <div class="bar" style="height:45%"></div>
-            <div class="bar" style="height:75%"></div>
-            <div class="bar" style="height:65%"></div>
-            <div class="bar" style="height:90%"></div>
-            <div class="bar" style="height:80%"></div>
-          </div>
-
-          <p style="margin-top:18px;font-weight:bold;">
-            Organized data. Clear dashboards. Faster decisions.
-          </p>
         </div>
       </div>
-    </section>
+    </div>
+  </header>
 
-    <section id="services">
-      <div class="section-label">OUR SERVICES</div>
-
-      <h2>Digital solutions built around real business needs.</h2>
+  <section id="services">
+    <div class="container">
+      <div class="section-head">
+        <h2>Everything your business needs to move online professionally.</h2>
+        <p>Clean design, strong development, and business-focused systems built for real usage, not just screenshots.</p>
+      </div>
 
       <div class="services">
-        <div class="service-card">
+        <div class="service">
+          <div class="icon">01</div>
           <h3>CRM Systems</h3>
-          <p>
-            Manage leads, customers, follow-ups, sales teams, tasks, and reports
-            from one organized platform.
-          </p>
+          <p>Custom client management systems for sales, support, operations, and follow-ups.</p>
+          <ul>
+            <li>Lead tracking</li>
+            <li>Client profiles</li>
+            <li>Role-based dashboards</li>
+            <li>Reports and analytics</li>
+          </ul>
         </div>
 
-        <div class="service-card">
-          <h3>Website Development</h3>
-          <p>
-            Modern, responsive websites with clean design, fast performance,
-            and strong user experience.
-          </p>
+        <div class="service">
+          <div class="icon">02</div>
+          <h3>Professional Websites</h3>
+          <p>Modern, responsive websites that present your brand clearly and convert visitors into clients.</p>
+          <ul>
+            <li>Landing pages</li>
+            <li>Company websites</li>
+            <li>Portfolio sections</li>
+            <li>Mobile-first design</li>
+          </ul>
         </div>
 
-        <div class="service-card">
+        <div class="service">
+          <div class="icon">03</div>
           <h3>Custom Software</h3>
-          <p>
-            Tailored systems built around your company’s exact workflow, needs,
-            and business goals.
-          </p>
-        </div>
-
-        <div class="service-card">
-          <h3>Business Automation</h3>
-          <p>
-            Automate repeated work, reduce manual effort, and improve operational
-            efficiency.
-          </p>
-        </div>
-
-        <div class="service-card">
-          <h3>Dashboards & Reporting</h3>
-          <p>
-            Real-time dashboards and reports that help managers track performance
-            and make better decisions.
-          </p>
-        </div>
-
-        <div class="service-card">
-          <h3>System Maintenance</h3>
-          <p>
-            Ongoing support and maintenance to keep your systems secure, stable,
-            and up to date.
-          </p>
+          <p>Tailored systems built around your workflow instead of forcing your business into generic tools.</p>
+          <ul>
+            <li>Admin panels</li>
+            <li>Booking systems</li>
+            <li>Internal tools</li>
+            <li>Automation workflows</li>
+          </ul>
         </div>
       </div>
-    </section>
-
-    <section class="dark">
-      <div class="section-label">WHY CHOOSE US</div>
-
-      <h2>We do not just build software. We build long-term systems.</h2>
-
-      <div class="why-grid">
-        <div class="why-item">Modern solutions</div>
-        <div class="why-item">Custom-built systems</div>
-        <div class="why-item">Simple user experience</div>
-        <div class="why-item">Scalable architecture</div>
-        <div class="why-item">Ongoing support</div>
-        <div class="why-item">Business-focused delivery</div>
-      </div>
-    </section>
-
-    <section>
-      <div class="section-label">OUR PROCESS</div>
-
-      <h2>Clear steps from idea to launch.</h2>
-
-      <div class="process">
-        <div class="process-card">
-          <span>01</span>
-          <h3>Understand the Business</h3>
-        </div>
-
-        <div class="process-card">
-          <span>02</span>
-          <h3>Plan the Solution</h3>
-        </div>
-
-        <div class="process-card">
-          <span>03</span>
-          <h3>Design the Interface</h3>
-        </div>
-
-        <div class="process-card">
-          <span>04</span>
-          <h3>Develop the System</h3>
-        </div>
-
-        <div class="process-card">
-          <span>05</span>
-          <h3>Test and Improve</h3>
-        </div>
-
-        <div class="process-card">
-          <span>06</span>
-          <h3>Launch and Support</h3>
-        </div>
-      </div>
-    </section>
-
-    <div id="contact" class="contact">
-      <div class="section-label" style="color:#dff7ff;">LET’S BUILD</div>
-
-      <h2>Turn your business idea into a professional digital solution.</h2>
-
-      <a href="mailto:info@digital-wave.solutions">
-        info@digital-wave.solutions
-      </a>
-
-      <a href="https://digital-wave.solutions">
-        Visit Website
-      </a>
     </div>
-  </main>
+  </section>
+
+  <section id="process">
+    <div class="container">
+      <div class="section-head">
+        <h2>A clear process from idea to launch.</h2>
+        <p>No confusion. No random design. Every project starts with business goals and ends with a usable product.</p>
+      </div>
+      <div class="process-wrap">
+        <div class="process">
+          <div class="step"><b>STEP 01</b><h3>Discover</h3><p>Understand your business, audience, workflow, and current problems.</p></div>
+          <div class="step"><b>STEP 02</b><h3>Design</h3><p>Create clean interfaces, user flows, and a professional brand-aligned direction.</p></div>
+          <div class="step"><b>STEP 03</b><h3>Develop</h3><p>Build the website, CRM, dashboard, or system using scalable code.</p></div>
+          <div class="step"><b>STEP 04</b><h3>Launch</h3><p>Deploy, test, optimize, and prepare the system for real users.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="work">
+    <div class="container">
+      <div class="section-head">
+        <h2>Designed to look premium and work practically.</h2>
+        <p>Digital Wave combines brand presentation with business functionality.</p>
+      </div>
+
+      <div class="portfolio">
+        <div class="case">
+          <div class="case-text">
+            <h3>CRM dashboard for managing leads, clients, and projects.</h3>
+            <p>A clean system direction for service businesses that need control over their customer pipeline.</p>
+          </div>
+          <div class="mockup">
+            <img src="https://www.image2url.com/r2/default/images/1779461802947-d68543a7-4041-4984-931b-52210614ec5b.png" alt="Digital Wave logo">
+            <div class="mockup-line blue"></div>
+            <div class="mockup-line"></div>
+            <div class="mockup-line"></div>
+            <div class="mockup-line"></div>
+          </div>
+        </div>
+
+        <div class="case light">
+          <div class="case-text">
+            <h3>High-converting website structure.</h3>
+            <p>Built with a clear offer, strong service sections, trust signals, and direct contact paths.</p>
+          </div>
+          <div class="mockup">
+            <img src="https://www.image2url.com/r2/default/images/1779461802947-d68543a7-4041-4984-931b-52210614ec5b.png" alt="Digital Wave logo">
+            <div class="mockup-line blue"></div>
+            <div class="mockup-line"></div>
+            <div class="mockup-line"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="container">
+      <div class="cta">
+        <div class="cta-content">
+          <h2>Ready to build your digital system?</h2>
+          <p>Start with a professional website, a custom CRM, or a complete software platform for your business.</p>
+          <a class="btn secondary" href="#contact">Contact Digital Wave</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="contact">
+    <div class="container contact">
+      <div class="contact-card">
+        <img src="https://www.image2url.com/r2/default/images/1779461802947-d68543a7-4041-4984-931b-52210614ec5b.png" alt="Digital Wave logo">
+        <h2 style="font-size:38px;letter-spacing:-.05em;color:var(--navy);margin-bottom:10px">Let’s talk.</h2>
+        <p style="color:var(--muted);line-height:1.7;margin-bottom:18px">Contact Digital Wave to discuss your website, CRM, or custom software project.</p>
+        <div class="contact-item"><strong>Email</strong><span>info@digital-wave.solutions</span></div>
+      </div>
+
+      <div class="contact-card">
+        <form>
+          <input type="text" placeholder="Your name">
+          <input type="email" placeholder="Your email">
+          <input type="text" placeholder="Project type: Website, CRM, Software">
+          <textarea placeholder="Tell us about your project"></textarea>
+          <a class="btn" href="mailto:info@digital-wave.solutions?subject=Project%20Inquiry%20-%20Digital%20Wave">Send Message</a>
+        </form>
+      </div>
+    </div>
+  </section>
 
   <footer>
-    © 2026 Digital Wave — CRM · Websites · Software Development
+    <div class="container footer-inner">
+      <img src="https://www.image2url.com/r2/default/images/1779461802947-d68543a7-4041-4984-931b-52210614ec5b.png" alt="Digital Wave logo">
+      <p>© 2026 Digital Wave. All rights reserved.</p>
+    </div>
   </footer>
 
 </body>
