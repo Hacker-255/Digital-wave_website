@@ -459,3 +459,225 @@ button, input { font: inherit; }
 .react-flow__edge-path {
   stroke-width: 2;
 }
+
+@layer components {
+  .twenty-crm-shell {
+    @apply grid min-h-screen bg-[radial-gradient(circle_at_50%_10%,rgba(46,92,255,.45),transparent_34%),linear-gradient(180deg,#001b78,#00125c_50%,#071147)] lg:grid-cols-[335px_1fr];
+  }
+
+  .twenty-sidebar {
+    @apply border-r border-white/15 bg-white/[.03] p-4 text-white backdrop-blur-xl;
+  }
+
+  .twenty-brand {
+    @apply mb-8 flex items-center gap-3 text-xl;
+  }
+
+  .twenty-brand b {
+    @apply flex-1 text-lg;
+  }
+
+  .twenty-brand button {
+    @apply rounded-lg p-1.5 text-white/85 hover:bg-white/10;
+  }
+
+  .twenty-brand-mark {
+    @apply flex h-6 w-6 items-center justify-center rounded bg-lime-600 text-sm font-bold text-[#061b15];
+  }
+
+  .twenty-pill-nav {
+    @apply mb-8 flex w-28 rounded-full border border-white/10 bg-white/5 p-1;
+  }
+
+  .twenty-pill-nav button {
+    @apply flex h-9 flex-1 items-center justify-center rounded-full text-white/80 hover:bg-white/10;
+  }
+
+  .twenty-pill-nav button.active {
+    @apply bg-white/15 text-white;
+  }
+
+  .twenty-new-chat {
+    @apply mb-8 flex w-40 items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-base hover:bg-white/10;
+  }
+
+  .twenty-section-label {
+    @apply mb-3 mt-6 text-sm text-white/60;
+  }
+
+  .twenty-sidebar-item {
+    @apply mb-1.5 flex w-full items-center gap-3 rounded-md px-2 py-2.5 text-left text-xl text-white/90 transition hover:bg-white/10;
+  }
+
+  .twenty-sidebar-item.active {
+    @apply bg-white/[.14] shadow-inner;
+  }
+
+  .twenty-sidebar-icon {
+    @apply flex h-7 w-7 items-center justify-center rounded-md;
+  }
+
+  .twenty-main {
+    @apply min-w-0 p-5 text-white;
+  }
+
+  .twenty-topbar {
+    @apply mb-5 flex items-center justify-between;
+  }
+
+  .twenty-title {
+    @apply flex items-center gap-3 text-2xl font-semibold;
+  }
+
+  .twenty-top-actions {
+    @apply flex gap-2;
+  }
+
+  .twenty-top-actions button {
+    @apply flex items-center gap-2 rounded-md border border-white/20 bg-white/5 px-4 py-2 text-xl hover:bg-white/10;
+  }
+
+  .twenty-table-card {
+    @apply relative overflow-hidden rounded-2xl border border-white/15 bg-white/[.025] backdrop-blur-xl;
+  }
+
+  .twenty-viewbar {
+    @apply relative flex min-h-[62px] flex-wrap items-center gap-3 border-b border-white/10 px-7 py-3;
+  }
+
+  .twenty-view-title {
+    @apply flex items-center gap-2 text-xl font-semibold;
+  }
+
+  .twenty-search {
+    @apply ml-auto flex min-w-64 items-center gap-2 rounded-md border border-white/15 bg-white/5 px-3 py-2 text-white/70;
+  }
+
+  .twenty-search input {
+    @apply w-full bg-transparent text-sm text-white outline-none placeholder:text-white/45;
+  }
+
+  .twenty-view-actions {
+    @apply flex gap-6 text-xl;
+  }
+
+  .twenty-view-actions button {
+    @apply hover:text-blue-200;
+  }
+
+  .twenty-dropdown {
+    @apply absolute right-6 top-14 z-20 grid min-w-56 gap-1 rounded-xl border border-white/15 bg-[#101842] p-2 shadow-2xl;
+  }
+
+  .twenty-dropdown button {
+    @apply flex items-center gap-2 rounded-lg px-3 py-2 text-left text-sm hover:bg-white/10;
+  }
+
+  .twenty-table {
+    @apply min-w-[1180px] overflow-x-auto;
+  }
+
+  .twenty-row {
+    @apply grid min-h-[49px] grid-cols-[48px_260px_170px_230px_230px_230px_230px_180px] items-center border-b border-white/10 text-xl;
+  }
+
+  .twenty-table.compact .twenty-row {
+    @apply min-h-[36px] text-base;
+  }
+
+  .twenty-row.header {
+    @apply text-white/90;
+  }
+
+  .twenty-row > span {
+    @apply flex h-full items-center gap-2 border-l border-white/10 px-3;
+  }
+
+  .twenty-check {
+    @apply mx-auto h-5 w-5 rounded border-2 border-white/80;
+  }
+
+  .twenty-check.checked {
+    @apply border-blue-200 bg-blue-300 shadow-[inset_0_0_0_3px_#06227b];
+  }
+
+  .company-name i {
+    @apply flex h-6 min-w-6 items-center justify-center rounded text-xs not-italic text-white;
+  }
+
+  .twenty-row em {
+    @apply rounded-full border border-white/15 bg-white/5 px-3 py-1 not-italic;
+  }
+
+  .twenty-table-footer {
+    @apply grid grid-cols-[260px_1fr_220px_150px] gap-4 border-t border-white/10 px-20 py-5 text-lg text-white/70;
+  }
+
+  .twenty-table-footer span {
+    @apply flex items-center gap-2;
+  }
+
+  .module-panel {
+    @apply min-h-[620px];
+  }
+
+  .twenty-module-grid {
+    @apply grid gap-3 p-5;
+  }
+
+  .twenty-module-grid button {
+    @apply flex items-center justify-between rounded-xl border border-white/10 bg-white/5 p-4 text-left text-lg hover:bg-white/10;
+  }
+
+  .twenty-command-overlay {
+    @apply fixed inset-0 z-[90] flex items-start justify-center bg-black/40 px-4 pt-20 backdrop-blur-sm;
+  }
+
+  .twenty-command-panel {
+    @apply w-full max-w-2xl rounded-xl border border-white/10 bg-[#151515] p-3 text-white shadow-2xl;
+  }
+
+  .twenty-command-panel.chat {
+    @apply max-w-xl;
+  }
+
+  .twenty-command-search {
+    @apply flex items-center gap-3 border-b border-white/10 px-2 pb-3;
+  }
+
+  .twenty-command-search input {
+    @apply flex-1 bg-transparent text-lg outline-none placeholder:text-white/40;
+  }
+
+  .twenty-command-search button {
+    @apply rounded-lg bg-white/10 p-2;
+  }
+
+  .twenty-command-panel p {
+    @apply px-3 py-3 text-sm text-white/50;
+  }
+
+  .twenty-command-list {
+    @apply max-h-[520px] overflow-y-auto;
+  }
+
+  .twenty-command-list button {
+    @apply flex w-full items-center gap-4 rounded-lg px-3 py-3 text-left text-xl text-white/80 hover:bg-white/10;
+  }
+
+  .twenty-command-list span {
+    @apply flex h-10 w-10 items-center justify-center rounded-lg bg-white/10;
+  }
+
+  .twenty-command-list em {
+    @apply ml-auto rounded-md border border-white/20 px-2 py-1 text-sm not-italic text-white/60;
+  }
+
+  .twenty-chat-answer {
+    @apply m-3 rounded-xl border border-white/10 bg-white/5 p-4 text-sm leading-6 text-white/75;
+  }
+
+  .twenty-chat-send {
+    @apply m-3 rounded-xl bg-blue-600 px-4 py-2 font-semibold hover:bg-blue-500;
+  }
+}

@@ -4,10 +4,12 @@ import { AnimatePresence, motion, useScroll, useTransform } from 'framer-motion'
 import {
   Activity,
   ArrowRight,
+  ArrowUpDown,
   BarChart3,
   Bell,
   Bot,
   Brain,
+  BriefcaseBusiness,
   Building2,
   Check,
   CheckCircle,
@@ -26,6 +28,8 @@ import {
   Inbox,
   LayoutGrid,
   LayoutDashboard,
+  List,
+  Linkedin,
   LockKeyhole,
   Mail,
   Menu,
@@ -35,6 +39,7 @@ import {
   Search,
   Settings,
   Send,
+  SlidersHorizontal,
   Sparkles,
   Star,
   Target,
@@ -45,6 +50,7 @@ import {
   Workflow,
   X,
   Zap,
+  Plus,
   type LucideIcon,
 } from 'lucide-react';
 import logo from '../assets/digital-wave-logo.png';
@@ -202,7 +208,7 @@ export function AppShell({ clerkMissing }: AppShellProps) {
   const isCrmPage = route === crmRoute || route === '/workflows';
 
   return isCrmPage ? (
-    <WorkingCrmApplicationPage clerkMissing={clerkMissing} />
+    <BlueCrmApplicationPage clerkMissing={clerkMissing} />
   ) : (
     <>
       {!clerkMissing && <RedirectSignedInToCrm />}
@@ -1601,6 +1607,381 @@ function AiAssistant({ prompt, setPrompt, answer, onAsk, onClose }: { prompt: st
             <button className="btn-primary" onClick={onAsk} type="button">Ask AI</button>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+type CompanyTableRow = {
+  id: string;
+  name: string;
+  domain: string;
+  createdBy: string;
+  owner: string;
+  createdAt: string;
+  employees: number | '';
+  linkedin: string;
+  color: string;
+  icon: string;
+};
+
+const initialCompanies: CompanyTableRow[] = [
+  { id: 'airbnb', name: 'Airbnb', domain: 'airbnb.com', createdBy: 'System', owner: '', createdAt: '2 days ago', employees: 5000, linkedin: '', color: 'bg-red-500', icon: 'A' },
+  { id: 'anthropic', name: 'Anthropic', domain: 'anthropic.com', createdBy: 'System', owner: '', createdAt: '2 days ago', employees: 1100, linkedin: '', color: 'bg-stone-200 text-stone-950', icon: 'AI' },
+  { id: 'stripe', name: 'Stripe', domain: 'stripe.com', createdBy: 'System', owner: '', createdAt: '2 days ago', employees: 8000, linkedin: '', color: 'bg-violet-500', icon: 'S' },
+  { id: 'figma', name: 'Figma', domain: 'figma.com', createdBy: 'System', owner: '', createdAt: '2 days ago', employees: 800, linkedin: '', color: 'bg-slate-900', icon: 'F' },
+  { id: 'notion', name: 'Notion', domain: 'notion.com', createdBy: 'System', owner: '', createdAt: '2 days ago', employees: 400, linkedin: '', color: 'bg-white text-black', icon: 'N' },
+  { id: 'hmail', name: 'Hmail', domain: 'hmail.com', createdBy: 'mahmoud mostafa', owner: '', createdAt: '2 days ago', employees: '', linkedin: '', color: 'bg-green-700', icon: 'H' },
+  { id: 'poe', name: 'Poe', domain: 'poe.com', createdBy: 'mahmoud mostafa', owner: '', createdAt: '2 days ago', employees: '', linkedin: '', color: 'bg-black', icon: 'P' },
+  { id: 'epic', name: 'Epic Games', domain: 'epicgames.com', createdBy: 'mahmoud mostafa', owner: '', createdAt: '2 days ago', employees: '', linkedin: '', color: 'bg-zinc-700', icon: 'E' },
+  { id: 'aarp', name: 'AARP', domain: 'aarp.org', createdBy: 'mahmoud mostafa', owner: '', createdAt: '2 days ago', employees: '', linkedin: '', color: 'bg-transparent text-red-500', icon: 'A' },
+  { id: 'loop', name: 'Loop Earplugs', domain: 'loopearplugs.com', createdBy: 'mahmoud mostafa', owner: '', createdAt: '2 days ago', employees: '', linkedin: '', color: 'bg-black', icon: 'O' },
+  { id: 'lara', name: 'Lara Kitchen Tools', domain: 'amazon.eg', createdBy: 'mahmoud mostafa', owner: '', createdAt: '2 days ago', employees: '', linkedin: '', color: 'bg-orange-600', icon: 'L' },
+];
+
+function BlueCrmApplicationPage({ clerkMissing }: AppShellProps) {
+  const [activeModule, setActiveModule] = useState('Companies');
+  const [companies, setCompanies] = useState(initialCompanies);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [query, setQuery] = useState('');
+  const [commandOpen, setCommandOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState<'filter' | 'sort' | 'options' | null>(null);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [employeeFilter, setEmployeeFilter] = useState(false);
+  const [compactRows, setCompactRows] = useState(false);
+  const [hiddenLinkedin, setHiddenLinkedin] = useState(false);
+  const [lastAction, setLastAction] = useState('Ready');
+  const [aiAnswer, setAiAnswer] = useState('');
+  const [aiPrompt, setAiPrompt] = useState('Summarize my companies and next CRM actions.');
+
+  const visibleCompanies = companies
+    .filter((company) => !employeeFilter || Number(company.employees || 0) >= 1000)
+    .filter((company) => [company.name, company.domain, company.createdBy, company.createdAt].join(' ').toLowerCase().includes(query.toLowerCase()));
+
+  const allSelected = visibleCompanies.length > 0 && visibleCompanies.every((company) => selectedIds.includes(company.id));
+  const maxEmployees = Math.max(...companies.map((company) => Number(company.employees || 0)));
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      const isTyping = target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA';
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        setCommandOpen(true);
+      }
+      if (!isTyping && event.key === '/') {
+        event.preventDefault();
+        setCommandOpen(true);
+      }
+      if (event.key === 'Escape') {
+        setCommandOpen(false);
+        setMenuOpen(null);
+        setChatOpen(false);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
+
+  function toggleSelected(id: string) {
+    setSelectedIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
+  }
+
+  function createCompany() {
+    const nextNumber = companies.length + 1;
+    const newCompany: CompanyTableRow = {
+      id: `new-${Date.now()}`,
+      name: `New Company ${nextNumber}`,
+      domain: `newcompany${nextNumber}.com`,
+      createdBy: 'mahmoud mostafa',
+      owner: 'mahmoud mostafa',
+      createdAt: 'Just now',
+      employees: 25,
+      linkedin: '',
+      color: 'bg-blue-600',
+      icon: 'N',
+    };
+    setCompanies((current) => [newCompany, ...current]);
+    setActiveModule('Companies');
+    setLastAction('New company created');
+  }
+
+  function exportView() {
+    const blob = new Blob([JSON.stringify(visibleCompanies, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = 'companies-view.json';
+    anchor.click();
+    URL.revokeObjectURL(url);
+    setLastAction('Companies exported');
+  }
+
+  function runCommand(action: string) {
+    if (action === 'new-company') createCompany();
+    if (action === 'search') setQuery('');
+    if (action === 'filter') setEmployeeFilter((value) => !value);
+    if (action === 'sort-name') setCompanies((current) => [...current].sort((a, b) => a.name.localeCompare(b.name)));
+    if (action === 'sort-employees') setCompanies((current) => [...current].sort((a, b) => Number(b.employees || 0) - Number(a.employees || 0)));
+    if (action === 'export') exportView();
+    if (action === 'delete-selected') {
+      setCompanies((current) => current.filter((company) => !selectedIds.includes(company.id)));
+      setSelectedIds([]);
+      setLastAction('Selected companies deleted');
+    }
+    if (action === 'ask-ai') {
+      setAiAnswer(`AI summary: ${companies.length} companies, ${selectedIds.length} selected. Focus on Stripe, Airbnb, and Anthropic first because they have the largest employee counts.`);
+      setChatOpen(true);
+      setLastAction('AI summary ready');
+    }
+    if (['People', 'Opportunities', 'Tasks', 'Notes', 'Dashboards', 'Workflows', 'Settings', 'Documentation'].includes(action)) setActiveModule(action);
+    setCommandOpen(false);
+  }
+
+  const sidebarItems: Array<[LucideIcon, string, string]> = [
+    [Building2, 'Companies', 'bg-violet-500/30 text-violet-100'],
+    [Users, 'People', 'bg-indigo-500/30 text-indigo-100'],
+    [Target, 'Opportunities', 'bg-red-500/30 text-red-100'],
+    [CheckCircle2, 'Tasks', 'bg-emerald-500/30 text-emerald-100'],
+    [ClipboardList, 'Notes', 'bg-teal-500/30 text-teal-100'],
+    [LayoutGrid, 'Dashboards', 'bg-slate-500/30 text-slate-100'],
+    [CircuitBoard, 'Workflows', 'bg-orange-500/30 text-orange-100'],
+  ];
+
+  return (
+    <main className="min-h-screen bg-[#001a78] text-white">
+      <AuthRequired clerkMissing={clerkMissing}>
+        <div className="twenty-crm-shell">
+          <aside className="twenty-sidebar">
+            <div className="twenty-brand">
+              <span className="twenty-brand-mark">D</span>
+              <b>digital-wave</b>
+              <ChevronDown size={15} />
+              <button onClick={() => setCommandOpen(true)} aria-label="Search"><Search size={20} /></button>
+              <button onClick={() => setCommandOpen(true)} aria-label="Command"><PanelIcon /></button>
+            </div>
+            <div className="twenty-pill-nav">
+              <button className="active"><LayoutDashboard size={22} /></button>
+              <button onClick={() => setChatOpen(true)}><MessageCircleQuestion size={22} /></button>
+            </div>
+            <button className="twenty-new-chat" onClick={() => setChatOpen(true)} type="button"><Bot size={18} /> New chat</button>
+            <p className="twenty-section-label">Workspace</p>
+            {sidebarItems.map(([Icon, label, tone]) => (
+              <button key={label} className={activeModule === label ? 'twenty-sidebar-item active' : 'twenty-sidebar-item'} onClick={() => setActiveModule(label)} type="button">
+                <span className={cn('twenty-sidebar-icon', tone)}><Icon size={18} /></span>
+                {label}
+                {label === 'Workflows' && <ChevronRight className="ml-auto" size={17} />}
+              </button>
+            ))}
+            <p className="twenty-section-label">Other</p>
+            {[[Settings, 'Settings'], [MessageCircleQuestion, 'Documentation']].map(([Icon, label]) => (
+              <button key={label as string} className={activeModule === label ? 'twenty-sidebar-item active' : 'twenty-sidebar-item'} onClick={() => setActiveModule(label as string)} type="button">
+                <span className="twenty-sidebar-icon bg-white/10 text-white"><Icon size={18} /></span>
+                {label as string}
+              </button>
+            ))}
+          </aside>
+
+          <section className="twenty-main">
+            <header className="twenty-topbar">
+              <div className="twenty-title">
+                {activeModule === 'Companies' ? <Building2 size={23} /> : <LayoutDashboard size={23} />}
+                <h1>{activeModule}</h1>
+              </div>
+              <div className="twenty-top-actions">
+                <button onClick={createCompany} type="button"><Plus size={18} /> New Company</button>
+                <button onClick={() => setCommandOpen(true)} type="button"><SlidersHorizontal size={17} /> | Ctrl K</button>
+              </div>
+            </header>
+
+            {activeModule === 'Companies' ? (
+              <div className="twenty-table-card">
+                <div className="twenty-viewbar">
+                  <div className="twenty-view-title"><List size={20} /> All Companies · {visibleCompanies.length} <ChevronDown size={16} /></div>
+                  <label className="twenty-search">
+                    <Search size={17} />
+                    <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search companies, domains, leads..." />
+                  </label>
+                  <div className="twenty-view-actions">
+                    <button onClick={() => setMenuOpen(menuOpen === 'filter' ? null : 'filter')} type="button">Filter</button>
+                    <button onClick={() => setMenuOpen(menuOpen === 'sort' ? null : 'sort')} type="button">Sort</button>
+                    <button onClick={() => setMenuOpen(menuOpen === 'options' ? null : 'options')} type="button">Options</button>
+                  </div>
+                  {menuOpen && (
+                    <div className="twenty-dropdown">
+                      {menuOpen === 'filter' && <button onClick={() => setEmployeeFilter((value) => !value)} type="button"><Check size={15} /> Employees over 1,000 {employeeFilter ? 'on' : 'off'}</button>}
+                      {menuOpen === 'sort' && <>
+                        <button onClick={() => runCommand('sort-name')} type="button"><ArrowUpDown size={15} /> Sort by name</button>
+                        <button onClick={() => runCommand('sort-employees')} type="button"><ArrowUpDown size={15} /> Sort by employees</button>
+                      </>}
+                      {menuOpen === 'options' && <>
+                        <button onClick={() => setCompactRows((value) => !value)} type="button"><List size={15} /> Compact rows</button>
+                        <button onClick={() => setHiddenLinkedin((value) => !value)} type="button"><Linkedin size={15} /> Toggle LinkedIn</button>
+                        <button onClick={exportView} type="button"><Download size={15} /> Export view</button>
+                      </>}
+                    </div>
+                  )}
+                </div>
+                <CompanyTable
+                  companies={visibleCompanies}
+                  selectedIds={selectedIds}
+                  allSelected={allSelected}
+                  compactRows={compactRows}
+                  hiddenLinkedin={hiddenLinkedin}
+                  toggleSelected={toggleSelected}
+                  toggleAll={() => setSelectedIds(allSelected ? [] : visibleCompanies.map((company) => company.id))}
+                />
+                <footer className="twenty-table-footer">
+                  <span>Calculate <ChevronDown size={15} /></span>
+                  <span>Count all <b>{visibleCompanies.length}</b></span>
+                  <span>Max of Empl... <b>{maxEmployees.toLocaleString()}</b></span>
+                  <span>Selected <b>{selectedIds.length}</b></span>
+                </footer>
+              </div>
+            ) : (
+              <TwentyModulePanel module={activeModule} onOpenCommand={() => setCommandOpen(true)} />
+            )}
+          </section>
+        </div>
+
+        {commandOpen && (
+          <TwentyCommandMenu
+            query={query}
+            setQuery={setQuery}
+            onClose={() => setCommandOpen(false)}
+            onRun={runCommand}
+            activeModule={activeModule}
+          />
+        )}
+        {chatOpen && (
+          <TwentyChatPanel
+            prompt={aiPrompt}
+            setPrompt={setAiPrompt}
+            answer={aiAnswer}
+            onAsk={() => runCommand('ask-ai')}
+            onClose={() => setChatOpen(false)}
+          />
+        )}
+      </AuthRequired>
+    </main>
+  );
+}
+
+function PanelIcon() {
+  return <span className="inline-flex h-5 w-5 items-center justify-center rounded border border-white/70 text-[10px]">⌘</span>;
+}
+
+function CompanyTable({ companies, selectedIds, allSelected, compactRows, hiddenLinkedin, toggleSelected, toggleAll }: {
+  companies: CompanyTableRow[];
+  selectedIds: string[];
+  allSelected: boolean;
+  compactRows: boolean;
+  hiddenLinkedin: boolean;
+  toggleSelected: (id: string) => void;
+  toggleAll: () => void;
+}) {
+  return (
+    <div className={compactRows ? 'twenty-table compact' : 'twenty-table'}>
+      <div className="twenty-row header">
+        <button className={allSelected ? 'twenty-check checked' : 'twenty-check'} onClick={toggleAll} aria-label="Select all" />
+        <span><Building2 size={19} /> Name</span>
+        <span><GitBranch size={18} /> Domain</span>
+        <span><BriefcaseBusiness size={18} /> Created by</span>
+        <span><Users size={18} /> Account Owner</span>
+        <span><CalendarIcon /> Creation date</span>
+        <span><Users size={18} /> Employees</span>
+        {!hiddenLinkedin && <span><Linkedin size={18} /> LinkedIn</span>}
+      </div>
+      {companies.map((company) => (
+        <div className="twenty-row" key={company.id}>
+          <button className={selectedIds.includes(company.id) ? 'twenty-check checked' : 'twenty-check'} onClick={() => toggleSelected(company.id)} aria-label={`Select ${company.name}`} />
+          <span className="company-name"><i className={company.color}>{company.icon}</i>{company.name}</span>
+          <span><em>{company.domain}</em></span>
+          <span>{company.createdBy === 'System' ? '🛡️ System' : '📚 ' + company.createdBy}</span>
+          <span>{company.owner}</span>
+          <span>{company.createdAt}</span>
+          <span>{typeof company.employees === 'number' ? company.employees.toLocaleString() : ''}</span>
+          {!hiddenLinkedin && <span>{company.linkedin}</span>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function CalendarIcon() {
+  return <span className="text-sm">▣</span>;
+}
+
+function TwentyModulePanel({ module, onOpenCommand }: { module: string; onOpenCommand: () => void }) {
+  const rows = {
+    People: ['Sarah Johnson - CEO at Acme Cloud', 'Marcus Chen - CTO at Northstar AI', 'Emily Rodriguez - Operations Director'],
+    Opportunities: ['Acme Cloud expansion - $84,000', 'Northstar AI platform - $62,000', 'Blue Ridge Labs rollout - $41,000'],
+    Tasks: ['Send proposal follow-up', 'Prepare security answers', 'Schedule onboarding call'],
+    Notes: ['Acme discovery notes', 'Northstar security review', 'Blue Ridge negotiation'],
+    Dashboards: ['Revenue dashboard', 'Workflow dashboard', 'Team performance dashboard'],
+    Workflows: ['Lead intake and routing', 'Opportunity follow-up', 'Task completion notifications'],
+    Settings: ['Workspace settings', 'Experience settings', 'Email settings'],
+    Documentation: ['Getting started', 'Workflow automation', 'API reference'],
+  }[module] ?? [];
+
+  return (
+    <div className="twenty-table-card module-panel">
+      <div className="twenty-viewbar">
+        <div className="twenty-view-title"><List size={20} /> {module} · {rows.length}</div>
+        <div className="twenty-view-actions"><button onClick={onOpenCommand}>Search</button><button>Options</button></div>
+      </div>
+      <div className="twenty-module-grid">
+        {rows.map((row) => <button key={row} onClick={onOpenCommand}>{row}<ChevronRight size={16} /></button>)}
+      </div>
+    </div>
+  );
+}
+
+function TwentyCommandMenu({ query, setQuery, onClose, onRun, activeModule }: {
+  query: string;
+  setQuery: (value: string) => void;
+  onClose: () => void;
+  onRun: (action: string) => void;
+  activeModule: string;
+}) {
+  const actions = [
+    ['new-company', Plus, 'New Company', 'N'],
+    ['search', Search, 'Search', '/'],
+    ['filter', SlidersHorizontal, `Filter ${activeModule}`, 'F'],
+    ['sort-name', ArrowUpDown, 'Sort by name', 'S'],
+    ['sort-employees', ArrowUpDown, 'Sort by employees', 'E'],
+    ['export', Download, 'Export View', ''],
+    ['delete-selected', Trash2, 'Delete selected', ''],
+    ['ask-ai', Sparkles, 'Ask AI', '@'],
+    ['People', Users, 'Open People', ''],
+    ['Opportunities', Target, 'Open Opportunities', ''],
+    ['Tasks', CheckCircle2, 'Open Tasks', ''],
+    ['Settings', Settings, 'Go to Settings', 'G S'],
+  ] as Array<[string, LucideIcon, string, string]>;
+  const filtered = actions.filter(([, , label]) => label.toLowerCase().includes(query.toLowerCase()));
+
+  return (
+    <div className="twenty-command-overlay">
+      <div className="twenty-command-panel">
+        <div className="twenty-command-search"><Search size={20} /><input value={query} onChange={(event) => setQuery(event.target.value)} autoFocus placeholder="Search companies, actions, settings..." /><button onClick={onClose}><X size={17} /></button></div>
+        <p>Other</p>
+        <div className="twenty-command-list">
+          {filtered.map(([action, Icon, label, shortcut]) => (
+            <button key={action} onClick={() => onRun(action)}><span><Icon size={21} /></span>{label}{shortcut && <em>{shortcut}</em>}</button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TwentyChatPanel({ prompt, setPrompt, answer, onAsk, onClose }: { prompt: string; setPrompt: (value: string) => void; answer: string; onAsk: () => void; onClose: () => void }) {
+  return (
+    <div className="twenty-command-overlay">
+      <div className="twenty-command-panel chat">
+        <div className="twenty-command-search"><Bot size={20} /><input value={prompt} onChange={(event) => setPrompt(event.target.value)} /><button onClick={onClose}><X size={17} /></button></div>
+        <div className="twenty-chat-answer">{answer || 'Ask Digital Wave AI about your companies, opportunities, or next actions.'}</div>
+        <button className="twenty-chat-send" onClick={onAsk}>Ask AI</button>
       </div>
     </div>
   );
