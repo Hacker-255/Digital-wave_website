@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton } from '@clerk/clerk-react';
+import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton, useUser } from '@clerk/clerk-react';
 import { AnimatePresence, motion, useScroll, useTransform } from 'framer-motion';
 import {
   Activity,
@@ -185,11 +185,30 @@ function usePathRoute() {
   return path;
 }
 
+function RedirectSignedInToCrm() {
+  const { isSignedIn, isLoaded } = useUser();
+
+  useEffect(() => {
+    if (isLoaded && isSignedIn && window.location.pathname !== crmRoute) {
+      window.location.assign(crmRoute);
+    }
+  }, [isLoaded, isSignedIn]);
+
+  return null;
+}
+
 export function AppShell({ clerkMissing }: AppShellProps) {
   const route = usePathRoute();
   const isCrmPage = route === crmRoute || route === '/workflows';
 
-  return isCrmPage ? <WorkingCrmApplicationPage clerkMissing={clerkMissing} /> : <LandingPage clerkMissing={clerkMissing} />;
+  return isCrmPage ? (
+    <WorkingCrmApplicationPage clerkMissing={clerkMissing} />
+  ) : (
+    <>
+      {!clerkMissing && <RedirectSignedInToCrm />}
+      <LandingPage clerkMissing={clerkMissing} />
+    </>
+  );
 }
 
 function Navbar({ clerkMissing }: AppShellProps) {
