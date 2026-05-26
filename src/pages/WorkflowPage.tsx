@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Copy, Edit3, Play, Plus, Power, Trash2 } from 'lucide-react';
+import { Copy, Edit3, GitCompare, History, Play, Plus, Power, RotateCcw, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '../lib/api';
 import { useWorkflow } from '../hooks/useWorkflow';
@@ -11,6 +11,7 @@ const filters: Array<WorkflowStatus | 'all'> = ['all', 'active', 'draft', 'archi
 export function WorkflowPage() {
   const { workflows, selectedWorkflow, select, filter, setFilter, upsertWorkflow, removeWorkflow, loading } = useWorkflow();
   const [view, setView] = useState<'list' | 'builder'>('list');
+  const [activityLog, setActivityLog] = useState<string[]>(['Workflow studio ready']);
 
   const visibleWorkflows = useMemo(
     () => workflows.filter((workflow) => filter === 'all' || workflow.status === filter),
@@ -33,12 +34,14 @@ export function WorkflowPage() {
       select(workflow);
       setView('builder');
       toast.success('Workflow created');
+      setActivityLog((items) => [`Created ${workflow.name}`, ...items]);
     } catch {
       const workflow = { ...payload, _id: crypto.randomUUID(), version: 1, runs: 0, updatedAt: new Date().toISOString() } as Workflow;
       upsertWorkflow(workflow);
       select(workflow);
       setView('builder');
       toast.success('Workflow created locally');
+      setActivityLog((items) => [`Created ${workflow.name} locally`, ...items]);
     }
   }
 
@@ -46,12 +49,14 @@ export function WorkflowPage() {
     removeWorkflow(workflow._id);
     void api.deleteWorkflow(workflow._id).catch(() => undefined);
     toast.success('Workflow deleted');
+    setActivityLog((items) => [`Archived ${workflow.name}`, ...items]);
   }
 
   async function duplicateWorkflow(workflow: Workflow) {
     const copy = { ...workflow, _id: crypto.randomUUID(), name: `${workflow.name} copy`, status: 'draft' as const, version: 1 };
     upsertWorkflow(copy);
     toast.success('Workflow duplicated');
+    setActivityLog((items) => [`Duplicated ${workflow.name}`, ...items]);
   }
 
   async function toggleWorkflow(workflow: Workflow) {
@@ -59,6 +64,55 @@ export function WorkflowPage() {
     const next: Workflow = { ...workflow, status: nextStatus };
     upsertWorkflow(next);
     void api.updateWorkflow(workflow._id, { status: next.status }).catch(() => undefined);
+    setActivityLog((items) => [`${workflow.name} set to ${nextStatus}`, ...items]);
+  }
+
+  async function runSelectedWorkflow(workflow: Workflow) {
+    try {
+      const run = await api.runWorkflow(workflow._id);
+      toast.success('Workflow run completed');
+      setActivityLog((items) => [`Run ${run.status}: ${run.logs.join(' -> ')}`, ...items]);
+    } catch {
+      toast.success('Workflow run simulated');
+      setActivityLog((items) => [`Simulated run for ${workflow.name}`, ...items]);
+    }
+  }
+
+  async function showVersions(workflow: Workflow) {
+    try {
+      const versions = await api.workflowVersions(workflow._id);
+      setActivityLog((items) => [`Versions for ${workflow.name}: ${versions.map((version) => `v${version.versionNumber}`).join(', ') || 'no saved versions yet'}`, ...items]);
+    } catch {
+      setActivityLog((items) => [`Versions for ${workflow.name}: local v${workflow.version}`, ...items]);
+    }
+  }
+
+  async function compareVersions(workflow: Workflow) {
+    try {
+      const versions = await api.workflowVersions(workflow._id);
+      const [latest, previous] = versions;
+      const summary = latest && previous
+        ? `Compared v${latest.versionNumber} with v${previous.versionNumber}: nodes ${latest.snapshot.nodes.length}/${previous.snapshot.nodes.length}, edges ${latest.snapshot.edges.length}/${previous.snapshot.edges.length}`
+        : `Need at least two saved versions to compare ${workflow.name}`;
+      setActivityLog((items) => [summary, ...items]);
+    } catch {
+      setActivityLog((items) => [`Compare unavailable until MongoDB versions are saved for ${workflow.name}`, ...items]);
+    }
+  }
+
+  async function restoreLatestVersion(workflow: Workflow) {
+    try {
+      const versions = await api.workflowVersions(workflow._id);
+      const version = versions.find((item) => item.versionNumber < workflow.version) ?? versions[0];
+      if (!version) throw new Error('No version found');
+      const restored = await api.restoreWorkflow(workflow._id, version._id);
+      upsertWorkflow(restored);
+      toast.success(`Restored ${workflow.name}`);
+      setActivityLog((items) => [`Restored ${workflow.name} from v${version.versionNumber}`, ...items]);
+    } catch {
+      toast.error('No saved version available yet');
+      setActivityLog((items) => [`Restore unavailable for ${workflow.name} until a saved MongoDB version exists`, ...items]);
+    }
   }
 
   return (
@@ -118,6 +172,9 @@ export function WorkflowPage() {
                         <button title="Edit" onClick={() => setView('builder')}><Edit3 size={15} /></button>
                         <button title="Duplicate" onClick={(event) => { event.stopPropagation(); void duplicateWorkflow(workflow); }}><Copy size={15} /></button>
                         <button title="Activate or deactivate" onClick={(event) => { event.stopPropagation(); void toggleWorkflow(workflow); }}><Power size={15} /></button>
+                        <button title="Versions" onClick={(event) => { event.stopPropagation(); void showVersions(workflow); }}><History size={15} /></button>
+                        <button title="Compare versions" onClick={(event) => { event.stopPropagation(); void compareVersions(workflow); }}><GitCompare size={15} /></button>
+                        <button title="Restore version" onClick={(event) => { event.stopPropagation(); void restoreLatestVersion(workflow); }}><RotateCcw size={15} /></button>
                         <button title="Delete" onClick={(event) => { event.stopPropagation(); void deleteWorkflow(workflow); }}><Trash2 size={15} /></button>
                       </div>
                     </td>
@@ -134,11 +191,16 @@ export function WorkflowPage() {
       {selectedWorkflow && (
         <div className="run-strip">
           <span>Selected: {selectedWorkflow.name}</span>
-          <button className="btn-secondary" onClick={() => api.runWorkflow(selectedWorkflow._id).then(() => toast.success('Workflow run completed')).catch(() => toast.success('Workflow run simulated'))}>
+          <button className="btn-secondary" onClick={() => runSelectedWorkflow(selectedWorkflow)}>
             <Play size={16} /> Run workflow
           </button>
         </div>
       )}
+
+      <div className="workflow-activity">
+        <b>Activity logs</b>
+        {activityLog.slice(0, 5).map((item) => <span key={item}>{item}</span>)}
+      </div>
     </div>
   );
 }

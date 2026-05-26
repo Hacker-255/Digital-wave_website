@@ -12,9 +12,7 @@ aiRoutes.post('/ask', async (request, response) => {
   }
 
   if (!apiKey) {
-    return response.json({
-      answer: 'AI is ready, but OPENAI_API_KEY is not configured on the server. Suggested next steps: prioritize hot leads, follow up on proposal-stage opportunities, and automate follow-up tasks.',
-    });
+    return response.status(500).json({ error: 'OPENAI_API_KEY is not configured on the server.' });
   }
 
   try {
@@ -45,9 +43,8 @@ aiRoutes.post('/ask', async (request, response) => {
 
     const data = await aiResponse.json() as { output_text?: string };
     return response.json({ answer: data.output_text ?? 'AI completed the request, but returned an empty answer.' });
-  } catch {
-    return response.json({
-      answer: 'AI fallback: focus on Acme Cloud follow-up, Northstar AI security review, and Blue Ridge Labs contract completion. Add a workflow that creates a task when an opportunity enters proposal.',
-    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'AI request failed';
+    return response.status(502).json({ error: message });
   }
 });

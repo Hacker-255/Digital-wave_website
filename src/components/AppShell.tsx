@@ -21,6 +21,7 @@ import {
   ClipboardList,
   DollarSign,
   Download,
+  Edit3,
   FolderKanban,
   GitBranch,
   GitMerge,
@@ -880,9 +881,9 @@ function DealsPanel() {
     <>
       <div className="pipeline-grid">
         {[
-          ['Qualified', 'Acme Cloud', '$84,000', 'Demo booked'],
-          ['Proposal', 'Northstar AI', '$62,000', 'Security review'],
-          ['Negotiation', 'Blue Ridge Labs', '$41,000', 'Contract sent'],
+          ['Qualified', 'NovaGrid Systems', '$84,000', 'Demo booked'],
+          ['Proposal', 'Northstar Automation', '$62,000', 'Security review'],
+          ['Negotiation', 'Blue Harbor Logistics', '$41,000', 'Contract sent'],
         ].map(([stage, account, value, note]) => (
           <div className="deal-card" key={account}>
             <span>{stage}</span>
@@ -904,14 +905,14 @@ function DealsPanel() {
 function SimpleCrmPanel({ type }: { type: 'people' | 'companies' | 'tasks' | 'notes' }) {
   const rows = {
     people: [
-      ['Sarah Johnson', 'CEO at Acme Cloud', 'Hot lead'],
-      ['Marcus Chen', 'CTO at Northstar AI', 'Security review'],
-      ['Emily Rodriguez', 'Ops Director at Blue Ridge Labs', 'Contract sent'],
+      ['Lina Carter', 'CEO at NovaGrid Systems', 'Hot lead'],
+      ['Omar Hale', 'CTO at Northstar Automation', 'Security review'],
+      ['Maya Stone', 'Ops Director at Blue Harbor Logistics', 'Contract sent'],
     ],
     companies: [
-      ['Acme Cloud', '$84,000 pipeline', 'Healthy'],
-      ['Northstar AI', '$62,000 pipeline', 'Reviewing'],
-      ['Blue Ridge Labs', '$41,000 pipeline', 'Negotiation'],
+      ['NovaGrid Systems', '$84,000 pipeline', 'Healthy'],
+      ['Northstar Automation', '$62,000 pipeline', 'Reviewing'],
+      ['Blue Harbor Logistics', '$41,000 pipeline', 'Negotiation'],
     ],
     tasks: [
       ['Send proposal follow-up', 'Due today', 'High'],
@@ -919,9 +920,9 @@ function SimpleCrmPanel({ type }: { type: 'people' | 'companies' | 'tasks' | 'no
       ['Schedule onboarding call', 'Friday', 'Normal'],
     ],
     notes: [
-      ['Acme Cloud discovery notes', 'Budget confirmed and timeline is Q3', 'Pinned'],
-      ['Northstar security review', 'SOC2 evidence requested', 'Shared'],
-      ['Blue Ridge negotiation', 'Legal asked for revised payment terms', 'Draft'],
+      ['NovaGrid Systems discovery notes', 'Budget confirmed and timeline is Q3', 'Pinned'],
+      ['Northstar automation review', 'SOC2 evidence requested', 'Shared'],
+      ['Blue Harbor negotiation', 'Legal asked for revised payment terms', 'Draft'],
     ],
   }[type];
 
@@ -1074,19 +1075,19 @@ type CrmAction =
 
 const baseCrmRecords: Record<string, CrmRecord[]> = {
   Companies: [
-    { title: 'Acme Cloud', detail: '$84,000 pipeline', status: 'Healthy', module: 'Companies' },
-    { title: 'Northstar AI', detail: '$62,000 pipeline', status: 'Reviewing', module: 'Companies' },
-    { title: 'Blue Ridge Labs', detail: '$41,000 pipeline', status: 'Negotiation', module: 'Companies' },
+    { title: 'NovaGrid Systems', detail: '$84,000 pipeline', status: 'Healthy', module: 'Companies' },
+    { title: 'Northstar Automation', detail: '$62,000 pipeline', status: 'Reviewing', module: 'Companies' },
+    { title: 'Blue Harbor Logistics', detail: '$41,000 pipeline', status: 'Negotiation', module: 'Companies' },
   ],
   People: [
-    { title: 'Sarah Johnson', detail: 'CEO at Acme Cloud', status: 'Hot lead', module: 'People' },
-    { title: 'Marcus Chen', detail: 'CTO at Northstar AI', status: 'Security review', module: 'People' },
-    { title: 'Emily Rodriguez', detail: 'Ops Director at Blue Ridge Labs', status: 'Contract sent', module: 'People' },
+    { title: 'Lina Carter', detail: 'CEO at NovaGrid Systems', status: 'Hot lead', module: 'People' },
+    { title: 'Omar Hale', detail: 'CTO at Northstar Automation', status: 'Security review', module: 'People' },
+    { title: 'Maya Stone', detail: 'Ops Director at Blue Harbor Logistics', status: 'Contract sent', module: 'People' },
   ],
   Opportunities: [
-    { title: 'Acme Cloud expansion', detail: '$84,000 - Demo booked', status: 'Qualified', module: 'Opportunities' },
-    { title: 'Northstar AI platform', detail: '$62,000 - Security review', status: 'Proposal', module: 'Opportunities' },
-    { title: 'Blue Ridge Labs rollout', detail: '$41,000 - Contract sent', status: 'Negotiation', module: 'Opportunities' },
+    { title: 'NovaGrid Systems expansion', detail: '$84,000 - Demo booked', status: 'Qualified', module: 'Opportunities' },
+    { title: 'Northstar Automation platform', detail: '$62,000 - Security review', status: 'Proposal', module: 'Opportunities' },
+    { title: 'Blue Harbor Logistics rollout', detail: '$41,000 - Contract sent', status: 'Negotiation', module: 'Opportunities' },
   ],
   Tasks: [
     { title: 'Send proposal follow-up', detail: 'Due today', status: 'High', module: 'Tasks' },
@@ -1094,9 +1095,9 @@ const baseCrmRecords: Record<string, CrmRecord[]> = {
     { title: 'Schedule onboarding call', detail: 'Friday', status: 'Normal', module: 'Tasks' },
   ],
   Notes: [
-    { title: 'Acme Cloud discovery notes', detail: 'Budget confirmed and timeline is Q3', status: 'Pinned', module: 'Notes' },
-    { title: 'Northstar security review', detail: 'SOC2 evidence requested', status: 'Shared', module: 'Notes' },
-    { title: 'Blue Ridge negotiation', detail: 'Legal asked for revised payment terms', status: 'Draft', module: 'Notes' },
+    { title: 'NovaGrid Systems discovery notes', detail: 'Budget confirmed and timeline is Q3', status: 'Pinned', module: 'Notes' },
+    { title: 'Northstar automation review', detail: 'SOC2 evidence requested', status: 'Shared', module: 'Notes' },
+    { title: 'Blue Harbor negotiation', detail: 'Legal asked for revised payment terms', status: 'Draft', module: 'Notes' },
   ],
 };
 
@@ -1169,7 +1170,7 @@ function WorkingCrmApplicationPage({ clerkMissing }: AppShellProps) {
       setAiAnswer(data.answer || 'AI returned no answer.');
       setLastAction('AI answer ready');
     } catch {
-      setAiAnswer('Priority summary: follow up with Acme Cloud today, answer Northstar AI security questions, and keep Blue Ridge Labs contract moving. Suggested automation: create a task when an opportunity reaches proposal.');
+      setAiAnswer('Priority summary: follow up with NovaGrid Systems today, answer Northstar Automation security questions, and keep Blue Harbor Logistics contract moving. Suggested automation: create a task when an opportunity reaches proposal.');
       setLastAction('AI fallback answer ready');
     }
   }
@@ -1623,20 +1624,21 @@ type CompanyTableRow = {
   linkedin: string;
   color: string;
   icon: string;
+  custom?: Record<string, string>;
 };
 
 const initialCompanies: CompanyTableRow[] = [
-  { id: 'airbnb', name: 'Airbnb', domain: 'airbnb.com', createdBy: 'System', owner: '', createdAt: '2 days ago', employees: 5000, linkedin: '', color: 'bg-red-500', icon: 'A' },
-  { id: 'anthropic', name: 'Anthropic', domain: 'anthropic.com', createdBy: 'System', owner: '', createdAt: '2 days ago', employees: 1100, linkedin: '', color: 'bg-stone-200 text-stone-950', icon: 'AI' },
-  { id: 'stripe', name: 'Stripe', domain: 'stripe.com', createdBy: 'System', owner: '', createdAt: '2 days ago', employees: 8000, linkedin: '', color: 'bg-violet-500', icon: 'S' },
-  { id: 'figma', name: 'Figma', domain: 'figma.com', createdBy: 'System', owner: '', createdAt: '2 days ago', employees: 800, linkedin: '', color: 'bg-slate-900', icon: 'F' },
-  { id: 'notion', name: 'Notion', domain: 'notion.com', createdBy: 'System', owner: '', createdAt: '2 days ago', employees: 400, linkedin: '', color: 'bg-white text-black', icon: 'N' },
-  { id: 'hmail', name: 'Hmail', domain: 'hmail.com', createdBy: 'mahmoud mostafa', owner: '', createdAt: '2 days ago', employees: '', linkedin: '', color: 'bg-green-700', icon: 'H' },
-  { id: 'poe', name: 'Poe', domain: 'poe.com', createdBy: 'mahmoud mostafa', owner: '', createdAt: '2 days ago', employees: '', linkedin: '', color: 'bg-black', icon: 'P' },
-  { id: 'epic', name: 'Epic Games', domain: 'epicgames.com', createdBy: 'mahmoud mostafa', owner: '', createdAt: '2 days ago', employees: '', linkedin: '', color: 'bg-zinc-700', icon: 'E' },
-  { id: 'aarp', name: 'AARP', domain: 'aarp.org', createdBy: 'mahmoud mostafa', owner: '', createdAt: '2 days ago', employees: '', linkedin: '', color: 'bg-transparent text-red-500', icon: 'A' },
-  { id: 'loop', name: 'Loop Earplugs', domain: 'loopearplugs.com', createdBy: 'mahmoud mostafa', owner: '', createdAt: '2 days ago', employees: '', linkedin: '', color: 'bg-black', icon: 'O' },
-  { id: 'lara', name: 'Lara Kitchen Tools', domain: 'amazon.eg', createdBy: 'mahmoud mostafa', owner: '', createdAt: '2 days ago', employees: '', linkedin: '', color: 'bg-orange-600', icon: 'L' },
+  { id: 'novagrid', name: 'NovaGrid Systems', domain: 'novagrid.example', createdBy: 'Digital Wave Ops', owner: 'Digital Wave Team', createdAt: '2 days ago', employees: 5000, linkedin: '', color: 'bg-blue-500', icon: 'N' },
+  { id: 'northstar', name: 'Northstar Automation', domain: 'northstar.example', createdBy: 'Digital Wave Ops', owner: 'Digital Wave Team', createdAt: '2 days ago', employees: 1100, linkedin: '', color: 'bg-stone-200 text-stone-950', icon: 'NA' },
+  { id: 'blueharbor', name: 'Blue Harbor Logistics', domain: 'blueharbor.example', createdBy: 'Digital Wave Ops', owner: 'Digital Wave Team', createdAt: '2 days ago', employees: 8000, linkedin: '', color: 'bg-cyan-600', icon: 'B' },
+  { id: 'skybridge', name: 'SkyBridge Tech', domain: 'skybridge.example', createdBy: 'Digital Wave Ops', owner: 'Digital Wave Team', createdAt: '2 days ago', employees: 800, linkedin: '', color: 'bg-slate-900', icon: 'S' },
+  { id: 'datapulse', name: 'DataPulse Labs', domain: 'datapulse.example', createdBy: 'Digital Wave Ops', owner: 'Digital Wave Team', createdAt: '2 days ago', employees: 400, linkedin: '', color: 'bg-white text-black', icon: 'D' },
+  { id: 'apex', name: 'Apex Software', domain: 'apex.example', createdBy: 'Digital Wave Sales', owner: 'Digital Wave Team', createdAt: '2 days ago', employees: '', linkedin: '', color: 'bg-green-700', icon: 'A' },
+  { id: 'cloudbase', name: 'CloudBase Corp', domain: 'cloudbase.example', createdBy: 'Digital Wave Sales', owner: 'Digital Wave Team', createdAt: '2 days ago', employees: '', linkedin: '', color: 'bg-black', icon: 'C' },
+  { id: 'arcanum', name: 'Arcanum Systems', domain: 'arcanum.example', createdBy: 'Digital Wave Sales', owner: 'Digital Wave Team', createdAt: '2 days ago', employees: '', linkedin: '', color: 'bg-zinc-700', icon: 'A' },
+  { id: 'devstack', name: 'DevStack Ltd', domain: 'devstack.example', createdBy: 'Digital Wave Sales', owner: 'Digital Wave Team', createdAt: '2 days ago', employees: '', linkedin: '', color: 'bg-red-600', icon: 'D' },
+  { id: 'techflow', name: 'TechFlow Solutions', domain: 'techflow.example', createdBy: 'Digital Wave Sales', owner: 'Digital Wave Team', createdAt: '2 days ago', employees: '', linkedin: '', color: 'bg-black', icon: 'T' },
+  { id: 'nexgen', name: 'NexGen Digital', domain: 'nexgen.example', createdBy: 'Digital Wave Sales', owner: 'Digital Wave Team', createdAt: '2 days ago', employees: '', linkedin: '', color: 'bg-orange-600', icon: 'N' },
 ];
 
 function BlueCrmApplicationPage({ clerkMissing }: AppShellProps) {
@@ -1650,13 +1652,14 @@ function BlueCrmApplicationPage({ clerkMissing }: AppShellProps) {
   const [employeeFilter, setEmployeeFilter] = useState(false);
   const [compactRows, setCompactRows] = useState(false);
   const [hiddenLinkedin, setHiddenLinkedin] = useState(false);
+  const [customColumns, setCustomColumns] = useState<string[]>([]);
   const [lastAction, setLastAction] = useState('Ready');
   const [aiAnswer, setAiAnswer] = useState('');
   const [aiPrompt, setAiPrompt] = useState('Summarize my companies and next CRM actions.');
 
   const visibleCompanies = companies
     .filter((company) => !employeeFilter || Number(company.employees || 0) >= 1000)
-    .filter((company) => [company.name, company.domain, company.createdBy, company.createdAt].join(' ').toLowerCase().includes(query.toLowerCase()));
+    .filter((company) => [company.name, company.domain, company.createdBy, company.createdAt, company.owner, company.linkedin, ...Object.values(company.custom ?? {})].join(' ').toLowerCase().includes(query.toLowerCase()));
 
   const allSelected = visibleCompanies.length > 0 && visibleCompanies.every((company) => selectedIds.includes(company.id));
   const maxEmployees = Math.max(...companies.map((company) => Number(company.employees || 0)));
@@ -1687,23 +1690,86 @@ function BlueCrmApplicationPage({ clerkMissing }: AppShellProps) {
     setSelectedIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
   }
 
+  function deleteCompany(id: string) {
+    setCompanies((current) => current.filter((company) => company.id !== id));
+    setSelectedIds((current) => current.filter((item) => item !== id));
+    setLastAction('Company deleted');
+  }
+
   function createCompany() {
     const nextNumber = companies.length + 1;
     const newCompany: CompanyTableRow = {
       id: `new-${Date.now()}`,
       name: `New Company ${nextNumber}`,
       domain: `newcompany${nextNumber}.com`,
-      createdBy: 'mahmoud mostafa',
-      owner: 'mahmoud mostafa',
+      createdBy: 'Digital Wave Ops',
+      owner: 'Digital Wave Team',
       createdAt: 'Just now',
       employees: 25,
       linkedin: '',
       color: 'bg-blue-600',
       icon: 'N',
+      custom: Object.fromEntries(customColumns.map((column) => [column, ''])),
     };
     setCompanies((current) => [newCompany, ...current]);
     setActiveModule('Companies');
     setLastAction('New company created');
+  }
+
+  function addColumn() {
+    const nextName = `Custom ${customColumns.length + 1}`;
+    setCustomColumns((current) => [...current, nextName]);
+    setCompanies((current) => current.map((company) => ({
+      ...company,
+      custom: { ...(company.custom ?? {}), [nextName]: '' },
+    })));
+    setLastAction(`${nextName} column added`);
+  }
+
+  function updateCompany(id: string, field: keyof Omit<CompanyTableRow, 'id' | 'color' | 'icon' | 'custom'>, value: string) {
+    setCompanies((current) => current.map((company) => {
+      if (company.id !== id) return company;
+      if (field === 'employees') {
+        return { ...company, employees: value === '' ? '' : Number(value.replace(/[^\d]/g, '')) };
+      }
+      return { ...company, [field]: value };
+    }));
+    setLastAction('Cell edited');
+  }
+
+  function updateCustomCell(id: string, column: string, value: string) {
+    setCompanies((current) => current.map((company) => company.id === id
+      ? { ...company, custom: { ...(company.custom ?? {}), [column]: value } }
+      : company));
+    setLastAction('Custom field edited');
+  }
+
+  async function askAi() {
+    setChatOpen(true);
+    setAiAnswer('Thinking...');
+    setLastAction('Asking AI');
+    try {
+      const response = await fetch('/api/ai/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: aiPrompt,
+          context: {
+            activeModule,
+            companies,
+            selectedCompanies: companies.filter((company) => selectedIds.includes(company.id)),
+            customColumns,
+          },
+        }),
+      });
+      const data = await response.json() as { answer?: string; error?: string };
+      if (!response.ok) throw new Error(data.error || 'AI request failed');
+      setAiAnswer(data.answer || 'AI did not return an answer.');
+      setLastAction('AI answer ready');
+    } catch (error) {
+      setAiAnswer(`AI is ready, but the server key is missing or the API route failed. Set OPENAI_API_KEY in Vercel, then ask again. Local fallback: ${companies.length} companies, ${selectedIds.length} selected, top account ${companies[0]?.name ?? 'none'}.`);
+      setLastAction(error instanceof Error ? error.message : 'AI unavailable');
+    }
   }
 
   function exportView() {
@@ -1719,6 +1785,7 @@ function BlueCrmApplicationPage({ clerkMissing }: AppShellProps) {
 
   function runCommand(action: string) {
     if (action === 'new-company') createCompany();
+    if (action === 'add-column') addColumn();
     if (action === 'search') setQuery('');
     if (action === 'filter') setEmployeeFilter((value) => !value);
     if (action === 'sort-name') setCompanies((current) => [...current].sort((a, b) => a.name.localeCompare(b.name)));
@@ -1730,11 +1797,9 @@ function BlueCrmApplicationPage({ clerkMissing }: AppShellProps) {
       setLastAction('Selected companies deleted');
     }
     if (action === 'ask-ai') {
-      setAiAnswer(`AI summary: ${companies.length} companies, ${selectedIds.length} selected. Focus on Stripe, Airbnb, and Anthropic first because they have the largest employee counts.`);
-      setChatOpen(true);
-      setLastAction('AI summary ready');
+      void askAi();
     }
-    if (['People', 'Opportunities', 'Tasks', 'Notes', 'Dashboards', 'Workflows', 'Settings', 'Documentation'].includes(action)) setActiveModule(action);
+    if (['People', 'Opportunities', 'Tasks', 'Notes', 'Dashboards', 'Workflows', 'AI Chat', 'Settings', 'Documentation'].includes(action)) setActiveModule(action);
     setCommandOpen(false);
   }
 
@@ -1746,69 +1811,72 @@ function BlueCrmApplicationPage({ clerkMissing }: AppShellProps) {
     [ClipboardList, 'Notes', 'bg-teal-500/30 text-teal-100'],
     [LayoutGrid, 'Dashboards', 'bg-slate-500/30 text-slate-100'],
     [CircuitBoard, 'Workflows', 'bg-orange-500/30 text-orange-100'],
+    [Bot, 'AI Chat', 'bg-blue-500/30 text-blue-100'],
   ];
 
   return (
     <main className="min-h-screen bg-[#001a78] text-white">
       <AuthRequired clerkMissing={clerkMissing}>
-        <div className="twenty-crm-shell">
-          <aside className="twenty-sidebar">
-            <div className="twenty-brand">
-              <span className="twenty-brand-mark">D</span>
+        <div className="dw-crm-shell">
+          <aside className="dw-sidebar">
+            <div className="dw-brand">
+              <span className="dw-brand-mark">D</span>
               <b>digital-wave</b>
               <ChevronDown size={15} />
               <button onClick={() => setCommandOpen(true)} aria-label="Search"><Search size={20} /></button>
               <button onClick={() => setCommandOpen(true)} aria-label="Command"><PanelIcon /></button>
             </div>
-            <div className="twenty-pill-nav">
+            <div className="dw-pill-nav">
               <button className="active"><LayoutDashboard size={22} /></button>
               <button onClick={() => setChatOpen(true)}><MessageCircleQuestion size={22} /></button>
             </div>
-            <button className="twenty-new-chat" onClick={() => setChatOpen(true)} type="button"><Bot size={18} /> New chat</button>
-            <p className="twenty-section-label">Workspace</p>
+            <button className="dw-new-chat" onClick={() => setChatOpen(true)} type="button"><Bot size={18} /> New chat</button>
+            <p className="dw-section-label">Workspace</p>
             {sidebarItems.map(([Icon, label, tone]) => (
-              <button key={label} className={activeModule === label ? 'twenty-sidebar-item active' : 'twenty-sidebar-item'} onClick={() => setActiveModule(label)} type="button">
-                <span className={cn('twenty-sidebar-icon', tone)}><Icon size={18} /></span>
+              <button key={label} className={activeModule === label ? 'dw-sidebar-item active' : 'dw-sidebar-item'} onClick={() => setActiveModule(label)} type="button">
+                <span className={cn('dw-sidebar-icon', tone)}><Icon size={18} /></span>
                 {label}
                 {label === 'Workflows' && <ChevronRight className="ml-auto" size={17} />}
               </button>
             ))}
-            <p className="twenty-section-label">Other</p>
+            <p className="dw-section-label">Other</p>
             {[[Settings, 'Settings'], [MessageCircleQuestion, 'Documentation']].map(([Icon, label]) => (
-              <button key={label as string} className={activeModule === label ? 'twenty-sidebar-item active' : 'twenty-sidebar-item'} onClick={() => setActiveModule(label as string)} type="button">
-                <span className="twenty-sidebar-icon bg-white/10 text-white"><Icon size={18} /></span>
+              <button key={label as string} className={activeModule === label ? 'dw-sidebar-item active' : 'dw-sidebar-item'} onClick={() => setActiveModule(label as string)} type="button">
+                <span className="dw-sidebar-icon bg-white/10 text-white"><Icon size={18} /></span>
                 {label as string}
               </button>
             ))}
           </aside>
 
-          <section className="twenty-main">
-            <header className="twenty-topbar">
-              <div className="twenty-title">
-                {activeModule === 'Companies' ? <Building2 size={23} /> : <LayoutDashboard size={23} />}
+          <section className="dw-main">
+            <header className="dw-topbar">
+              <div className="dw-title">
+                {activeModule === 'Companies' ? <Building2 size={23} /> : activeModule === 'AI Chat' ? <Bot size={23} /> : <LayoutDashboard size={23} />}
                 <h1>{activeModule}</h1>
               </div>
-              <div className="twenty-top-actions">
-                <button onClick={createCompany} type="button"><Plus size={18} /> New Company</button>
+              <div className="dw-top-actions">
+                {activeModule === 'Companies' && <button onClick={createCompany} type="button"><Plus size={18} /> New Company</button>}
+                {activeModule === 'Companies' && <button onClick={addColumn} type="button"><List size={17} /> Add Column</button>}
+                {activeModule === 'AI Chat' && <button onClick={askAi} type="button"><Sparkles size={17} /> Ask AI</button>}
                 <button onClick={() => setCommandOpen(true)} type="button"><SlidersHorizontal size={17} /> | Ctrl K</button>
               </div>
             </header>
 
             {activeModule === 'Companies' ? (
-              <div className="twenty-table-card">
-                <div className="twenty-viewbar">
-                  <div className="twenty-view-title"><List size={20} /> All Companies · {visibleCompanies.length} <ChevronDown size={16} /></div>
-                  <label className="twenty-search">
+              <div className="dw-table-card">
+                <div className="dw-viewbar">
+                  <div className="dw-view-title"><List size={20} /> All Companies · {visibleCompanies.length} <ChevronDown size={16} /></div>
+                  <label className="dw-search">
                     <Search size={17} />
                     <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search companies, domains, leads..." />
                   </label>
-                  <div className="twenty-view-actions">
+                  <div className="dw-view-actions">
                     <button onClick={() => setMenuOpen(menuOpen === 'filter' ? null : 'filter')} type="button">Filter</button>
                     <button onClick={() => setMenuOpen(menuOpen === 'sort' ? null : 'sort')} type="button">Sort</button>
                     <button onClick={() => setMenuOpen(menuOpen === 'options' ? null : 'options')} type="button">Options</button>
                   </div>
                   {menuOpen && (
-                    <div className="twenty-dropdown">
+                    <div className="dw-dropdown">
                       {menuOpen === 'filter' && <button onClick={() => setEmployeeFilter((value) => !value)} type="button"><Check size={15} /> Employees over 1,000 {employeeFilter ? 'on' : 'off'}</button>}
                       {menuOpen === 'sort' && <>
                         <button onClick={() => runCommand('sort-name')} type="button"><ArrowUpDown size={15} /> Sort by name</button>
@@ -1816,6 +1884,8 @@ function BlueCrmApplicationPage({ clerkMissing }: AppShellProps) {
                       </>}
                       {menuOpen === 'options' && <>
                         <button onClick={() => setCompactRows((value) => !value)} type="button"><List size={15} /> Compact rows</button>
+                        <button onClick={createCompany} type="button"><Plus size={15} /> Add row</button>
+                        <button onClick={addColumn} type="button"><List size={15} /> Add column</button>
                         <button onClick={() => setHiddenLinkedin((value) => !value)} type="button"><Linkedin size={15} /> Toggle LinkedIn</button>
                         <button onClick={exportView} type="button"><Download size={15} /> Export view</button>
                       </>}
@@ -1828,24 +1898,40 @@ function BlueCrmApplicationPage({ clerkMissing }: AppShellProps) {
                   allSelected={allSelected}
                   compactRows={compactRows}
                   hiddenLinkedin={hiddenLinkedin}
+                  customColumns={customColumns}
                   toggleSelected={toggleSelected}
                   toggleAll={() => setSelectedIds(allSelected ? [] : visibleCompanies.map((company) => company.id))}
+                  updateCompany={updateCompany}
+                  updateCustomCell={updateCustomCell}
+                  deleteCompany={deleteCompany}
                 />
-                <footer className="twenty-table-footer">
+                <footer className="dw-table-footer">
                   <span>Calculate <ChevronDown size={15} /></span>
                   <span>Count all <b>{visibleCompanies.length}</b></span>
                   <span>Max of Empl... <b>{maxEmployees.toLocaleString()}</b></span>
                   <span>Selected <b>{selectedIds.length}</b></span>
                 </footer>
               </div>
+            ) : activeModule === 'Workflows' ? (
+              <WorkflowPage />
+            ) : activeModule === 'AI Chat' ? (
+              <DigitalWaveAiChatPage
+                prompt={aiPrompt}
+                setPrompt={setAiPrompt}
+                answer={aiAnswer}
+                onAsk={askAi}
+                companiesCount={companies.length}
+                selectedCount={selectedIds.length}
+                lastAction={lastAction}
+              />
             ) : (
-              <TwentyModulePanel module={activeModule} onOpenCommand={() => setCommandOpen(true)} />
+              <DigitalWaveModulePanel module={activeModule} onOpenCommand={() => setCommandOpen(true)} />
             )}
           </section>
         </div>
 
         {commandOpen && (
-          <TwentyCommandMenu
+          <DigitalWaveCommandMenu
             query={query}
             setQuery={setQuery}
             onClose={() => setCommandOpen(false)}
@@ -1854,11 +1940,11 @@ function BlueCrmApplicationPage({ clerkMissing }: AppShellProps) {
           />
         )}
         {chatOpen && (
-          <TwentyChatPanel
+          <DigitalWaveChatPanel
             prompt={aiPrompt}
             setPrompt={setAiPrompt}
             answer={aiAnswer}
-            onAsk={() => runCommand('ask-ai')}
+            onAsk={askAi}
             onClose={() => setChatOpen(false)}
           />
         )}
@@ -1868,22 +1954,39 @@ function BlueCrmApplicationPage({ clerkMissing }: AppShellProps) {
 }
 
 function PanelIcon() {
-  return <span className="inline-flex h-5 w-5 items-center justify-center rounded border border-white/70 text-[10px]">⌘</span>;
+  return <span className="inline-flex h-5 w-5 items-center justify-center rounded border border-white/70 text-[10px]">K</span>;
 }
 
-function CompanyTable({ companies, selectedIds, allSelected, compactRows, hiddenLinkedin, toggleSelected, toggleAll }: {
+function CompanyTable({ companies, selectedIds, allSelected, compactRows, hiddenLinkedin, customColumns, toggleSelected, toggleAll, updateCompany, updateCustomCell, deleteCompany }: {
   companies: CompanyTableRow[];
   selectedIds: string[];
   allSelected: boolean;
   compactRows: boolean;
   hiddenLinkedin: boolean;
+  customColumns: string[];
   toggleSelected: (id: string) => void;
   toggleAll: () => void;
+  updateCompany: (id: string, field: keyof Omit<CompanyTableRow, 'id' | 'color' | 'icon' | 'custom'>, value: string) => void;
+  updateCustomCell: (id: string, column: string, value: string) => void;
+  deleteCompany: (id: string) => void;
 }) {
+  const gridTemplateColumns = [
+    '42px',
+    '220px',
+    '160px',
+    '180px',
+    '180px',
+    '150px',
+    '130px',
+    hiddenLinkedin ? '' : '150px',
+    ...customColumns.map(() => '150px'),
+    '120px',
+  ].filter(Boolean).join(' ');
+
   return (
-    <div className={compactRows ? 'twenty-table compact' : 'twenty-table'}>
-      <div className="twenty-row header">
-        <button className={allSelected ? 'twenty-check checked' : 'twenty-check'} onClick={toggleAll} aria-label="Select all" />
+    <div className={compactRows ? 'dw-table compact' : 'dw-table'}>
+      <div className="dw-row header" style={{ gridTemplateColumns }}>
+        <button className={allSelected ? 'dw-check checked' : 'dw-check'} onClick={toggleAll} aria-label="Select all" />
         <span><Building2 size={19} /> Name</span>
         <span><GitBranch size={18} /> Domain</span>
         <span><BriefcaseBusiness size={18} /> Created by</span>
@@ -1891,17 +1994,26 @@ function CompanyTable({ companies, selectedIds, allSelected, compactRows, hidden
         <span><CalendarIcon /> Creation date</span>
         <span><Users size={18} /> Employees</span>
         {!hiddenLinkedin && <span><Linkedin size={18} /> LinkedIn</span>}
+        {customColumns.map((column) => <span key={column}><List size={18} /> {column}</span>)}
+        <span><Settings size={18} /> Actions</span>
       </div>
       {companies.map((company) => (
-        <div className="twenty-row" key={company.id}>
-          <button className={selectedIds.includes(company.id) ? 'twenty-check checked' : 'twenty-check'} onClick={() => toggleSelected(company.id)} aria-label={`Select ${company.name}`} />
-          <span className="company-name"><i className={company.color}>{company.icon}</i>{company.name}</span>
-          <span><em>{company.domain}</em></span>
-          <span>{company.createdBy === 'System' ? '🛡️ System' : '📚 ' + company.createdBy}</span>
-          <span>{company.owner}</span>
-          <span>{company.createdAt}</span>
-          <span>{typeof company.employees === 'number' ? company.employees.toLocaleString() : ''}</span>
-          {!hiddenLinkedin && <span>{company.linkedin}</span>}
+        <div className="dw-row" key={company.id} style={{ gridTemplateColumns }}>
+          <button className={selectedIds.includes(company.id) ? 'dw-check checked' : 'dw-check'} onClick={() => toggleSelected(company.id)} aria-label={`Select ${company.name}`} />
+          <span className="company-name"><i className={company.color}>{company.icon}</i><input className="dw-cell-input" value={company.name} onChange={(event) => updateCompany(company.id, 'name', event.target.value)} aria-label={`${company.name} name`} /></span>
+          <span><input className="dw-cell-input pill" value={company.domain} onChange={(event) => updateCompany(company.id, 'domain', event.target.value)} aria-label={`${company.name} domain`} /></span>
+          <span><input className="dw-cell-input" value={company.createdBy} onChange={(event) => updateCompany(company.id, 'createdBy', event.target.value)} aria-label={`${company.name} creator`} /></span>
+          <span><input className="dw-cell-input" value={company.owner} onChange={(event) => updateCompany(company.id, 'owner', event.target.value)} aria-label={`${company.name} owner`} /></span>
+          <span><input className="dw-cell-input" value={company.createdAt} onChange={(event) => updateCompany(company.id, 'createdAt', event.target.value)} aria-label={`${company.name} creation date`} /></span>
+          <span><input className="dw-cell-input" inputMode="numeric" value={company.employees === '' ? '' : company.employees.toString()} onChange={(event) => updateCompany(company.id, 'employees', event.target.value)} aria-label={`${company.name} employees`} /></span>
+          {!hiddenLinkedin && <span><input className="dw-cell-input" value={company.linkedin} onChange={(event) => updateCompany(company.id, 'linkedin', event.target.value)} aria-label={`${company.name} linkedin`} /></span>}
+          {customColumns.map((column) => (
+            <span key={column}><input className="dw-cell-input" value={company.custom?.[column] ?? ''} onChange={(event) => updateCustomCell(company.id, column, event.target.value)} aria-label={`${company.name} ${column}`} /></span>
+          ))}
+          <span className="dw-row-actions">
+            <button onClick={() => updateCompany(company.id, 'owner', 'Digital Wave Team')} type="button" title="Quick edit owner"><Edit3 size={14} /></button>
+            <button onClick={() => deleteCompany(company.id)} type="button" title="Delete row"><Trash2 size={14} /></button>
+          </span>
         </div>
       ))}
     </div>
@@ -1909,15 +2021,14 @@ function CompanyTable({ companies, selectedIds, allSelected, compactRows, hidden
 }
 
 function CalendarIcon() {
-  return <span className="text-sm">▣</span>;
+  return <span className="text-[10px]">Date</span>;
 }
-
-function TwentyModulePanel({ module, onOpenCommand }: { module: string; onOpenCommand: () => void }) {
+function DigitalWaveModulePanel({ module, onOpenCommand }: { module: string; onOpenCommand: () => void }) {
   const rows = {
-    People: ['Sarah Johnson - CEO at Acme Cloud', 'Marcus Chen - CTO at Northstar AI', 'Emily Rodriguez - Operations Director'],
-    Opportunities: ['Acme Cloud expansion - $84,000', 'Northstar AI platform - $62,000', 'Blue Ridge Labs rollout - $41,000'],
+    People: ['Lina Carter - CEO at NovaGrid Systems', 'Omar Hale - CTO at Northstar Automation', 'Maya Stone - Operations Director'],
+    Opportunities: ['NovaGrid Systems expansion - $84,000', 'Northstar Automation platform - $62,000', 'Blue Harbor Logistics rollout - $41,000'],
     Tasks: ['Send proposal follow-up', 'Prepare security answers', 'Schedule onboarding call'],
-    Notes: ['Acme discovery notes', 'Northstar security review', 'Blue Ridge negotiation'],
+    Notes: ['Acme discovery notes', 'Northstar automation review', 'Blue Harbor negotiation'],
     Dashboards: ['Revenue dashboard', 'Workflow dashboard', 'Team performance dashboard'],
     Workflows: ['Lead intake and routing', 'Opportunity follow-up', 'Task completion notifications'],
     Settings: ['Workspace settings', 'Experience settings', 'Email settings'],
@@ -1925,19 +2036,19 @@ function TwentyModulePanel({ module, onOpenCommand }: { module: string; onOpenCo
   }[module] ?? [];
 
   return (
-    <div className="twenty-table-card module-panel">
-      <div className="twenty-viewbar">
-        <div className="twenty-view-title"><List size={20} /> {module} · {rows.length}</div>
-        <div className="twenty-view-actions"><button onClick={onOpenCommand}>Search</button><button>Options</button></div>
+    <div className="dw-table-card module-panel">
+      <div className="dw-viewbar">
+        <div className="dw-view-title"><List size={20} /> {module} · {rows.length}</div>
+        <div className="dw-view-actions"><button onClick={onOpenCommand} type="button">Search</button><button onClick={onOpenCommand} type="button">Options</button></div>
       </div>
-      <div className="twenty-module-grid">
-        {rows.map((row) => <button key={row} onClick={onOpenCommand}>{row}<ChevronRight size={16} /></button>)}
+      <div className="dw-module-grid">
+        {rows.map((row) => <button key={row} onClick={onOpenCommand} type="button">{row}<ChevronRight size={16} /></button>)}
       </div>
     </div>
   );
 }
 
-function TwentyCommandMenu({ query, setQuery, onClose, onRun, activeModule }: {
+function DigitalWaveCommandMenu({ query, setQuery, onClose, onRun, activeModule }: {
   query: string;
   setQuery: (value: string) => void;
   onClose: () => void;
@@ -1946,6 +2057,7 @@ function TwentyCommandMenu({ query, setQuery, onClose, onRun, activeModule }: {
 }) {
   const actions = [
     ['new-company', Plus, 'New Company', 'N'],
+    ['add-column', List, 'Add Column', 'C'],
     ['search', Search, 'Search', '/'],
     ['filter', SlidersHorizontal, `Filter ${activeModule}`, 'F'],
     ['sort-name', ArrowUpDown, 'Sort by name', 'S'],
@@ -1956,16 +2068,18 @@ function TwentyCommandMenu({ query, setQuery, onClose, onRun, activeModule }: {
     ['People', Users, 'Open People', ''],
     ['Opportunities', Target, 'Open Opportunities', ''],
     ['Tasks', CheckCircle2, 'Open Tasks', ''],
+    ['Workflows', CircuitBoard, 'Open Workflows', ''],
+    ['AI Chat', Bot, 'Open AI Chat', ''],
     ['Settings', Settings, 'Go to Settings', 'G S'],
   ] as Array<[string, LucideIcon, string, string]>;
   const filtered = actions.filter(([, , label]) => label.toLowerCase().includes(query.toLowerCase()));
 
   return (
-    <div className="twenty-command-overlay">
-      <div className="twenty-command-panel">
-        <div className="twenty-command-search"><Search size={20} /><input value={query} onChange={(event) => setQuery(event.target.value)} autoFocus placeholder="Search companies, actions, settings..." /><button onClick={onClose}><X size={17} /></button></div>
+    <div className="dw-command-overlay">
+      <div className="dw-command-panel">
+        <div className="dw-command-search"><Search size={20} /><input value={query} onChange={(event) => setQuery(event.target.value)} autoFocus placeholder="Search companies, actions, settings..." /><button onClick={onClose}><X size={17} /></button></div>
         <p>Other</p>
-        <div className="twenty-command-list">
+        <div className="dw-command-list">
           {filtered.map(([action, Icon, label, shortcut]) => (
             <button key={action} onClick={() => onRun(action)}><span><Icon size={21} /></span>{label}{shortcut && <em>{shortcut}</em>}</button>
           ))}
@@ -1975,13 +2089,53 @@ function TwentyCommandMenu({ query, setQuery, onClose, onRun, activeModule }: {
   );
 }
 
-function TwentyChatPanel({ prompt, setPrompt, answer, onAsk, onClose }: { prompt: string; setPrompt: (value: string) => void; answer: string; onAsk: () => void; onClose: () => void }) {
+function DigitalWaveAiChatPage({ prompt, setPrompt, answer, onAsk, companiesCount, selectedCount, lastAction }: {
+  prompt: string;
+  setPrompt: (value: string) => void;
+  answer: string;
+  onAsk: () => void;
+  companiesCount: number;
+  selectedCount: number;
+  lastAction: string;
+}) {
   return (
-    <div className="twenty-command-overlay">
-      <div className="twenty-command-panel chat">
-        <div className="twenty-command-search"><Bot size={20} /><input value={prompt} onChange={(event) => setPrompt(event.target.value)} /><button onClick={onClose}><X size={17} /></button></div>
-        <div className="twenty-chat-answer">{answer || 'Ask Digital Wave AI about your companies, opportunities, or next actions.'}</div>
-        <button className="twenty-chat-send" onClick={onAsk}>Ask AI</button>
+    <div className="dw-table-card ai-page">
+      <div className="dw-viewbar">
+        <div className="dw-view-title"><Bot size={20} /> Digital Wave AI Assistant</div>
+        <div className="dw-view-actions">
+          <button onClick={onAsk} type="button">Send</button>
+        </div>
+      </div>
+      <div className="ai-page-grid">
+        <section className="ai-page-chat">
+          <label>
+            Message
+            <textarea value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder="Ask about leads, companies, opportunities, workflows, or next actions." />
+          </label>
+          <button className="dw-chat-send" onClick={onAsk} type="button"><Sparkles size={15} /> Ask AI</button>
+          <div className="dw-chat-answer">{answer || 'Ask Digital Wave AI about companies, opportunities, workflow automation, or next best actions. The CRM sends this through the backend only.'}</div>
+        </section>
+        <aside className="ai-page-context">
+          <b>CRM context</b>
+          <span>Company: Digital Wave</span>
+          <span>Domain: digital-wave.solutions</span>
+          <span>Email: info@digital-wave.solutions</span>
+          <span>Companies loaded: {companiesCount}</span>
+          <span>Selected records: {selectedCount}</span>
+          <span>Last action: {lastAction}</span>
+        </aside>
+      </div>
+    </div>
+  );
+}
+
+function DigitalWaveChatPanel({ prompt, setPrompt, answer, onAsk, onClose }: { prompt: string; setPrompt: (value: string) => void; answer: string; onAsk: () => void; onClose: () => void }) {
+  return (
+    <div className="dw-command-overlay">
+      <div className="dw-command-panel chat">
+        <div className="dw-command-search"><Bot size={20} /><input value={prompt} onChange={(event) => setPrompt(event.target.value)} /><button onClick={onClose}><X size={17} /></button></div>
+        <div className="dw-chat-answer">{answer || 'Ask Digital Wave AI about your companies, opportunities, or next actions.'}</div>
+        <button className="dw-chat-send" onClick={onAsk}>Ask AI</button>
       </div>
     </div>
   );
