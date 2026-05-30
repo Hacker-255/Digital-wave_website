@@ -1,5 +1,18 @@
 import type { Workflow, WorkflowRun, WorkflowVersion } from './types';
 
+interface APIErrorResponse {
+  error?: string;
+  message?: string;
+}
+
+interface OpenAIResponse {
+  choices?: Array<{
+    message?: {
+      content?: string;
+    };
+  }>;
+}
+
 const fallbackWorkflows: Workflow[] = [
   {
     _id: 'wf-1',

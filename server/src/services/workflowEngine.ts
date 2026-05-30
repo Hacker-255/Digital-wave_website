@@ -1,88 +1,161 @@
-type WorkflowNode = {
-  id: string;
-  data?: {
-    label?: string;
-    kind?: string;
+import { Workflow } from '../models/Workflow';
+import { WorkflowRun } from '../models/WorkflowRun';
+
+export type WorkflowTriggerType =
+  | 'contact.created'
+  | 'company.created'
+  | 'deal.created'
+  | 'deal.stage_changed'
+  | 'task.completed'
+  | 'manual';
+
+type WorkflowActionResult = {
+  type: string;
+  status: 'success';
+  output: Record<string, unknown>;
+};
+
+type TriggerData = Record<string, unknown>;
+
+function getPath(source: unknown, path: string): unknown {
+  if (!path) return undefined;
+  return path.split('.').reduce<unknown>((value, key) => {
+    if (value && typeof value === 'object' && key in value) {
+      return (value as Record<string, unknown>)[key];
+    }
+    return undefined;
+  }, source);
+}
+
+function renderTemplate(value: unknown, triggerData: TriggerData): unknown {
+  if (typeof value !== 'string') return value;
+  return value.replace(/\{\{\s*([^}]+?)\s*\}\}/g, (_, path: string) => {
+    const resolved = getPath(triggerData, path.trim());
+    return resolved == null ? '' : String(resolved);
+  });
+}
+
+function renderPayload(payload: Record<string, unknown>, triggerData: TriggerData) {
+  return Object.fromEntries(
+    Object.entries(payload).map(([key, value]) => [key, renderTemplate(value, triggerData)]),
+  );
+}
+
+function conditionMatches(condition: { field: string; operator: string; value: unknown }, triggerData: TriggerData) {
+  const actual = getPath(triggerData, condition.field);
+  const expected = renderTemplate(condition.value, triggerData);
+
+  switch (condition.operator) {
+    case 'not_equals': return String(actual ?? '') !== String(expected ?? '');
+    case 'contains': return String(actual ?? '').toLowerCase().includes(String(expected ?? '').toLowerCase());
+    case 'is_empty': return actual == null || actual === '';
+    case 'is_not_empty': return actual != null && actual !== '';
+    case 'greater_than': return Number(actual) > Number(expected);
+    case 'less_than': return Number(actual) < Number(expected);
+    case 'equals':
+    default:
+      return String(actual ?? '') === String(expected ?? '');
+  }
+}
+
+async function executeAction(action: { type: string; targetEntity?: string; payload?: Record<string, unknown> }, triggerData: TriggerData): Promise<WorkflowActionResult> {
+  const payload = renderPayload(action.payload ?? {}, triggerData);
+
+  // Version 1 records action intent in the workflow run. Real CRM persistence can plug in here
+  // without changing workflow definitions or run history shape.
+  return {
+    type: action.type,
+    status: 'success',
+    output: {
+      targetEntity: action.targetEntity || '',
+      payload,
+      executedAt: new Date().toISOString(),
+    },
   };
-};
-
-type WorkflowEdge = {
-  source: string;
-  target: string;
-};
-
-type ExecutableWorkflow = {
-  nodes: WorkflowNode[];
-  edges: WorkflowEdge[];
-};
-
-type ExecutionResult = {
-  status: 'success' | 'failed';
-  logs: string[];
-  errorMessages: string[];
-};
-
-function orderedNodes(workflow: ExecutableWorkflow) {
-  const incoming = new Set(workflow.edges.map((edge) => edge.target));
-  const trigger = workflow.nodes.find((node) => !incoming.has(node.id)) ?? workflow.nodes[0];
-  const visited = new Set<string>();
-  const result: WorkflowNode[] = [];
-
-  function visit(node?: WorkflowNode) {
-    if (!node || visited.has(node.id)) return;
-    visited.add(node.id);
-    result.push(node);
-    workflow.edges.filter((edge) => edge.source === node.id).forEach((edge) => {
-      visit(workflow.nodes.find((candidate) => candidate.id === edge.target));
-    });
-  }
-
-  visit(trigger);
-  workflow.nodes.forEach((node) => visit(node));
-  return result;
 }
 
-async function executeNode(node: WorkflowNode, inputData: Record<string, unknown>) {
-  const kind = node.data?.kind ?? 'Action Node';
-  const label = node.data?.label ?? 'Unnamed node';
-
-  if (kind.includes('Condition')) {
-    return `Validated condition "${label}" against ${Object.keys(inputData).length} input fields`;
-  }
-
-  if (kind.includes('Delay')) {
-    await new Promise((resolve) => setTimeout(resolve, 75));
-    return `Delay "${label}" completed`;
-  }
-
-  if (kind.includes('Form')) {
-    return `Captured form step "${label}"`;
-  }
-
-  if (kind.includes('Trigger')) {
-    return `Trigger "${label}" accepted`;
-  }
-
-  return `Executed action "${label}"`;
-}
-
-export async function runWorkflow(workflow: ExecutableWorkflow, inputData: Record<string, unknown>): Promise<ExecutionResult> {
-  const logs: string[] = [];
+async function executeWorkflow(workflow: any, triggerData: TriggerData) {
+  const startedAt = new Date();
 
   try {
-    const trigger = workflow.nodes.find((node) => String(node.data?.kind).includes('Trigger'));
-    if (!trigger) {
-      throw new Error('Workflow must include a trigger node.');
+    const conditions = workflow.conditions ?? [];
+    const failedCondition = conditions.find((condition: any) => !conditionMatches(condition, triggerData));
+    if (failedCondition) {
+      const result = {
+        skipped: true,
+        reason: `Condition failed: ${failedCondition.field} ${failedCondition.operator}`,
+        actions: [],
+      };
+      await WorkflowRun.create({
+        workflowId: workflow._id,
+        status: 'success',
+        triggerData,
+        result,
+        startedAt,
+        completedAt: new Date(),
+      });
+      return result;
     }
 
-    for (const node of orderedNodes(workflow)) {
-      logs.push(await executeNode(node, inputData));
+    const actions = [];
+    for (const action of workflow.actions ?? []) {
+      actions.push(await executeAction(action, triggerData));
     }
 
-    logs.push('Workflow finished successfully');
-    return { status: 'success', logs, errorMessages: [] };
+    const result = { skipped: false, actions };
+    await WorkflowRun.create({
+      workflowId: workflow._id,
+      status: 'success',
+      triggerData,
+      result,
+      startedAt,
+      completedAt: new Date(),
+    });
+    return result;
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown workflow execution error';
-    return { status: 'failed', logs, errorMessages: [message] };
+    const message = error instanceof Error ? error.message : 'Workflow execution failed';
+    await WorkflowRun.create({
+      workflowId: workflow._id,
+      status: 'failed',
+      triggerData,
+      result: {},
+      errorMessage: message,
+      startedAt,
+      completedAt: new Date(),
+    });
+    throw error;
+  }
+}
+
+export async function runWorkflowById(workflowId: string, triggerData: TriggerData) {
+  const workflow = await Workflow.findById(workflowId);
+  if (!workflow) throw new Error('Workflow not found');
+  return executeWorkflow(workflow, triggerData);
+}
+
+export async function runMatchingWorkflows(triggerType: WorkflowTriggerType, triggerData: TriggerData) {
+  const workflows = await Workflow.find({ status: 'active', 'trigger.type': triggerType });
+  const results = [];
+
+  for (const workflow of workflows) {
+    try {
+      results.push({ workflowId: workflow._id, result: await executeWorkflow(workflow, triggerData) });
+    } catch (error) {
+      results.push({
+        workflowId: workflow._id,
+        error: error instanceof Error ? error.message : 'Workflow failed',
+      });
+    }
+  }
+
+  return results;
+}
+
+export async function safelyRunMatchingWorkflows(triggerType: WorkflowTriggerType, triggerData: TriggerData) {
+  try {
+    return await runMatchingWorkflows(triggerType, triggerData);
+  } catch (error) {
+    console.warn('[Workflow] execution failed without interrupting CRM action', error);
+    return [];
   }
 }

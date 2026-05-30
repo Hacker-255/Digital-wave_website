@@ -1,109 +1,114 @@
 import type { Request, Response } from 'express';
 import { Workflow } from '../models/Workflow';
 import { WorkflowRun } from '../models/WorkflowRun';
-import { WorkflowVersion } from '../models/WorkflowVersion';
-import { runWorkflow } from '../services/workflowEngine';
+import { runMatchingWorkflows, runWorkflowById, type WorkflowTriggerType } from '../services/workflowEngine';
 
 function canPersist() {
   return Workflow.db.readyState === 1;
 }
 
-export async function createWorkflow(request: Request, response: Response) {
-  if (!canPersist()) return response.status(503).send('MongoDB is not connected');
-  const workflow = await Workflow.create(request.body);
-  await WorkflowVersion.create({ workflowId: workflow._id, versionNumber: workflow.version, snapshot: workflow.toObject() });
-  response.status(201).json(workflow);
+function asyncHandler(fn: (req: Request, res: Response) => Promise<void>) {
+  return async (req: Request, res: Response) => {
+    try {
+      await fn(req, res);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Internal server error';
+      res.status(500).json({ error: message });
+    }
+  };
 }
 
-export async function listWorkflows(_: Request, response: Response) {
-  if (!canPersist()) return response.status(503).send('MongoDB is not connected');
+function requireDb(req: Request, res: Response) {
+  if (canPersist()) return true;
+  res.status(503).json({ error: 'MongoDB is not connected' });
+  return false;
+}
+
+function validateWorkflow(body: any) {
+  if (!body.name?.trim()) return 'Workflow name is required';
+  if (!body.trigger?.type) return 'Workflow trigger is required';
+  if (!Array.isArray(body.actions) || body.actions.length === 0) return 'At least one workflow action is required';
+  return '';
+}
+
+export const listWorkflows = asyncHandler(async (request, response) => {
+  if (!requireDb(request, response)) return;
   const workflows = await Workflow.find().sort({ updatedAt: -1 });
   response.json(workflows);
-}
+});
 
-export async function getWorkflow(request: Request, response: Response) {
-  if (!canPersist()) return response.status(503).send('MongoDB is not connected');
-  const workflow = await Workflow.findById(request.params.id);
-  if (!workflow) return response.status(404).send('Workflow not found');
-  response.json(workflow);
-}
+export const createWorkflow = asyncHandler(async (request, response) => {
+  if (!requireDb(request, response)) return;
+  const validationError = validateWorkflow(request.body);
+  if (validationError) { response.status(400).json({ error: validationError }); return; }
 
-export async function updateWorkflow(request: Request, response: Response) {
-  if (!canPersist()) return response.status(503).send('MongoDB is not connected');
-  const existing = await Workflow.findById(request.params.id);
-  if (!existing) return response.status(404).send('Workflow not found');
-
-  const nextVersion = existing.version + 1;
-  const workflow = await Workflow.findByIdAndUpdate(
-    request.params.id,
-    { ...request.body, version: nextVersion },
-    { new: true, runValidators: true },
-  );
-
-  await WorkflowVersion.create({ workflowId: existing._id, versionNumber: nextVersion, snapshot: workflow?.toObject() });
-  response.json(workflow);
-}
-
-export async function deleteWorkflow(request: Request, response: Response) {
-  if (!canPersist()) return response.status(503).send('MongoDB is not connected');
-  await Workflow.findByIdAndUpdate(request.params.id, { status: 'archived' });
-  response.json({ ok: true });
-}
-
-export async function runWorkflowById(request: Request, response: Response) {
-  if (!canPersist()) return response.status(503).send('MongoDB is not connected');
-  const workflow = await Workflow.findById(request.params.id);
-  if (!workflow) return response.status(404).send('Workflow not found');
-
-  const run = await WorkflowRun.create({
-    workflowId: workflow._id,
-    status: 'running',
-    inputData: request.body.inputData ?? {},
-    startedAt: new Date(),
+  const workflow = await Workflow.create({
+    ...request.body,
+    createdBy: request.authUser?.email || request.authUser?.clerkId || 'unknown',
   });
+  response.status(201).json(workflow);
+});
 
-  const result = await runWorkflow({ nodes: workflow.nodes, edges: workflow.edges }, request.body.inputData ?? {});
-
-  run.status = result.status;
-  run.logs = result.logs;
-  run.errorMessages = result.errorMessages;
-  run.finishedAt = new Date();
-  await run.save();
-  await Workflow.findByIdAndUpdate(workflow._id, { $inc: { runs: 1 } });
-
-  response.json(run);
-}
-
-export async function listRuns(request: Request, response: Response) {
-  if (!canPersist()) return response.status(503).send('MongoDB is not connected');
-  const runs = await WorkflowRun.find({ workflowId: request.params.id }).sort({ createdAt: -1 });
-  response.json(runs);
-}
-
-export async function listVersions(request: Request, response: Response) {
-  if (!canPersist()) return response.status(503).send('MongoDB is not connected');
-  const versions = await WorkflowVersion.find({ workflowId: request.params.id }).sort({ versionNumber: -1 });
-  response.json(versions);
-}
-
-export async function restoreVersion(request: Request, response: Response) {
-  if (!canPersist()) return response.status(503).send('MongoDB is not connected');
-  const version = await WorkflowVersion.findById(request.params.versionId);
-  if (!version) return response.status(404).send('Workflow version not found');
-
-  const snapshot = version.snapshot;
-  const workflow = await Workflow.findByIdAndUpdate(
-    request.params.id,
-    {
-      name: snapshot.name,
-      description: snapshot.description,
-      status: 'draft',
-      nodes: snapshot.nodes,
-      edges: snapshot.edges,
-      version: snapshot.version + 1,
-    },
-    { new: true },
-  );
-
+export const getWorkflow = asyncHandler(async (request, response) => {
+  if (!requireDb(request, response)) return;
+  const workflow = await Workflow.findById(request.params.id);
+  if (!workflow) { response.status(404).json({ error: 'Workflow not found' }); return; }
   response.json(workflow);
+});
+
+export const updateWorkflow = asyncHandler(async (request, response) => {
+  if (!requireDb(request, response)) return;
+  const workflow = await Workflow.findByIdAndUpdate(request.params.id, request.body, { new: true, runValidators: true });
+  if (!workflow) { response.status(404).json({ error: 'Workflow not found' }); return; }
+  response.json(workflow);
+});
+
+export const deleteWorkflow = asyncHandler(async (request, response) => {
+  if (!requireDb(request, response)) return;
+  const workflow = await Workflow.findByIdAndDelete(request.params.id);
+  if (!workflow) { response.status(404).json({ error: 'Workflow not found' }); return; }
+  response.json({ ok: true });
+});
+
+export const activateWorkflow = asyncHandler(async (request, response) => {
+  if (!requireDb(request, response)) return;
+  const workflow = await Workflow.findByIdAndUpdate(request.params.id, { status: 'active' }, { new: true });
+  if (!workflow) { response.status(404).json({ error: 'Workflow not found' }); return; }
+  response.json(workflow);
+});
+
+export const deactivateWorkflow = asyncHandler(async (request, response) => {
+  if (!requireDb(request, response)) return;
+  const workflow = await Workflow.findByIdAndUpdate(request.params.id, { status: 'inactive' }, { new: true });
+  if (!workflow) { response.status(404).json({ error: 'Workflow not found' }); return; }
+  response.json(workflow);
+});
+
+export const testWorkflow = asyncHandler(async (request, response) => {
+  if (!requireDb(request, response)) return;
+  const result = await runWorkflowById(String(request.params.id), request.body.triggerData ?? sampleTriggerData());
+  response.json({ result });
+});
+
+export const manualRun = asyncHandler(async (request, response) => {
+  if (!requireDb(request, response)) return;
+  const triggerType = String(request.body.triggerType ?? 'manual') as WorkflowTriggerType;
+  const results = await runMatchingWorkflows(triggerType, request.body.triggerData ?? sampleTriggerData());
+  response.json({ results });
+});
+
+export const listWorkflowRuns = asyncHandler(async (request, response) => {
+  if (!requireDb(request, response)) return;
+  const query = request.query.workflowId ? { workflowId: request.query.workflowId } : {};
+  const runs = await WorkflowRun.find(query).sort({ startedAt: -1 }).limit(100);
+  response.json(runs);
+});
+
+function sampleTriggerData() {
+  return {
+    contact: { name: 'Maya Stone', ownerId: 'admin-default' },
+    company: { name: 'NovaGrid Systems', ownerId: '' },
+    deal: { name: 'Website redesign', stage: 'Won', previousStage: 'Proposal' },
+    task: { title: 'Send proposal follow-up', status: 'completed' },
+  };
 }

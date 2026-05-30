@@ -1,4 +1,4 @@
-import type { Edge, Node } from 'react-flow-renderer';
+import type { Edge, Node } from 'reactflow';
 
 export type WorkflowStatus = 'active' | 'draft' | 'archived';
 

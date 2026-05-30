@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import ReactFlow, {
   addEdge,
   Background,
@@ -9,12 +9,12 @@ import ReactFlow, {
   type Node,
   useEdgesState,
   useNodesState,
-} from 'react-flow-renderer';
-import { Clock, Diamond, FileText, MousePointerClick, Plus, Save, Send, Split, Trash2, Zap } from 'lucide-react';
+} from 'reactflow';
+import { Clock, Diamond, FileText, MousePointerClick, Plus, Save, Send, Split, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '../../lib/api';
 import type { Workflow } from '../../lib/types';
-import 'react-flow-renderer/dist/style.css';
+import 'reactflow/dist/style.css';
 
 const nodeLibrary = [
   { type: 'Trigger Node', label: 'Manual Trigger', icon: MousePointerClick, color: '#00d9ff' },
@@ -41,7 +41,6 @@ type WorkflowBuilderProps = {
 };
 
 export function WorkflowBuilder({ workflow, onSave }: WorkflowBuilderProps) {
-  const canvasRef = useRef<HTMLDivElement | null>(null);
   const [nodes, setNodes, onNodesChange] = useNodesState(workflow?.nodes ?? []);
   const [edges, setEdges, onEdgesChange] = useEdgesState(workflow?.edges ?? []);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
@@ -54,7 +53,7 @@ export function WorkflowBuilder({ workflow, onSave }: WorkflowBuilderProps) {
   }, [workflow, setEdges, setNodes]);
 
   const onConnect = useCallback(
-    (connection: Edge | Connection) => setEdges((items) => addEdge({ ...connection, animated: true, style: { stroke: '#00d9ff' } }, items)),
+    (connection: Connection) => setEdges((items) => addEdge({ ...connection, animated: true, style: { stroke: '#00d9ff' } }, items)),
     [setEdges],
   );
 
@@ -64,11 +63,11 @@ export function WorkflowBuilder({ workflow, onSave }: WorkflowBuilderProps) {
     return { hasTrigger, orphaned };
   }, [edges, nodes]);
 
-  function buildNode(item: (typeof nodeLibrary)[number], position?: { x: number; y: number }) {
+  function addNode(item: (typeof nodeLibrary)[number]) {
     const node: Node = {
       id: crypto.randomUUID(),
       type: nodes.length === 0 ? 'input' : 'default',
-      position: position ?? { x: 140 + nodes.length * 55, y: 120 + (nodes.length % 4) * 70 },
+      position: { x: 140 + nodes.length * 55, y: 120 + (nodes.length % 4) * 70 },
       data: { label: item.label, kind: item.type },
       style: {
         border: `1px solid ${item.color}`,
@@ -77,39 +76,7 @@ export function WorkflowBuilder({ workflow, onSave }: WorkflowBuilderProps) {
         boxShadow: `0 0 22px ${item.color}33`,
       },
     };
-    return node;
-  }
-
-  function addNode(item: (typeof nodeLibrary)[number], position?: { x: number; y: number }) {
-    setNodes((items) => [...items, buildNode(item, position)]);
-  }
-
-  function onDragStart(event: DragEvent<HTMLButtonElement>, item: (typeof nodeLibrary)[number]) {
-    event.dataTransfer.setData('application/digital-wave-node', JSON.stringify({ type: item.type, label: item.label }));
-    event.dataTransfer.effectAllowed = 'move';
-  }
-
-  function onDrop(event: DragEvent<HTMLDivElement>) {
-    event.preventDefault();
-    const payload = event.dataTransfer.getData('application/digital-wave-node');
-    if (!payload || !canvasRef.current) return;
-    const dropped = JSON.parse(payload) as { type: string; label: string };
-    const item = nodeLibrary.find((node) => node.type === dropped.type && node.label === dropped.label);
-    if (!item) return;
-    const bounds = canvasRef.current.getBoundingClientRect();
-    addNode(item, {
-      x: event.clientX - bounds.left - 90,
-      y: event.clientY - bounds.top - 35,
-    });
-    toast.success(`${item.label} node added`);
-  }
-
-  function deleteSelectedNode() {
-    if (!selectedNode) return;
-    setNodes((items) => items.filter((node) => node.id !== selectedNode.id));
-    setEdges((items) => items.filter((edge) => edge.source !== selectedNode.id && edge.target !== selectedNode.id));
-    setSelectedNode(null);
-    toast.success('Node deleted');
+    setNodes((items) => [...items, node]);
   }
 
   async function saveWorkflow() {
@@ -154,14 +121,7 @@ export function WorkflowBuilder({ workflow, onSave }: WorkflowBuilderProps) {
           {nodeLibrary.map((item) => {
             const Icon = item.icon;
             return (
-              <button
-                key={`${item.type}-${item.label}`}
-                className="node-library-item"
-                draggable
-                onDragStart={(event) => onDragStart(event, item)}
-                onClick={() => addNode(item)}
-                type="button"
-              >
+              <button key={`${item.type}-${item.label}`} className="node-library-item" onClick={() => addNode(item)}>
                 <Icon size={16} style={{ color: item.color }} />
                 <span>{item.label}</span>
                 <small>{item.type.replace(' Node', '')}</small>
@@ -180,7 +140,7 @@ export function WorkflowBuilder({ workflow, onSave }: WorkflowBuilderProps) {
           </div>
           <button className="btn-primary" onClick={saveWorkflow}><Save size={15} /> Save</button>
         </div>
-        <div className="canvas-wrap" ref={canvasRef} onDragOver={(event) => event.preventDefault()} onDrop={onDrop}>
+        <div className="canvas-wrap">
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -220,7 +180,6 @@ export function WorkflowBuilder({ workflow, onSave }: WorkflowBuilderProps) {
               <span>ID: {selectedNode.id.slice(0, 8)}</span>
               <span>Connections: {edges.filter((edge) => edge.source === selectedNode.id || edge.target === selectedNode.id).length}</span>
             </div>
-            <button className="btn-secondary w-full" onClick={deleteSelectedNode} type="button"><Trash2 size={15} /> Delete node</button>
           </div>
         ) : (
           <p className="text-sm leading-6 text-slate-400">Select a node to edit its label, validation state, and future execution settings.</p>

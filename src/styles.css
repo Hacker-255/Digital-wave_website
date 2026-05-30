@@ -2,11 +2,149 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================
+   CSS Custom Properties (Theme)
+   ============================ */
+
+:root, .dark {
+  --crm-app-bg: #0a0a0a;
+  --crm-sidebar-bg: #0f0f0f;
+  --crm-text: #ededed;
+  --crm-text-secondary: #a1a1aa;
+  --crm-text-muted: #71717a;
+  --crm-border: rgba(255,255,255,0.08);
+  --crm-border-light: rgba(255,255,255,0.04);
+  --crm-border-accent: rgba(255,255,255,0.12);
+  --crm-card-bg: #111111;
+  --crm-hover: rgba(255,255,255,0.06);
+  --crm-hover-subtle: rgba(255,255,255,0.04);
+  --crm-dropdown-bg: #18181b;
+  --crm-surface: rgba(255,255,255,0.04);
+  --crm-surface-alt: #141414;
+  --crm-overlay: rgba(0,0,0,0.6);
+  --crm-scrollbar: rgba(255,255,255,0.08);
+  --crm-scrollbar-hover: rgba(255,255,255,0.16);
+  --crm-btn-bg: rgba(255,255,255,0.04);
+  --crm-btn-text: #ededed;
+  --crm-btn-border: rgba(255,255,255,0.08);
+  --crm-btn-hover: rgba(255,255,255,0.08);
+  --crm-cta-bg: #ededed;
+  --crm-cta-text: #0a0a0a;
+  --crm-cta-hover: rgba(255,255,255,0.16);
+}
+
+.light {
+  --crm-app-bg: #f5f5f5;
+  --crm-sidebar-bg: #ffffff;
+  --crm-text: #09090b;
+  --crm-text-secondary: #52525b;
+  --crm-text-muted: #6b7280;
+  --crm-border: rgba(0,0,0,0.08);
+  --crm-border-light: rgba(0,0,0,0.04);
+  --crm-border-accent: rgba(0,0,0,0.12);
+  --crm-card-bg: #ffffff;
+  --crm-hover: rgba(0,0,0,0.05);
+  --crm-hover-subtle: rgba(0,0,0,0.03);
+  --crm-dropdown-bg: #ffffff;
+  --crm-surface: rgba(0,0,0,0.03);
+  --crm-surface-alt: #fafafa;
+  --crm-overlay: rgba(0,0,0,0.12);
+  --crm-scrollbar: rgba(0,0,0,0.12);
+  --crm-scrollbar-hover: rgba(0,0,0,0.2);
+  --crm-btn-bg: rgba(0,0,0,0.04);
+  --crm-btn-text: #09090b;
+  --crm-btn-border: rgba(0,0,0,0.08);
+  --crm-btn-hover: rgba(0,0,0,0.06);
+  --crm-cta-bg: #09090b;
+  --crm-cta-text: #f5f5f5;
+  --crm-cta-hover: rgba(255,255,255,0.12);
+}
+
+.light .digital-wave-crm-shell [class*="text-white"] {
+  color: var(--crm-text) !important;
+}
+
+.light .digital-wave-crm-shell [class*="text-white/"] {
+  color: var(--crm-text) !important;
+}
+
+.light .digital-wave-crm-shell [class*="bg-white/"] {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+}
+
+.light .digital-wave-crm-shell [class*="border-white/"] {
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+.light .digital-wave-crm-shell [class*="hover:bg-white/"]:hover {
+  background-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+.light .digital-wave-crm-shell [class*="hover:text-white"]:hover {
+  color: var(--crm-text) !important;
+}
+
+.light .digital-wave-crm-shell [class*="bg-black/"] {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.light .digital-wave-crm-shell [class*="bg-[#050816]"] {
+  background-color: rgba(15, 23, 42, 0.08) !important;
+}
+
+.light .digital-wave-crm-shell [class*="bg-[#151515]"] {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.light .digital-wave-crm-shell [class*="bg-[#0B1023]"] {
+  background-color: rgba(15, 23, 42, 0.08) !important;
+}
+
+.light .digital-wave-crm-shell [class*="hover:bg-[#050816]"]:hover,
+.light .digital-wave-crm-shell [class*="hover:bg-[#151515]"]:hover,
+.light .digital-wave-crm-shell [class*="hover:bg-[#0B1023]"]:hover {
+  background-color: rgba(255, 255, 255, 0.12) !important;
+}
+
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
-body { margin: 0; background: #05070d; color: #e8f6ff; }
+
+body {
+  margin: 0;
+  background: var(--crm-app-bg, #0a0a0a);
+  color: var(--crm-text, #ededed);
+  font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
 a { color: inherit; text-decoration: none; }
 button, input { font: inherit; }
+
+::selection {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--crm-scrollbar, rgba(255,255,255,0.1));
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--crm-scrollbar-hover, rgba(255,255,255,0.2));
+}
+
+.theme-transitioning * {
+  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease !important;
+}
 
 @keyframes pulse-glow {
   0%, 100% { opacity: .75; box-shadow: 0 0 0 rgba(59, 130, 246, 0); }
@@ -17,719 +155,279 @@ button, input { font: inherit; }
   .landing-primary {
     @apply inline-flex h-8 items-center justify-center gap-1.5 rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-medium text-white shadow-lg shadow-blue-500/25 transition-all duration-200 hover:bg-blue-500 active:scale-[0.97] sm:h-auto sm:px-8 sm:py-3 sm:text-sm sm:font-semibold;
   }
-
   .landing-ghost {
     @apply inline-flex h-8 items-center justify-center gap-1.5 rounded-xl border border-white/10 px-3 py-1.5 text-xs font-medium text-gray-300 transition-all duration-200 hover:bg-white/5 hover:text-white active:scale-[0.97] sm:h-auto sm:px-4 sm:py-2 sm:text-sm;
   }
-
   .dark-section {
     @apply relative bg-[#050816];
   }
-
   .dark-section-alt {
     @apply relative bg-[#0B1023];
   }
-
   .section-grid {
     background-image:
       linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
       linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
     background-size: 48px 48px;
   }
-
   .animate-pulse-glow {
     animation: pulse-glow 3s ease-in-out infinite;
   }
-
   .glow-blue-lg {
     box-shadow: 0 0 80px rgba(37, 99, 235, .18), 0 24px 80px rgba(0, 0, 0, .35);
   }
-
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 rounded-xl border border-blue-500 bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 transition hover:bg-blue-500;
   }
-
   .btn-secondary {
     @apply inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[.04] px-4 py-2 text-sm font-semibold text-slate-100 transition hover:border-blue-400/40 hover:bg-blue-500/10;
   }
-
-  .icon-btn {
-    @apply inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-100;
-  }
-
-  .metric {
-    @apply border border-slate-200 bg-white p-4 shadow-[0_12px_34px_rgba(15,23,42,.06)];
-  }
-
-  .metric strong {
-    @apply block text-2xl text-slate-950;
-  }
-
-  .metric span {
-    @apply text-xs uppercase tracking-[.2em] text-slate-500;
-  }
-
-  .dashboard-shell {
-    @apply overflow-hidden border border-slate-200 bg-white shadow-[0_28px_80px_rgba(15,23,42,.12)];
-  }
-
-  .crm-row {
-    @apply flex items-center gap-3 border border-slate-200 bg-slate-50 p-3;
-  }
-
-  .crm-row b { @apply block text-sm; }
-  .crm-row span { @apply text-xs text-slate-500; }
-
-  .automation-preview {
-    @apply flex min-h-[280px] flex-col items-center justify-center border border-slate-200 bg-slate-50 p-5;
-  }
-
-  .node-card {
-    @apply w-full max-w-[230px] border bg-white px-4 py-3 text-center text-sm font-semibold text-slate-900;
-  }
-
-  .node-card.cyan { @apply border-cyan-300/60 shadow-[0_0_28px_rgba(0,217,255,.18)]; }
-  .node-card.blue { @apply border-blue-400/60 shadow-[0_0_28px_rgba(8,119,255,.18)]; }
-  .node-card.green { @apply border-emerald-300/60 shadow-[0_0_28px_rgba(52,211,153,.16)]; }
-  .flow-line { @apply h-9 w-px bg-cyan-300/60; }
-
-  .section-band {
-    @apply border-y border-slate-200 bg-white;
-  }
-
-  .section-heading {
-    @apply mb-8 max-w-3xl;
-  }
-
-  .section-heading span, .eyebrow {
-    @apply mb-3 block text-xs font-semibold uppercase tracking-[.22em] text-sky-600;
-  }
-
-  .section-heading h2 {
-    @apply text-3xl font-semibold leading-tight md:text-5xl;
-  }
-
-  .feature-card {
-    @apply border border-slate-200 bg-white p-5 shadow-[0_14px_40px_rgba(15,23,42,.05)] transition hover:border-sky-300 hover:bg-sky-50;
-  }
-
-  .feature-card h3 { @apply mt-5 text-lg font-semibold; }
-  .feature-card p { @apply mt-2 text-sm leading-6 text-slate-600; }
-
-  .pricing-card {
-    @apply flex flex-col justify-between gap-8 border border-slate-200 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,.06)] md:min-h-[310px];
-  }
-
-  .pricing-card span { @apply text-sm uppercase tracking-[.2em] text-sky-600; }
-  .pricing-card h3 { @apply mt-4 text-5xl font-semibold; }
-  .pricing-card small { @apply ml-2 text-base font-normal text-slate-500; }
-  .pricing-card p { @apply mt-4 max-w-xl leading-7 text-slate-600; }
-
-  .crm-app-shell {
-    @apply grid overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.03] shadow-2xl shadow-blue-500/5 backdrop-blur-xl lg:grid-cols-[240px_1fr];
-  }
-
-  .crm-sidebar {
-    @apply border-b border-white/10 bg-black/20 p-4 lg:border-b-0 lg:border-r;
-  }
-
-  .crm-sidebar b, .crm-sidebar span {
-    @apply block;
-  }
-
-  .crm-sidebar span {
-    @apply text-xs uppercase tracking-[.18em] text-slate-500;
-  }
-
-  .crm-nav-item {
-    @apply mb-2 flex w-full items-center gap-3 rounded-xl border border-transparent px-3 py-3 text-left text-sm text-slate-300 transition hover:border-blue-500/30 hover:bg-blue-500/10;
-  }
-
-  .crm-nav-item.active {
-    @apply border-blue-500/35 bg-blue-500/10 text-blue-100;
-  }
-
-  .crm-workspace {
-    @apply p-5;
-  }
-
-  .crm-workspace-header {
-    @apply mb-5 flex flex-col gap-4 border-b border-white/10 pb-5 md:flex-row md:items-center md:justify-between;
-  }
-
-  .crm-workspace-header h2 {
-    @apply text-3xl font-semibold;
-  }
-
-  .pipeline-grid {
-    @apply grid gap-4 md:grid-cols-3;
-  }
-
-  .deal-card {
-    @apply rounded-2xl border border-white/[0.06] bg-white/[.04] p-4 transition hover:border-blue-500/25 hover:bg-white/[.06];
-  }
-
-  .deal-card span {
-    @apply text-xs uppercase tracking-[.18em] text-blue-300;
-  }
-
-  .deal-card h3 {
-    @apply mt-4 text-lg font-semibold;
-  }
-
-  .deal-card b {
-    @apply mt-2 block text-2xl;
-  }
-
-  .deal-card p {
-    @apply mt-3 text-sm text-slate-400;
-  }
-
-  .crm-data-grid {
-    @apply mt-4 grid gap-4 md:grid-cols-3;
-  }
-
-  .crm-data-grid div {
-    @apply rounded-2xl border border-white/[0.06] bg-black/20 p-4;
-  }
-
-  .crm-data-grid span, .crm-data-grid strong {
-    @apply block;
-  }
-
-  .crm-data-grid span {
-    @apply text-sm text-slate-400;
-  }
-
-  .crm-data-grid strong {
-    @apply mt-2 text-2xl;
-  }
-
-  .crm-list-row {
-    @apply flex flex-col gap-3 rounded-2xl border border-white/[0.06] bg-white/[.04] p-4 transition hover:border-blue-500/25 hover:bg-white/[.06] md:flex-row md:items-center md:justify-between;
-  }
-
-  .crm-list-row b, .crm-list-row span {
-    @apply block;
-  }
-
-  .crm-list-row b {
-    @apply text-base text-slate-100;
-  }
-
-  .crm-list-row span {
-    @apply mt-1 text-sm text-slate-400;
-  }
-
-  .crm-list-row em {
-    @apply not-italic rounded-xl border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-xs text-blue-200;
-  }
-
-  .crm-command-button {
-    @apply inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[.04] px-3 py-2 text-xs text-slate-200 transition hover:border-blue-500/30 hover:bg-blue-500/10;
-  }
-
-  .crm-search-stack {
-    @apply flex w-full max-w-xl flex-col gap-2;
-  }
-
-  .crm-global-search {
-    @apply flex items-center gap-2 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-slate-400;
-  }
-
-  .crm-global-search input {
-    @apply min-w-0 flex-1 bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-500;
-  }
-
-  .crm-action-row {
-    @apply mb-4 flex flex-wrap gap-2;
-  }
-
-  .crm-action-row button {
-    @apply inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[.04] px-3 py-2 text-xs text-slate-200 transition hover:border-blue-500/30 hover:bg-blue-500/10;
-  }
-
-  .crm-view-strip {
-    @apply mb-4 flex flex-wrap gap-2;
-  }
-
-  .crm-view-strip span {
-    @apply rounded-xl border border-white/10 bg-white/[.04] px-3 py-1 text-xs text-slate-400;
-  }
-
-  .command-overlay {
-    @apply fixed inset-0 z-[80] flex items-start justify-center bg-black/50 px-4 pt-20 backdrop-blur-sm;
-  }
-
-  .command-panel {
-    @apply w-full max-w-2xl overflow-hidden rounded-2xl border border-white/10 bg-[#151515] shadow-2xl shadow-black/40;
-  }
-
-  .command-search {
-    @apply flex items-center gap-3 border-b border-white/10 px-4 py-3 text-slate-300;
-  }
-
-  .command-search input {
-    @apply min-w-0 flex-1 bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-500;
-  }
-
-  .command-search button {
-    @apply flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10;
-  }
-
-  .command-section-label {
-    @apply px-5 pb-2 pt-4 text-xs font-semibold text-slate-500;
-  }
-
-  .command-list {
-    @apply max-h-[520px] overflow-y-auto px-3 pb-3;
-  }
-
-  .command-item {
-    @apply flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-slate-300 transition hover:bg-white/10;
-  }
-
-  .command-item span {
-    @apply flex h-9 w-9 items-center justify-center rounded-lg bg-white/10 text-slate-300;
-  }
-
-  .command-item b {
-    @apply flex-1 text-sm font-medium;
-  }
-
-  .command-item em {
-    @apply not-italic rounded-md border border-white/15 px-2 py-1 text-xs text-slate-400;
-  }
-
-  .command-empty {
-    @apply px-3 py-8 text-center text-sm text-slate-500;
-  }
-
-  .crm-modal-input {
-    @apply mb-3 w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-slate-100 outline-none focus:border-blue-500/40;
-  }
-
-  .crm-modal-textarea {
-    @apply min-h-40 w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm leading-6 text-slate-100 outline-none focus:border-blue-500/40;
-  }
-
-  .crm-ai-answer {
-    @apply rounded-xl border border-blue-500/20 bg-blue-500/10 p-4 text-sm leading-6 text-blue-100;
-  }
-
   .auth-lock {
     @apply mx-auto mt-12 max-w-2xl rounded-2xl border border-blue-500/20 bg-white/[0.03] p-8 text-center shadow-2xl shadow-blue-500/10 backdrop-blur-xl;
   }
+  .auth-lock svg { @apply mx-auto mb-4 text-blue-200; }
+  .auth-lock h2 { @apply text-3xl font-semibold; }
+  .auth-lock p { @apply mx-auto mt-3 max-w-lg text-sm leading-6 text-slate-400; }
 
-  .auth-lock svg {
-    @apply mx-auto mb-4 text-blue-200;
+  /* Digital Wave CRM Shell Styles - Theme Aware */
+  .digital-wave-crm-shell {
+    @apply grid min-h-screen lg:grid-cols-[220px_1fr];
+    background: var(--crm-app-bg);
+    transition: background-color 0.25s ease;
+  }
+  .digital-wave-sidebar {
+    @apply border-r p-3 backdrop-blur-xl;
+    background: var(--crm-sidebar-bg);
+    border-color: var(--crm-border);
+    color: var(--crm-text);
+    transition: background-color 0.25s ease, border-color 0.25s ease;
+  }
+  .digital-wave-brand {
+    @apply mb-5 flex items-center gap-2 text-xs;
+  }
+  .digital-wave-brand b { @apply flex-1 text-sm; }
+  .digital-wave-brand button { @apply rounded-md p-1; color: var(--crm-text-secondary); transition: background-color 0.2s ease, color 0.2s ease; }
+  .digital-wave-brand button:hover { background: var(--crm-hover); }
+  .digital-wave-brand-mark { @apply flex h-5 w-5 items-center justify-center rounded bg-lime-600 text-[10px] font-bold text-[#061b15]; }
+  .digital-wave-pill-nav { @apply mb-5 flex w-24 rounded-full border p-0.5; border-color: var(--crm-border); background: var(--crm-surface); }
+  .digital-wave-pill-nav button { @apply flex h-7 flex-1 items-center justify-center rounded-full; color: var(--crm-text-secondary); transition: background-color 0.2s ease, color 0.2s ease; }
+  .digital-wave-pill-nav button:hover { background: var(--crm-hover); }
+  .digital-wave-pill-nav button.active { background: var(--crm-surface-alt); color: var(--crm-text); }
+  .digital-wave-new-chat { @apply mb-5 flex w-36 items-center justify-center gap-1.5 rounded-full border px-3 py-1.5 text-xs; border-color: var(--crm-border); background: var(--crm-surface); transition: background-color 0.2s ease, color 0.2s ease; }
+  .digital-wave-new-chat:hover { background: var(--crm-hover); }
+  .digital-wave-section-label { @apply mb-2 mt-4 text-[11px]; color: var(--crm-text-muted); }
+  .digital-wave-sidebar-item { @apply mb-0.5 flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition; color: var(--crm-text-secondary); }
+  .digital-wave-sidebar-item:hover { background: var(--crm-hover); }
+  .digital-wave-sidebar-item.active { @apply shadow-inner; background: var(--crm-surface-alt); color: var(--crm-text); }
+  .digital-wave-sidebar-icon { @apply flex h-5 w-5 items-center justify-center rounded-md; }
+  .digital-wave-main {
+    @apply min-w-0 p-3;
+    color: var(--crm-text);
+    transition: color 0.25s ease;
+  }
+  .digital-wave-topbar { @apply mb-3 flex items-center justify-between; }
+  .digital-wave-title { @apply flex items-center gap-2 text-sm font-semibold; }
+  .digital-wave-top-actions { @apply flex gap-1.5; }
+  .digital-wave-top-actions button {
+    @apply flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs;
+    border-color: var(--crm-border);
+    background: var(--crm-surface);
+    color: var(--crm-text);
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+  .digital-wave-top-actions button:hover { background: var(--crm-hover); }
+  .digital-wave-crm-shell button:not([class*="bg-"]) {
+    @apply rounded-md border px-3 py-1.5 text-xs;
+    border-color: var(--crm-btn-border);
+    background: var(--crm-btn-bg);
+    color: var(--crm-btn-text);
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+  .digital-wave-crm-shell button:not([class*="bg-"]):hover {
+    background: var(--crm-btn-hover);
+  }
+  .digital-wave-quick-add-button {
+    @apply flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium border transition;
+    border-color: var(--crm-btn-border);
+    background: var(--crm-cta-bg);
+    color: var(--crm-cta-text);
+  }
+  .digital-wave-quick-add-button:hover {
+    background: var(--crm-cta-hover);
+  }
+  .digital-wave-crm-shell button:not([class*="bg-"]):hover {
+    background: var(--crm-btn-hover);
+  }
+  .digital-wave-table-card {
+    @apply relative rounded-xl border backdrop-blur-xl;
+    background: var(--crm-card-bg);
+    border-color: var(--crm-border-accent);
+    transition: background-color 0.25s ease, border-color 0.25s ease;
+  }
+  .digital-wave-viewbar {
+    @apply relative flex min-h-[40px] flex-wrap items-center gap-2 border-b px-4 py-2;
+    border-color: var(--crm-border);
+  }
+  .digital-wave-view-title { @apply flex items-center gap-1.5 text-sm font-semibold; }
+  .digital-wave-search {
+    @apply ml-auto flex min-w-44 items-center gap-1.5 rounded-md border px-2 py-1.5;
+    border-color: var(--crm-border-accent);
+    background: var(--crm-surface);
+    color: var(--crm-text-secondary);
+  }
+  .digital-wave-search input {
+    @apply w-full bg-transparent text-xs outline-none;
+    color: var(--crm-text);
+  }
+  .digital-wave-search input::placeholder { color: var(--crm-text-muted); }
+  .digital-wave-view-actions { @apply flex gap-3 text-xs; color: var(--crm-text-secondary); }
+  .digital-wave-view-actions button {
+    @apply rounded-md border px-3 py-1.5 text-xs;
+    border-color: var(--crm-border);
+    background: var(--crm-surface);
+    color: var(--crm-text-secondary);
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+  .digital-wave-view-actions button:hover {
+    background: var(--crm-hover);
+    color: var(--crm-text);
+  }
+  .digital-wave-dropdown {
+    @apply absolute right-4 top-10 z-20 grid min-w-40 gap-1 rounded-xl border p-1.5 shadow-2xl;
+    background: var(--crm-dropdown-bg);
+    border-color: var(--crm-border-accent);
+  }
+  .digital-wave-dropdown button {
+    @apply flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-left text-xs;
+    border-color: var(--crm-border);
+    background: var(--crm-surface);
+    color: var(--crm-text);
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+  .digital-wave-dropdown button:hover { background: var(--crm-hover); }
+  .digital-wave-table { @apply min-w-[780px] overflow-x-auto; }
+  .digital-wave-row { @apply grid min-h-[30px] grid-cols-[32px_130px_110px_110px_110px_85px_75px_110px_44px] items-center border-b text-xs; border-color: var(--crm-border); }
+  .digital-wave-table.compact .digital-wave-row { @apply min-h-[24px] text-[11px]; }
+  .digital-wave-row.header { @apply text-xs; color: var(--crm-text-muted); }
+  .digital-wave-row > span { @apply flex h-full items-center gap-1.5 border-l px-2; border-color: var(--crm-border); }
+  .digital-wave-check { @apply mx-auto h-3.5 w-3.5 rounded border-2; border-color: var(--crm-text-muted); }
+  .digital-wave-check.checked { @apply border-blue-200 bg-blue-300 shadow-[inset_0_0_0_2px_#06227b]; }
+  .company-name i { @apply flex h-4 min-w-4 items-center justify-center rounded text-[9px] not-italic text-white; }
+  .digital-wave-row em { @apply rounded-full border bg-white/5 px-2 py-0.5 not-italic; border-color: var(--crm-border-accent); }
+  .digital-wave-table-footer {
+    @apply grid grid-cols-[140px_1fr_140px_90px] gap-3 border-t px-10 py-3 text-xs;
+    border-color: var(--crm-border);
+    color: var(--crm-text-muted);
+  }
+  .digital-wave-table-footer span { @apply flex items-center gap-1.5; }
+  .digital-wave-module-grid { @apply grid gap-2 p-4; }
+  .digital-wave-module-grid button {
+    @apply flex items-center justify-between rounded-xl border p-3 text-left text-sm;
+    border-color: var(--crm-border);
+    background: var(--crm-surface);
+    color: var(--crm-text);
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+  .digital-wave-module-grid button:hover { background: var(--crm-hover); }
+
+  .digital-wave-btn {
+    @apply rounded-lg border px-3 py-1.5 text-xs transition;
+    border-color: var(--crm-btn-border);
+    background: var(--crm-surface);
+    color: var(--crm-text);
+  }
+  .digital-wave-btn:hover {
+    background: var(--crm-hover);
+  }
+  .digital-wave-btn-primary {
+    @apply font-medium;
+    background: var(--crm-text);
+    color: var(--crm-app-bg);
+    border-color: transparent;
+  }
+  .digital-wave-btn-primary:hover {
+    background: rgba(255, 255, 255, 0.16);
+  }
+  .digital-wave-btn-ghost {
+    @apply rounded-lg text-xs transition;
+    background: transparent;
+    color: var(--crm-text-secondary);
+    border-color: transparent;
+  }
+  .digital-wave-btn-ghost:hover {
+    background: var(--crm-hover);
+    color: var(--crm-text);
+  }
+  .digital-wave-btn-danger {
+    @apply font-medium;
+    background: rgba(248, 113, 113, 0.12);
+    color: #f87171;
+    border-color: rgba(248, 113, 113, 0.24);
+  }
+  .digital-wave-btn-danger:hover {
+    background: rgba(248, 113, 113, 0.18);
+  }
+  .digital-wave-btn-success {
+    @apply font-medium;
+    background: rgba(34, 197, 94, 0.12);
+    color: #22c55e;
+    border-color: rgba(34, 197, 94, 0.24);
+  }
+  .digital-wave-btn-success:hover {
+    background: rgba(34, 197, 94, 0.18);
   }
 
-  .auth-lock h2 {
-    @apply text-3xl font-semibold;
+  .table-action-btn {
+    @apply inline-flex h-7 w-7 items-center justify-center rounded-md border text-white/70 transition hover:text-white;
+    border-color: var(--crm-border);
+    background: var(--crm-surface);
   }
 
-  .auth-lock p {
-    @apply mx-auto mt-3 max-w-lg text-sm leading-6 text-slate-400;
+  .table-action-btn:hover {
+    background: var(--crm-hover);
   }
 
-  .workflow-shell {
-    @apply rounded-2xl border border-white/[0.06] bg-white/[0.03] p-4 shadow-2xl shadow-blue-500/5 backdrop-blur-xl md:p-5;
+  .workflow-field {
+    @apply flex flex-col gap-1 text-xs font-medium text-white/55;
   }
 
-  .workflow-topbar {
-    @apply mb-5 flex flex-col gap-4 border-b border-white/10 pb-5 md:flex-row md:items-end md:justify-between;
+  .workflow-field input,
+  .workflow-field textarea,
+  .workflow-field select,
+  .workflow-field + input,
+  .workflow-field + select {
+    @apply rounded-lg border px-3 py-2 text-sm text-white outline-none;
+    border-color: var(--crm-border);
+    background: rgba(6, 23, 53, 0.72);
   }
 
-  .workflow-topbar h2 { @apply text-2xl font-semibold md:text-4xl; }
-  .workflow-topbar p { @apply mt-2 max-w-2xl text-sm leading-6 text-slate-400; }
-
-  .tab, .chip {
-    @apply rounded-xl border border-white/10 bg-white/[.04] px-3 py-2 text-sm capitalize text-slate-300 transition hover:border-blue-500/30;
+  .workflow-field textarea {
+    @apply min-h-20 resize-y;
   }
 
-  .tab.active, .chip.active {
-    @apply border-blue-500/45 bg-blue-500/10 text-blue-100;
+  .workflow-field option,
+  select option {
+    background: #061735;
+    color: #ffffff;
   }
 
-  .crm-table {
-    @apply w-full border-collapse bg-slate-950/70 text-left text-sm;
+  .digital-wave-table-card input,
+  .digital-wave-table-card textarea,
+  .digital-wave-table-card select {
+    @apply rounded-lg border px-3 py-2 text-sm text-white outline-none;
+    border-color: var(--crm-border);
+    background: rgba(6, 23, 53, 0.72);
   }
-
-  .crm-table th {
-    @apply border-b border-white/10 px-4 py-3 text-xs uppercase tracking-[.16em] text-slate-500;
-  }
-
-  .crm-table td {
-    @apply border-b border-white/5 px-4 py-4 align-middle text-slate-300;
-  }
-
-  .crm-table td b { @apply block text-slate-100; }
-  .crm-table td span { @apply mt-1 block text-xs text-slate-500; }
-  .crm-table tr { @apply cursor-pointer transition hover:bg-cyan-300/5; }
-
-  .status {
-    @apply inline-flex border px-2 py-1 text-xs capitalize;
-  }
-
-  .status.active { @apply border-emerald-300/30 bg-emerald-300/10 text-emerald-200; }
-  .status.draft { @apply border-amber-300/30 bg-amber-300/10 text-amber-200; }
-  .status.archived { @apply border-slate-300/20 bg-slate-300/10 text-slate-300; }
-
-  .table-actions { @apply flex gap-1; }
-  .table-actions button { @apply inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/[.04] hover:border-blue-400/40; }
-
-  .skeleton {
-    @apply h-9 animate-pulse bg-white/10;
-  }
-
-  .run-strip {
-    @apply mt-4 flex flex-col gap-3 border border-white/10 bg-white/[.03] p-3 text-sm text-slate-300 md:flex-row md:items-center md:justify-between;
-  }
-
-  .workflow-activity {
-    @apply mt-4 flex flex-col gap-2 rounded-2xl border border-white/10 bg-white/[.03] p-4 text-sm text-slate-400;
-  }
-
-  .workflow-activity b {
-    @apply text-slate-100;
-  }
-
-  .builder-grid {
-    @apply grid min-h-[680px] gap-4 lg:grid-cols-[240px_1fr_260px];
-  }
-
-  .node-library, .edit-panel {
-    @apply rounded-2xl border border-white/10 bg-black/20 p-3;
-  }
-
-  .panel-heading {
-    @apply mb-3 flex items-center gap-2 border-b border-white/10 pb-3 text-sm font-semibold text-slate-200;
-  }
-
-  .node-library-item {
-    @apply grid w-full grid-cols-[20px_1fr] items-center gap-x-2 rounded-xl border border-white/10 bg-white/[.04] px-3 py-2 text-left text-sm transition hover:border-blue-400/40;
-  }
-
-  .node-library-item small {
-    @apply col-start-2 text-xs text-slate-500;
-  }
-
-  .canvas-panel {
-    @apply min-w-0 overflow-hidden rounded-2xl border border-white/10 bg-black/20;
-  }
-
-  .canvas-toolbar {
-    @apply flex flex-col gap-3 border-b border-white/10 p-3 md:flex-row md:items-center;
-  }
-
-  .canvas-toolbar input, .edit-panel input {
-    @apply w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-blue-400/45;
-  }
-
-  .validation {
-    @apply flex flex-wrap gap-2 text-xs text-slate-400 md:ml-auto;
-  }
-
-  .validation span {
-    @apply border border-white/10 bg-white/[.04] px-2 py-1;
-  }
-
-  .validation .ok { @apply border-emerald-300/30 text-emerald-200; }
-  .validation .warn { @apply border-amber-300/30 text-amber-200; }
-
-  .canvas-wrap {
-    @apply h-[600px] bg-[linear-gradient(135deg,rgba(0,217,255,.05),transparent_35%),#05070d];
-  }
-
-  .edit-panel label {
-    @apply block space-y-2 text-xs uppercase tracking-[.16em] text-slate-500;
-  }
-
-  .detail-box {
-    @apply space-y-2 border border-white/10 bg-white/[.04] p-3 text-sm text-slate-300;
-  }
-
-  .detail-box b, .detail-box span { @apply block; }
-  .empty-state { @apply border border-white/10 bg-white/[.03] p-8 text-center text-slate-400; }
 }
 
-.react-flow__node {
+.reactflow__node {
   border-radius: 0 !important;
   font-weight: 700;
 }
-
-.react-flow__handle {
+.reactflow__handle {
   background: #00d9ff !important;
   border: 1px solid #e5fbff !important;
 }
-
-.react-flow__edge-path {
+.reactflow__edge-path {
   stroke-width: 2;
-}
-
-@layer components {
-  .dw-crm-shell {
-    @apply grid min-h-screen bg-[radial-gradient(circle_at_50%_10%,rgba(46,92,255,.45),transparent_34%),linear-gradient(180deg,#001b78,#00125c_50%,#071147)] lg:grid-cols-[335px_1fr];
-  }
-
-  .dw-sidebar {
-    @apply border-r border-white/15 bg-white/[.03] p-4 text-white backdrop-blur-xl;
-  }
-
-  .dw-brand {
-    @apply mb-8 flex items-center gap-3 text-xl;
-  }
-
-  .dw-brand b {
-    @apply flex-1 text-lg;
-  }
-
-  .dw-brand button {
-    @apply rounded-lg p-1.5 text-white/85 hover:bg-white/10;
-  }
-
-  .dw-brand-mark {
-    @apply flex h-6 w-6 items-center justify-center rounded bg-lime-600 text-sm font-bold text-[#061b15];
-  }
-
-  .dw-pill-nav {
-    @apply mb-8 flex w-28 rounded-full border border-white/10 bg-white/5 p-1;
-  }
-
-  .dw-pill-nav button {
-    @apply flex h-9 flex-1 items-center justify-center rounded-full text-white/80 hover:bg-white/10;
-  }
-
-  .dw-pill-nav button.active {
-    @apply bg-white/15 text-white;
-  }
-
-  .dw-new-chat {
-    @apply mb-8 flex w-36 items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm hover:bg-white/10;
-  }
-
-  .dw-section-label {
-    @apply mb-3 mt-6 text-sm text-white/60;
-  }
-
-  .dw-sidebar-item {
-    @apply mb-1 flex w-full items-center gap-3 rounded-md px-2 py-2 text-left text-sm text-white/90 transition hover:bg-white/10;
-  }
-
-  .dw-sidebar-item.active {
-    @apply bg-white/[.14] shadow-inner;
-  }
-
-  .dw-sidebar-icon {
-    @apply flex h-7 w-7 items-center justify-center rounded-md;
-  }
-
-  .dw-main {
-    @apply min-w-0 p-5 text-white;
-  }
-
-  .dw-topbar {
-    @apply mb-5 flex items-center justify-between;
-  }
-
-  .dw-title {
-    @apply flex items-center gap-3 text-lg font-semibold;
-  }
-
-  .dw-top-actions {
-    @apply flex gap-2;
-  }
-
-  .dw-top-actions button {
-    @apply flex items-center gap-2 rounded-md border border-white/20 bg-white/5 px-3 py-2 text-sm hover:bg-white/10;
-  }
-
-  .dw-table-card {
-    @apply relative overflow-hidden rounded-2xl border border-white/15 bg-white/[.025] backdrop-blur-xl;
-  }
-
-  .dw-viewbar {
-    @apply relative flex min-h-[62px] flex-wrap items-center gap-3 border-b border-white/10 px-7 py-3;
-  }
-
-  .dw-view-title {
-    @apply flex items-center gap-2 text-base font-semibold;
-  }
-
-  .dw-search {
-    @apply ml-auto flex min-w-64 items-center gap-2 rounded-md border border-white/15 bg-white/5 px-3 py-2 text-white/70;
-  }
-
-  .dw-search input {
-    @apply w-full bg-transparent text-sm text-white outline-none placeholder:text-white/45;
-  }
-
-  .dw-view-actions {
-    @apply flex gap-5 text-sm;
-  }
-
-  .dw-view-actions button {
-    @apply hover:text-blue-200;
-  }
-
-  .dw-dropdown {
-    @apply absolute right-6 top-14 z-20 grid min-w-56 gap-1 rounded-xl border border-white/15 bg-[#101842] p-2 shadow-2xl;
-  }
-
-  .dw-dropdown button {
-    @apply flex items-center gap-2 rounded-lg px-3 py-2 text-left text-sm hover:bg-white/10;
-  }
-
-  .dw-table {
-    @apply min-w-[1180px] overflow-x-auto;
-  }
-
-  .dw-row {
-    @apply grid min-h-[42px] grid-cols-[42px_220px_160px_180px_180px_150px_130px_150px] items-center border-b border-white/10 text-sm;
-  }
-
-  .dw-table.compact .dw-row {
-    @apply min-h-[32px] text-xs;
-  }
-
-  .dw-row.header {
-    @apply text-white/90;
-  }
-
-  .dw-row > span {
-    @apply flex h-full items-center gap-2 border-l border-white/10 px-3;
-  }
-
-  .dw-check {
-    @apply mx-auto h-4 w-4 rounded border-2 border-white/80;
-  }
-
-  .dw-check.checked {
-    @apply border-blue-200 bg-blue-300 shadow-[inset_0_0_0_3px_#06227b];
-  }
-
-  .company-name i {
-    @apply flex h-5 min-w-5 items-center justify-center rounded text-[10px] not-italic text-white;
-  }
-
-  .dw-row em {
-    @apply rounded-full border border-white/15 bg-white/5 px-3 py-1 not-italic;
-  }
-
-  .dw-cell-input {
-    @apply min-w-0 flex-1 rounded-md border border-transparent bg-transparent px-1.5 py-1 text-sm text-white outline-none transition placeholder:text-white/30 hover:border-white/10 hover:bg-white/5 focus:border-blue-300/50 focus:bg-white/10;
-  }
-
-  .dw-cell-input.pill {
-    @apply rounded-full border-white/15 bg-white/5 px-3;
-  }
-
-  .dw-row-actions {
-    @apply gap-2;
-  }
-
-  .dw-row-actions button {
-    @apply inline-flex h-7 w-7 items-center justify-center rounded-md border border-white/10 bg-white/5 text-white/75 hover:border-blue-300/50 hover:text-white;
-  }
-
-  .dw-table-footer {
-    @apply grid grid-cols-[220px_1fr_180px_120px] gap-4 border-t border-white/10 px-16 py-4 text-sm text-white/70;
-  }
-
-  .dw-table-footer span {
-    @apply flex items-center gap-2;
-  }
-
-  .module-panel {
-    @apply min-h-[620px];
-  }
-
-  .dw-module-grid {
-    @apply grid gap-3 p-5;
-  }
-
-  .dw-module-grid button {
-    @apply flex items-center justify-between rounded-xl border border-white/10 bg-white/5 p-4 text-left text-sm hover:bg-white/10;
-  }
-
-  .dw-command-overlay {
-    @apply fixed inset-0 z-[90] flex items-start justify-center bg-black/40 px-4 pt-20 backdrop-blur-sm;
-  }
-
-  .dw-command-panel {
-    @apply w-full max-w-2xl rounded-xl border border-white/10 bg-[#151515] p-3 text-white shadow-2xl;
-  }
-
-  .dw-command-panel.chat {
-    @apply max-w-xl;
-  }
-
-  .dw-command-search {
-    @apply flex items-center gap-3 border-b border-white/10 px-2 pb-3;
-  }
-
-  .dw-command-search input {
-    @apply flex-1 bg-transparent text-sm outline-none placeholder:text-white/40;
-  }
-
-  .dw-command-search button {
-    @apply rounded-lg bg-white/10 p-2;
-  }
-
-  .dw-command-panel p {
-    @apply px-3 py-3 text-sm text-white/50;
-  }
-
-  .dw-command-list {
-    @apply max-h-[520px] overflow-y-auto;
-  }
-
-  .dw-command-list button {
-    @apply flex w-full items-center gap-4 rounded-lg px-3 py-2.5 text-left text-sm text-white/80 hover:bg-white/10;
-  }
-
-  .dw-command-list span {
-    @apply flex h-10 w-10 items-center justify-center rounded-lg bg-white/10;
-  }
-
-  .dw-command-list em {
-    @apply ml-auto rounded-md border border-white/20 px-2 py-1 text-sm not-italic text-white/60;
-  }
-
-  .dw-chat-answer {
-    @apply m-3 rounded-xl border border-white/10 bg-white/5 p-4 text-sm leading-6 text-white/75;
-  }
-
-  .dw-chat-send {
-    @apply m-3 inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold hover:bg-blue-500;
-  }
-
-  .ai-page {
-    @apply min-h-[620px];
-  }
-
-  .ai-page-grid {
-    @apply grid gap-4 p-5 lg:grid-cols-[1fr_280px];
-  }
-
-  .ai-page-chat {
-    @apply rounded-2xl border border-white/10 bg-black/20 p-4;
-  }
-
-  .ai-page-chat label {
-    @apply block text-xs font-semibold uppercase tracking-[.16em] text-white/50;
-  }
-
-  .ai-page-chat textarea {
-    @apply mt-2 min-h-36 w-full rounded-xl border border-white/10 bg-slate-950/70 p-3 text-sm normal-case tracking-normal text-white outline-none focus:border-blue-300/50;
-  }
-
-  .ai-page-context {
-    @apply flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/[.04] p-4 text-sm text-white/65;
-  }
-
-  .ai-page-context b {
-    @apply text-white;
-  }
 }

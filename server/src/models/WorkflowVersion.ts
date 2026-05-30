@@ -4,7 +4,7 @@ const workflowVersionSchema = new Schema(
   {
     workflowId: { type: Schema.Types.ObjectId, ref: 'Workflow', required: true },
     versionNumber: { type: Number, required: true },
-    snapshot: { type: Object, required: true },
+    snapshot: { type: Schema.Types.Mixed, required: true },
   },
   { timestamps: true },
 );
