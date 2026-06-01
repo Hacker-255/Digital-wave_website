@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState, createElement, useEffect } from 'react';
+import { useCallback, useMemo, useState, createElement, useEffect, useRef } from 'react';
 import { Building2, ChevronDown, LayoutDashboard, List, Plus, Search, SlidersHorizontal, ArrowUpDown, Download, Linkedin, Check, Sparkles, Zap, AlertTriangle, Upload } from 'lucide-react';
 import { useUser } from '@clerk/clerk-react';
 import { useKeyboard } from '../../hooks/useKeyboard';
@@ -83,6 +83,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
   const [activeModule, setActiveModule] = useState(() => window.location.pathname.startsWith('/crm/workflows') ? 'Workflows' : 'Dashboards');
   const [companies, setCompanies] = useState(() => localSnapshot.companies?.length ? localSnapshot.companies : initialCompanies);
   const [companiesLoaded, setCompaniesLoaded] = useState(false);
+  const companiesRef = useRef(companies);
   const [recordsLoaded, setRecordsLoaded] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [query, setQuery] = useState('');
@@ -113,9 +114,14 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
       .then((items) => {
         if (cancelled) return;
         if (items && items.length > 0) {
-          setCompanies((current) => mergeById(current, items));
+          setCompanies((current) => {
+            const merged = mergeById(current, items);
+            companiesRef.current = merged;
+            saveLocalCrmSnapshot({ companies: merged });
+            return merged;
+          });
         } else if (items && items.length === 0) {
-          void saveCompanies(companies);
+          void saveCompanies(companiesRef.current);
         }
       })
       .catch(() => undefined)
@@ -127,6 +133,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
   }, [isSignedIn]);
 
   useEffect(() => {
+    companiesRef.current = companies;
     saveLocalCrmSnapshot({ companies });
     if (!isSignedIn || !companiesLoaded) return;
     const timer = window.setTimeout(() => {
@@ -151,6 +158,16 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
   const [leads, setLeads] = useState<CrmLead[]>(() => localSnapshot.Leads?.length ? localSnapshot.Leads : initialLeads);
   const [meetings, setMeetings] = useState<CrmMeeting[]>(() => localSnapshot.Meetings?.length ? localSnapshot.Meetings : initialMeetings);
   const [projects, setProjects] = useState<CrmProject[]>(() => localSnapshot.Projects?.length ? localSnapshot.Projects : initialProjects);
+  const moduleRecordsRef = useRef({
+    People: people,
+    Tasks: tasks,
+    Notes: notes,
+    Opportunities: opportunities,
+    Deals: deals,
+    Leads: leads,
+    Meetings: meetings,
+    Projects: projects,
+  });
 
   useEffect(() => {
     if (!isSignedIn) return;
@@ -168,27 +185,31 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
         const meetingRecords = records.Meetings as CrmMeeting[] | null;
         const projectRecords = records.Projects as CrmProject[] | null;
 
-        if (peopleRecords?.length) setPeople((current) => mergeById(current, peopleRecords));
-        if (taskRecords?.length) setTasks((current) => mergeById(current, taskRecords));
-        if (noteRecords?.length) setNotes((current) => mergeById(current, noteRecords));
-        if (opportunityRecords?.length) setOpportunities((current) => mergeById(current, opportunityRecords));
-        if (dealRecords?.length) setDeals((current) => mergeById(current, dealRecords));
-        if (leadRecords?.length) setLeads((current) => mergeById(current, leadRecords));
-        if (meetingRecords?.length) setMeetings((current) => mergeById(current, meetingRecords));
-        if (projectRecords?.length) setProjects((current) => mergeById(current, projectRecords));
+        const mergedRecords = {
+          People: peopleRecords?.length ? mergeById(moduleRecordsRef.current.People, peopleRecords) : moduleRecordsRef.current.People,
+          Tasks: taskRecords?.length ? mergeById(moduleRecordsRef.current.Tasks, taskRecords) : moduleRecordsRef.current.Tasks,
+          Notes: noteRecords?.length ? mergeById(moduleRecordsRef.current.Notes, noteRecords) : moduleRecordsRef.current.Notes,
+          Opportunities: opportunityRecords?.length ? mergeById(moduleRecordsRef.current.Opportunities, opportunityRecords) : moduleRecordsRef.current.Opportunities,
+          Deals: dealRecords?.length ? mergeById(moduleRecordsRef.current.Deals, dealRecords) : moduleRecordsRef.current.Deals,
+          Leads: leadRecords?.length ? mergeById(moduleRecordsRef.current.Leads, leadRecords) : moduleRecordsRef.current.Leads,
+          Meetings: meetingRecords?.length ? mergeById(moduleRecordsRef.current.Meetings, meetingRecords) : moduleRecordsRef.current.Meetings,
+          Projects: projectRecords?.length ? mergeById(moduleRecordsRef.current.Projects, projectRecords) : moduleRecordsRef.current.Projects,
+        };
+
+        moduleRecordsRef.current = mergedRecords;
+        setPeople(mergedRecords.People);
+        setTasks(mergedRecords.Tasks);
+        setNotes(mergedRecords.Notes);
+        setOpportunities(mergedRecords.Opportunities);
+        setDeals(mergedRecords.Deals);
+        setLeads(mergedRecords.Leads);
+        setMeetings(mergedRecords.Meetings);
+        setProjects(mergedRecords.Projects);
+        saveLocalCrmSnapshot(mergedRecords);
 
         const hasAnyRecords = Object.values(records).some((items) => Array.isArray(items) && items.length > 0);
         if (!hasAnyRecords) {
-          void saveAllModuleRecords({
-            People: people,
-            Tasks: tasks,
-            Notes: notes,
-            Opportunities: opportunities,
-            Deals: deals,
-            Leads: leads,
-            Meetings: meetings,
-            Projects: projects,
-          });
+          void saveAllModuleRecords(moduleRecordsRef.current);
         }
       })
       .catch(() => undefined)
@@ -197,10 +218,10 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
       });
 
     return () => { cancelled = true; };
-  }, [deals, isSignedIn, leads, meetings, notes, opportunities, people, projects, tasks]);
+  }, [isSignedIn]);
 
   useEffect(() => {
-    saveLocalCrmSnapshot({
+    moduleRecordsRef.current = {
       People: people,
       Tasks: tasks,
       Notes: notes,
@@ -209,23 +230,30 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
       Leads: leads,
       Meetings: meetings,
       Projects: projects,
-    });
+    };
+    saveLocalCrmSnapshot(moduleRecordsRef.current);
     if (!isSignedIn || !recordsLoaded) return;
     const timer = window.setTimeout(() => {
-      void saveAllModuleRecords({
-        People: people,
-        Tasks: tasks,
-        Notes: notes,
-        Opportunities: opportunities,
-        Deals: deals,
-        Leads: leads,
-        Meetings: meetings,
-        Projects: projects,
-      }).catch(() => undefined);
+      void saveAllModuleRecords(moduleRecordsRef.current).catch(() => undefined);
     }, 500);
 
     return () => window.clearTimeout(timer);
   }, [deals, isSignedIn, leads, meetings, notes, opportunities, people, projects, recordsLoaded, tasks]);
+
+  useEffect(() => {
+    const flushLocalRecords = () => {
+      saveLocalCrmSnapshot({
+        companies: companiesRef.current,
+        ...moduleRecordsRef.current,
+      });
+    };
+
+    window.addEventListener('beforeunload', flushLocalRecords);
+    return () => {
+      flushLocalRecords();
+      window.removeEventListener('beforeunload', flushLocalRecords);
+    };
+  }, []);
 
   const [crudModal, setCrudModal] = useState<{ type: string; item?: CrudEntity } | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{ type: string; item: CrudEntity } | null>(null);
