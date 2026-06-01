@@ -7,6 +7,23 @@ import { cn } from '../../utils/cn';
 import { CRM_ROUTE } from '../../constants/design';
 import { companies, FEATURES, iconMap, PRICING_PLANS, TESTIMONIALS, FAQ_ITEMS, NAV_LINKS } from '../../constants/data';
 
+const CHECKOUT_URLS: Record<string, string | undefined> = {
+  Starter: import.meta.env.VITE_LEMONSQUEEZY_STARTER_CHECKOUT_URL,
+  Professional: import.meta.env.VITE_LEMONSQUEEZY_PRO_CHECKOUT_URL,
+  Enterprise: import.meta.env.VITE_LEMONSQUEEZY_ENTERPRISE_CHECKOUT_URL,
+};
+
+function openCheckout(planName: string) {
+  const checkoutUrl = CHECKOUT_URLS[planName];
+
+  if (!checkoutUrl) {
+    window.alert(`Checkout is not configured for the ${planName} plan.`);
+    return;
+  }
+
+  window.location.href = checkoutUrl;
+}
+
 function SectionIntro({ eyebrow, title, body }: { eyebrow: string; title: string; body: string }) {
   const [head, tail] = title.includes(' to ') ? title.split(' to ') : [title, ''];
   return (
@@ -196,6 +213,8 @@ interface LandingSectionProps {
 }
 
 export function PricingSection({ clerkMissing }: LandingSectionProps) {
+  void clerkMissing;
+
   return (
     <section id="pricing" className="dark-section py-20 sm:py-24">
       <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 via-transparent to-transparent" />
@@ -214,12 +233,10 @@ export function PricingSection({ clerkMissing }: LandingSectionProps) {
                 <ul className="mb-6 flex-1 space-y-2.5">
                   {plan.features.map((feature) => <li key={feature} className="flex items-start gap-2.5 text-xs text-gray-300"><Check size={14} className="mt-0.5 shrink-0 text-blue-400" />{feature}</li>)}
                 </ul>
-                {clerkMissing ? (
-                  <button className={plan.popular ? 'landing-primary w-full' : 'landing-ghost w-full'} onClick={() => window.alert('Set VITE_CLERK_PUBLISHABLE_KEY in .env to enable Clerk authentication.')}>{plan.cta} <ArrowRight size={14} /></button>
+                {plan.cta === 'Contact Sales' ? (
+                  <a href="#contact" className={plan.popular ? 'landing-primary w-full' : 'landing-ghost w-full'}>{plan.cta} <ArrowRight size={14} /></a>
                 ) : (
-                  <SignUpButton mode="modal" forceRedirectUrl={CRM_ROUTE}>
-                    <button className={plan.popular ? 'landing-primary w-full' : 'landing-ghost w-full'}>{plan.cta} <ArrowRight size={14} /></button>
-                  </SignUpButton>
+                  <button className={plan.popular ? 'landing-primary w-full' : 'landing-ghost w-full'} onClick={() => openCheckout(plan.name)} type="button">{plan.cta} <ArrowRight size={14} /></button>
                 )}
               </div>
             </div>

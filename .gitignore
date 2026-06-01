@@ -6,3 +6,5 @@ dist/
 .env.production
 tsconfig.tsbuildinfo
 *.log
+
+.vercel

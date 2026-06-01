@@ -1,4 +1,4 @@
-import { Building2, BriefcaseBusiness, GitBranch, Linkedin, Users } from 'lucide-react';
+import { Building2, BriefcaseBusiness, FileEdit, GitBranch, Linkedin, Users } from 'lucide-react';
 import type { CompanyTableRow } from '../../constants/data';
 import { TableActions } from './TableActions';
 
@@ -49,7 +49,19 @@ export function CompanyTable({
           <span>{company.createdAt}</span>
           <span>{typeof company.employees === 'number' ? company.employees.toLocaleString() : ''}</span>
           {!hiddenLinkedin && <span style={{ color: 'var(--crm-text-muted)' }}>{company.linkedin}</span>}
-          <span className="flex justify-end">
+          <span className="flex justify-end gap-1">
+            {onEdit && (
+              <button
+                onClick={() => onEdit(company)}
+                className="table-action-btn company-edit-btn"
+                type="button"
+                title={`Edit ${company.name}`}
+                aria-label={`Edit ${company.name}`}
+              >
+                <FileEdit size={13} />
+                <span>Edit</span>
+              </button>
+            )}
             {(onEdit || onDelete || onDuplicate) && (
               <TableActions onAction={(action) => {
                 switch (action) {

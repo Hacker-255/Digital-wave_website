@@ -306,7 +306,7 @@ button, input { font: inherit; }
   }
   .digital-wave-dropdown button:hover { background: var(--crm-hover); }
   .digital-wave-table { @apply min-w-[780px] overflow-x-auto; }
-  .digital-wave-row { @apply grid min-h-[30px] grid-cols-[32px_130px_110px_110px_110px_85px_75px_110px_44px] items-center border-b text-xs; border-color: var(--crm-border); }
+  .digital-wave-row { @apply grid min-h-[30px] grid-cols-[32px_130px_110px_110px_110px_85px_75px_110px_96px] items-center border-b text-xs; border-color: var(--crm-border); }
   .digital-wave-table.compact .digital-wave-row { @apply min-h-[24px] text-[11px]; }
   .digital-wave-row.header { @apply text-xs; color: var(--crm-text-muted); }
   .digital-wave-row > span { @apply flex h-full items-center gap-1.5 border-l px-2; border-color: var(--crm-border); }
@@ -385,6 +385,10 @@ button, input { font: inherit; }
 
   .table-action-btn:hover {
     background: var(--crm-hover);
+  }
+
+  .company-edit-btn {
+    @apply w-auto gap-1 px-2;
   }
 
   .workflow-field {

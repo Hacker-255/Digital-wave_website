@@ -9,10 +9,14 @@ type VercelResponse = {
   setHeader: (name: string, value: string) => void;
 };
 
-export default async function handler(request: { method?: string; body?: AskRequest }, response: VercelResponse) {
+export default async function handler(
+  request: { method?: string; body?: AskRequest },
+  response: VercelResponse,
+) {
   response.setHeader('Access-Control-Allow-Origin', process.env.CLIENT_ORIGIN || '*');
   response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  response.setHeader('Content-Type', 'application/json');
 
   if (request.method === 'OPTIONS') {
     response.status(204).json({});
@@ -26,7 +30,7 @@ export default async function handler(request: { method?: string; body?: AskRequ
 
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    response.status(500).json({ error: 'OPENAI_API_KEY is not configured on the server.' });
+    response.status(500).json({ error: 'OPENAI_API_KEY is not configured.' });
     return;
   }
 
@@ -36,34 +40,43 @@ export default async function handler(request: { method?: string; body?: AskRequ
     return;
   }
 
-  const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o-mini',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are Digital Wave CRM AI. Give concise, practical CRM and workflow automation help.',
-        },
-        {
-          role: 'user',
-          content: `${prompt}\n\nCRM context:\n${JSON.stringify(request.body?.context ?? {}, null, 2)}`,
-        },
-      ],
-      max_tokens: 500,
-    }),
-  });
+  try {
+    const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are Digital Wave CRM AI. Give concise, practical CRM and workflow automation help.',
+          },
+          {
+            role: 'user',
+            content: `${prompt}\n\nCRM context:\n${JSON.stringify(request.body?.context ?? {}, null, 2)}`,
+          },
+        ],
+        max_tokens: 700,
+      }),
+    });
 
-  const data = await aiResponse.json() as { choices?: Array<{ message?: { content?: string } }>; error?: { message?: string } };
+    const data = await aiResponse.json().catch(() => ({})) as {
+      choices?: Array<{ message?: { content?: string } }>;
+      error?: { message?: string };
+    };
 
-  if (!aiResponse.ok) {
-    response.status(aiResponse.status).json({ error: data.error?.message || 'OpenAI request failed.' });
-    return;
+    if (!aiResponse.ok) {
+      response.status(aiResponse.status).json({ error: data.error?.message || 'OpenAI request failed.' });
+      return;
+    }
+
+    response.status(200).json({
+      answer: data.choices?.[0]?.message?.content?.trim() || 'No answer returned.',
+    });
+  } catch {
+    response.status(500).json({ error: 'AI request failed.' });
   }
-
-  response.status(200).json({ answer: data.choices?.[0]?.message?.content || 'No answer returned.' });
 }

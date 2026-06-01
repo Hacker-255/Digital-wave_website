@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { useAuth } from '@clerk/clerk-react';
 import { Activity, CheckCircle, ClipboardList, FileEdit, ListFilter, Play, Plus, Power, Trash2 } from 'lucide-react';
 
 type WorkflowStatus = 'active' | 'inactive';
@@ -59,8 +58,24 @@ function emptyWorkflow(): Partial<Workflow> {
   };
 }
 
+function normalizeWorkflow(workflow: Partial<Workflow>): Workflow {
+  const now = new Date().toISOString();
+
+  return {
+    _id: workflow._id ?? `wf-${Date.now()}`,
+    name: workflow.name ?? 'Untitled workflow',
+    description: workflow.description ?? '',
+    status: workflow.status === 'active' ? 'active' : 'inactive',
+    trigger: workflow.trigger ?? { type: 'manual' },
+    conditions: Array.isArray(workflow.conditions) ? workflow.conditions : [],
+    actions: Array.isArray(workflow.actions) ? workflow.actions : [],
+    createdBy: workflow.createdBy ?? 'Digital Wave Admin',
+    createdAt: workflow.createdAt ?? now,
+    updatedAt: workflow.updatedAt ?? now,
+  };
+}
+
 export function WorkflowDashboard() {
-  const { getToken } = useAuth();
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [runs, setRuns] = useState<WorkflowRun[]>([]);
   const [view, setView] = useState<'list' | 'new' | 'edit' | 'details' | 'runs'>('list');
@@ -72,8 +87,13 @@ export function WorkflowDashboard() {
 
   const activeCount = useMemo(() => workflows.filter((workflow) => workflow.status === 'active').length, [workflows]);
 
+  const getAuthToken = useCallback(async () => {
+    const clerk = (window as unknown as { Clerk?: { session?: { getToken?: () => Promise<string | null> } } }).Clerk;
+    return clerk?.session?.getToken ? clerk.session.getToken().catch(() => null) : null;
+  }, []);
+
   const apiRequest = useCallback(async <T,>(url: string, options: RequestInit = {}) => {
-    const token = await getToken().catch(() => null);
+    const token = await getAuthToken();
     const response = await fetch(url, {
       ...options,
       headers: {
@@ -82,10 +102,14 @@ export function WorkflowDashboard() {
         ...(options.headers ?? {}),
       },
     });
+    const contentType = response.headers.get('content-type') ?? '';
+    if (!contentType.includes('application/json')) {
+      throw new Error('Workflow API is not available on this server yet.');
+    }
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.error || 'Request failed');
     return data as T;
-  }, [getToken]);
+  }, [getAuthToken]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -95,8 +119,8 @@ export function WorkflowDashboard() {
         apiRequest<Workflow[]>('/api/v1/workflows'),
         apiRequest<WorkflowRun[]>('/api/v1/workflow-runs'),
       ]);
-      setWorkflows(workflowData);
-      setRuns(runData);
+      setWorkflows(Array.isArray(workflowData) ? workflowData.map(normalizeWorkflow) : []);
+      setRuns(Array.isArray(runData) ? runData : []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to load workflows');
     } finally {
@@ -259,7 +283,7 @@ export function WorkflowDashboard() {
                     <span className={workflow.status === 'active' ? 'status active' : 'status draft'}>{workflow.status}</span>
                   </div>
                   <p className="mt-1 text-xs text-white/45">{workflow.description || 'No description'}</p>
-                  <p className="mt-2 text-[11px] text-white/35"><ListFilter size={11} className="mr-1 inline" />{workflow.trigger.type} - {workflow.actions.length} action(s)</p>
+                  <p className="mt-2 text-[11px] text-white/35"><ListFilter size={11} className="mr-1 inline" />{workflow.trigger?.type ?? 'manual'} - {workflow.actions?.length ?? 0} action(s)</p>
                 </button>
                 <div className="flex flex-wrap gap-1">
                   <button onClick={() => testWorkflow(workflow)} className="table-action-btn" type="button" title="Test"><Play size={13} /></button>
