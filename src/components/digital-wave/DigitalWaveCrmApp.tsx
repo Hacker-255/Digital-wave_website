@@ -35,6 +35,7 @@ import { checkCrmSchemaHealth, listAllModuleRecords, listCompanies, saveAllModul
 import { useAuth } from '../../contexts/AuthContext';
 import { getPermissions } from '../../services/permissions';
 import { recordAuditEvent } from '../../services/auditLogService';
+import { loadLocalCrmSnapshot, mergeById, saveLocalCrmSnapshot } from '../../services/crmLocalPersistence';
 
 interface DigitalWaveCrmAppProps {
   clerkMissing: boolean;
@@ -69,6 +70,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
   const { user: clerkUser, isSignedIn } = useUser();
   const { role, currentUser } = useAuth();
   const permissions = useMemo(() => getPermissions(role), [role]);
+  const localSnapshot = useMemo(() => loadLocalCrmSnapshot(), []);
   const audit = useCallback((action: string, entityType: string, entityName: string, outcome: 'success' | 'blocked' | 'failed' = 'success') => {
     recordAuditEvent({
       action,
@@ -79,7 +81,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
     });
   }, [clerkUser, currentUser]);
   const [activeModule, setActiveModule] = useState(() => window.location.pathname.startsWith('/crm/workflows') ? 'Workflows' : 'Dashboards');
-  const [companies, setCompanies] = useState(initialCompanies);
+  const [companies, setCompanies] = useState(() => localSnapshot.companies?.length ? localSnapshot.companies : initialCompanies);
   const [companiesLoaded, setCompaniesLoaded] = useState(false);
   const [recordsLoaded, setRecordsLoaded] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -111,9 +113,9 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
       .then((items) => {
         if (cancelled) return;
         if (items && items.length > 0) {
-          setCompanies(items);
+          setCompanies((current) => mergeById(current, items));
         } else if (items && items.length === 0) {
-          void saveCompanies(initialCompanies);
+          void saveCompanies(companies);
         }
       })
       .catch(() => undefined)
@@ -125,6 +127,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
   }, [isSignedIn]);
 
   useEffect(() => {
+    saveLocalCrmSnapshot({ companies });
     if (!isSignedIn || !companiesLoaded) return;
     const timer = window.setTimeout(() => {
       void saveCompanies(companies).catch(() => undefined);
@@ -140,14 +143,14 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
   const [aiPrompt, setAiPrompt] = useState('Summarize my companies and next CRM actions.');
   const [quickAddType, setQuickAddType] = useState<QuickAddType | null>(null);
 
-  const [people, setPeople] = useState<CrmPerson[]>(initialPeople);
-  const [tasks, setTasks] = useState<CrmTask[]>(initialTasks);
-  const [notes, setNotes] = useState<CrmNote[]>(initialNotes);
-  const [opportunities, setOpportunities] = useState<CrmOpportunity[]>(initialOpportunities);
-  const [deals, setDeals] = useState<CrmDeal[]>(initialDeals);
-  const [leads, setLeads] = useState<CrmLead[]>(initialLeads);
-  const [meetings, setMeetings] = useState<CrmMeeting[]>(initialMeetings);
-  const [projects, setProjects] = useState<CrmProject[]>(initialProjects);
+  const [people, setPeople] = useState<CrmPerson[]>(() => localSnapshot.People?.length ? localSnapshot.People : initialPeople);
+  const [tasks, setTasks] = useState<CrmTask[]>(() => localSnapshot.Tasks?.length ? localSnapshot.Tasks : initialTasks);
+  const [notes, setNotes] = useState<CrmNote[]>(() => localSnapshot.Notes?.length ? localSnapshot.Notes : initialNotes);
+  const [opportunities, setOpportunities] = useState<CrmOpportunity[]>(() => localSnapshot.Opportunities?.length ? localSnapshot.Opportunities : initialOpportunities);
+  const [deals, setDeals] = useState<CrmDeal[]>(() => localSnapshot.Deals?.length ? localSnapshot.Deals : initialDeals);
+  const [leads, setLeads] = useState<CrmLead[]>(() => localSnapshot.Leads?.length ? localSnapshot.Leads : initialLeads);
+  const [meetings, setMeetings] = useState<CrmMeeting[]>(() => localSnapshot.Meetings?.length ? localSnapshot.Meetings : initialMeetings);
+  const [projects, setProjects] = useState<CrmProject[]>(() => localSnapshot.Projects?.length ? localSnapshot.Projects : initialProjects);
 
   useEffect(() => {
     if (!isSignedIn) return;
@@ -165,26 +168,26 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
         const meetingRecords = records.Meetings as CrmMeeting[] | null;
         const projectRecords = records.Projects as CrmProject[] | null;
 
-        if (peopleRecords?.length) setPeople(peopleRecords);
-        if (taskRecords?.length) setTasks(taskRecords);
-        if (noteRecords?.length) setNotes(noteRecords);
-        if (opportunityRecords?.length) setOpportunities(opportunityRecords);
-        if (dealRecords?.length) setDeals(dealRecords);
-        if (leadRecords?.length) setLeads(leadRecords);
-        if (meetingRecords?.length) setMeetings(meetingRecords);
-        if (projectRecords?.length) setProjects(projectRecords);
+        if (peopleRecords?.length) setPeople((current) => mergeById(current, peopleRecords));
+        if (taskRecords?.length) setTasks((current) => mergeById(current, taskRecords));
+        if (noteRecords?.length) setNotes((current) => mergeById(current, noteRecords));
+        if (opportunityRecords?.length) setOpportunities((current) => mergeById(current, opportunityRecords));
+        if (dealRecords?.length) setDeals((current) => mergeById(current, dealRecords));
+        if (leadRecords?.length) setLeads((current) => mergeById(current, leadRecords));
+        if (meetingRecords?.length) setMeetings((current) => mergeById(current, meetingRecords));
+        if (projectRecords?.length) setProjects((current) => mergeById(current, projectRecords));
 
         const hasAnyRecords = Object.values(records).some((items) => Array.isArray(items) && items.length > 0);
         if (!hasAnyRecords) {
           void saveAllModuleRecords({
-            People: initialPeople,
-            Tasks: initialTasks,
-            Notes: initialNotes,
-            Opportunities: initialOpportunities,
-            Deals: initialDeals,
-            Leads: initialLeads,
-            Meetings: initialMeetings,
-            Projects: initialProjects,
+            People: people,
+            Tasks: tasks,
+            Notes: notes,
+            Opportunities: opportunities,
+            Deals: deals,
+            Leads: leads,
+            Meetings: meetings,
+            Projects: projects,
           });
         }
       })
@@ -194,9 +197,19 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
       });
 
     return () => { cancelled = true; };
-  }, [isSignedIn]);
+  }, [deals, isSignedIn, leads, meetings, notes, opportunities, people, projects, tasks]);
 
   useEffect(() => {
+    saveLocalCrmSnapshot({
+      People: people,
+      Tasks: tasks,
+      Notes: notes,
+      Opportunities: opportunities,
+      Deals: deals,
+      Leads: leads,
+      Meetings: meetings,
+      Projects: projects,
+    });
     if (!isSignedIn || !recordsLoaded) return;
     const timer = window.setTimeout(() => {
       void saveAllModuleRecords({
