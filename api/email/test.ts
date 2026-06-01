@@ -1,7 +1,7 @@
 import {
   requireClerkUser,
   setJsonHeaders,
-  supabaseRequest,
+  supabaseServiceRequest,
   type VercelRequest,
   type VercelResponse,
 } from '../_serverHelpers.js';
@@ -33,7 +33,7 @@ export default async function handler(request: VercelRequest<TestEmailBody>, res
 
   try {
     const requester = await requireClerkUser(request);
-    const profiles = await supabaseRequest<ProfileRow[]>(`profiles?select=id,role&id=eq.${encodeURIComponent(requester.id)}`, requester.token);
+    const profiles = await supabaseServiceRequest<ProfileRow[]>(`profiles?select=id,role&id=eq.${encodeURIComponent(requester.id)}`);
     const requesterProfile = profiles[0];
     if (!requesterProfile || !MANAGER_ROLES.has(requesterProfile.role)) {
       response.status(403).json({ error: 'Only admins and managers can send test emails' });
@@ -47,7 +47,7 @@ export default async function handler(request: VercelRequest<TestEmailBody>, res
     const message = error instanceof Error ? error.message : 'Failed to send test email';
     const status = error instanceof EmailDeliveryError
       ? error.status
-      : message.includes('Authorization') ? 401 : 400;
+      : message.includes('Authorization') ? 401 : message.includes('environment') || message.includes('configured') ? 500 : 400;
     response.status(status).json({ error: message });
   }
 }

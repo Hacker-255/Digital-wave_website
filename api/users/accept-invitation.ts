@@ -2,7 +2,7 @@ import {
   hashToken,
   requireClerkUser,
   setJsonHeaders,
-  supabaseRequest,
+  supabaseServiceRequest,
   type VercelRequest,
   type VercelResponse,
 } from '../_serverHelpers.js';
@@ -41,9 +41,8 @@ export default async function handler(request: VercelRequest<AcceptBody>, respon
     }
 
     const tokenHash = hashToken(token);
-    const invitations = await supabaseRequest<InvitationRow[]>(
+    const invitations = await supabaseServiceRequest<InvitationRow[]>(
       `invitations?select=id,email,role,status,expires_at&token_hash=eq.${encodeURIComponent(tokenHash)}&status=eq.pending`,
-      user.token,
     );
     const invitation = invitations[0];
     if (!invitation) {
@@ -59,9 +58,8 @@ export default async function handler(request: VercelRequest<AcceptBody>, respon
       return;
     }
 
-    await supabaseRequest(
+    await supabaseServiceRequest(
       'profiles?on_conflict=id',
-      user.token,
       {
         method: 'POST',
         headers: { Prefer: 'resolution=merge-duplicates,return=representation' },
@@ -76,9 +74,8 @@ export default async function handler(request: VercelRequest<AcceptBody>, respon
       },
     );
 
-    await supabaseRequest(
+    await supabaseServiceRequest(
       `invitations?id=eq.${encodeURIComponent(invitation.id)}`,
-      user.token,
       {
         method: 'PATCH',
         body: JSON.stringify({
@@ -91,6 +88,11 @@ export default async function handler(request: VercelRequest<AcceptBody>, respon
     response.status(200).json({ ok: true, role: invitation.role });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to accept invitation';
-    response.status(message.includes('Authorization') ? 401 : 400).json({ error: message });
+    const status = message.includes('Authorization')
+      ? 401
+      : message.includes('environment') || message.includes('configured')
+        ? 500
+        : 400;
+    response.status(status).json({ error: message });
   }
 }

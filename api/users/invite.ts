@@ -4,7 +4,6 @@ import {
   hashToken,
   requireClerkUser,
   setJsonHeaders,
-  supabaseRequest,
   supabaseServiceRequest,
   type VercelRequest,
   type VercelResponse,
@@ -53,6 +52,34 @@ function queryValue(request: InviteRequest, name: string) {
 
 function idsFilter(ids: string[]) {
   return `(${ids.map((id) => `"${String(id).replace(/"/g, '\\"')}"`).join(',')})`;
+}
+
+async function getRequesterProfile(requester: { id: string; email: string; name: string; avatarUrl?: string }) {
+  const profiles = await supabaseServiceRequest<ProfileRow[]>(
+    `profiles?select=id,full_name,email,role&id=eq.${encodeURIComponent(requester.id)}`,
+  );
+  if (profiles[0]) return profiles[0];
+
+  const existingManagers = await supabaseServiceRequest<Array<{ id: string }>>(
+    'profiles?select=id&role=in.(Owner,Admin,Manager)&limit=1',
+  );
+  if (existingManagers.length > 0) return null;
+
+  const created = await supabaseServiceRequest<ProfileRow[]>(
+    'profiles?on_conflict=id',
+    {
+      method: 'POST',
+      headers: { Prefer: 'resolution=merge-duplicates,return=representation' },
+      body: JSON.stringify([{
+        id: requester.id,
+        email: requester.email,
+        full_name: requester.name,
+        avatar_url: requester.avatarUrl,
+        role: 'Owner',
+      }]),
+    },
+  );
+  return created[0] || null;
 }
 
 async function handleCrmSync(request: InviteRequest, response: VercelResponse) {
@@ -173,8 +200,7 @@ export default async function handler(request: InviteRequest, response: VercelRe
 
   try {
     const requester = await requireClerkUser(request);
-    const profiles = await supabaseRequest<ProfileRow[]>(`profiles?select=id,full_name,email,role&id=eq.${encodeURIComponent(requester.id)}`, requester.token);
-    const requesterProfile = profiles[0];
+    const requesterProfile = await getRequesterProfile(requester);
     if (!requesterProfile || !MANAGER_ROLES.has(requesterProfile.role)) {
       response.status(403).json({ error: 'Only admins and managers can invite users' });
       return;
@@ -187,9 +213,8 @@ export default async function handler(request: InviteRequest, response: VercelRe
       return;
     }
 
-    const existing = await supabaseRequest<InvitationRow[]>(
+    const existing = await supabaseServiceRequest<InvitationRow[]>(
       `invitations?select=id,email,role,status,expires_at&email=eq.${encodeURIComponent(email)}&status=eq.pending&expires_at=gt.${encodeURIComponent(new Date().toISOString())}`,
-      requester.token,
     );
     if (existing.length > 0) {
       response.status(409).json({ error: 'There is already an active invitation for this email' });
@@ -199,9 +224,8 @@ export default async function handler(request: InviteRequest, response: VercelRe
     const token = createInvitationToken();
     const tokenHash = hashToken(token);
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7).toISOString();
-    const invitation = await supabaseRequest<InvitationRow[]>(
+    const invitation = await supabaseServiceRequest<InvitationRow[]>(
       'invitations',
-      requester.token,
       {
         method: 'POST',
         body: JSON.stringify([{
@@ -249,6 +273,11 @@ export default async function handler(request: InviteRequest, response: VercelRe
     response.status(201).json({ invitation: invitation[0], inviteLink, emailSent: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to invite user';
-    response.status(message.includes('Authorization') ? 401 : 400).json({ error: message });
+    const status = message.includes('Authorization')
+      ? 401
+      : message.includes('environment') || message.includes('configured')
+        ? 500
+        : 400;
+    response.status(status).json({ error: message });
   }
 }
