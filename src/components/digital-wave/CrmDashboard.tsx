@@ -1,4 +1,4 @@
-import { BarChart3, Briefcase, Calendar, CheckSquare, Database, Download, Target, Upload, Users } from 'lucide-react';
+import { BarChart3, Briefcase, Calendar, CheckSquare, Database, Download, Target, Upload, UserPlus, Users } from 'lucide-react';
 import type {
   CompanyTableRow,
   CrmDeal,
@@ -19,6 +19,7 @@ interface CrmDashboardProps {
   companiesLoaded: boolean;
   recordsLoaded: boolean;
   schemaHealth?: { ok: boolean; missing: string[] } | null;
+  userCount?: number;
   onNavigate: (module: string) => void;
   onOpenImport?: () => void;
   onExportAll?: () => void;
@@ -38,6 +39,7 @@ export function CrmDashboard({
   companiesLoaded,
   recordsLoaded,
   schemaHealth,
+  userCount = 0,
   onNavigate,
   onOpenImport,
   onExportAll,
@@ -50,6 +52,7 @@ export function CrmDashboard({
     .filter((meeting) => meeting.date)
     .sort((a, b) => a.date.localeCompare(b.date))
     .slice(0, 4);
+  const isStarterWorkspace = companies.length <= 3 && people.length <= 3 && deals.length === 0;
 
   const stats = [
     { label: 'Pipeline value', value: money(pipelineValue), icon: BarChart3, module: 'Deals', tone: '#22c55e' },
@@ -73,12 +76,30 @@ export function CrmDashboard({
         </div>
       </div>
 
+      {isStarterWorkspace && (
+        <section className="rounded-xl border p-4" style={{ borderColor: 'rgba(59,130,246,0.35)', background: 'linear-gradient(135deg, rgba(37,99,235,0.14), var(--crm-card-bg))' }}>
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h3 className="text-sm font-semibold" style={{ color: 'var(--crm-text)' }}>Finish workspace setup</h3>
+              <p className="mt-1 max-w-2xl text-xs leading-relaxed" style={{ color: 'var(--crm-text-secondary)' }}>
+                Import existing customers, invite teammates, and create your first deal so the dashboard reflects live business work instead of starter data.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {onOpenImport && <button onClick={onOpenImport} className="digital-wave-btn digital-wave-btn-primary" type="button"><Upload size={13} /> Import customers</button>}
+              <button onClick={() => onNavigate('Settings')} className="digital-wave-btn" type="button"><UserPlus size={13} /> Invite team</button>
+              <button onClick={() => onNavigate('Deals')} className="digital-wave-btn" type="button"><Target size={13} /> Create deal</button>
+            </div>
+          </div>
+        </section>
+      )}
+
       <SetupHealthPanel
         compact
         companiesLoaded={companiesLoaded}
         recordsLoaded={recordsLoaded}
         schemaHealth={schemaHealth}
-        counts={{ companies: companies.length, people: people.length, deals: deals.length, tasks: tasks.length }}
+        counts={{ companies: companies.length, people: people.length, deals: deals.length, tasks: tasks.length, users: userCount }}
         onNavigate={onNavigate}
         onOpenImport={onOpenImport}
       />

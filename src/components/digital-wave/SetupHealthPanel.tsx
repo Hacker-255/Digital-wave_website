@@ -10,6 +10,7 @@ interface SetupHealthPanelProps {
     deals: number;
     tasks: number;
     workflows?: number;
+    users?: number;
   };
   schemaHealth?: { ok: boolean; missing: string[] } | null;
   compact?: boolean;
@@ -56,8 +57,8 @@ export function SetupHealthPanel({ companiesLoaded, recordsLoaded, counts, schem
     },
     {
       label: 'Invite the team',
-      done: false,
-      detail: 'Invite sales, support, and operations teammates.',
+      done: (counts.users ?? 0) > 1,
+      detail: (counts.users ?? 0) > 1 ? `${counts.users} users have access.` : 'Invite sales, support, and operations teammates.',
       action: 'Team settings',
       onClick: () => onNavigate('Settings'),
     },

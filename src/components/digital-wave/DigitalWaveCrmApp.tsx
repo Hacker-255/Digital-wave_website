@@ -29,9 +29,12 @@ import { SettingsPanel } from './SettingsPanel';
 import { CrmDashboard } from './CrmDashboard';
 import { CsvImportModal, type ImportTarget } from './CsvImportModal';
 import { RecordDetailDrawer } from './RecordDetailDrawer';
+import { NotificationCenter } from './NotificationCenter';
+import { SyncStatusPill, type SyncStatus } from './SyncStatusPill';
 import { AuthRequired } from '../crm/AuthRequired';
 import type { ExecuteResult } from '../../services/aiExecutionEngine';
 import { checkCrmSchemaHealth, listAllModuleRecords, listCompanies, saveAllModuleRecords, saveCompanies } from '../../services/supabaseCrmService';
+import { isSupabaseConfigured } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { getPermissions } from '../../services/permissions';
 import { recordAuditEvent } from '../../services/auditLogService';
@@ -68,7 +71,7 @@ const moduleIconMap: Record<string, typeof Building2> = {
 
 export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
   const { user: clerkUser, isSignedIn } = useUser();
-  const { role, currentUser } = useAuth();
+  const { role, currentUser, users } = useAuth();
   const permissions = useMemo(() => getPermissions(role), [role]);
   const localSnapshot = useMemo(() => loadLocalCrmSnapshot(), []);
   const audit = useCallback((action: string, entityType: string, entityName: string, outcome: 'success' | 'blocked' | 'failed' = 'success') => {
@@ -94,6 +97,10 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
   const [importOpen, setImportOpen] = useState(false);
   const [detailRecord, setDetailRecord] = useState<{ type: string; item: CrudEntity } | null>(null);
   const [schemaHealth, setSchemaHealth] = useState<{ ok: boolean; missing: string[] } | null>(null);
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>(() => ({
+    state: isSupabaseConfigured ? 'loading' : 'local',
+    message: isSupabaseConfigured ? 'Loading CRM data' : 'Saved locally',
+  }));
 
   useEffect(() => {
     if (isSignedIn && clerkUser) {
@@ -126,7 +133,10 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
       })
       .catch(() => undefined)
       .finally(() => {
-        if (!cancelled) setCompaniesLoaded(true);
+        if (!cancelled) {
+          setCompaniesLoaded(true);
+          setSyncStatus((current) => current.state === 'loading' ? { state: 'local', message: 'Saved locally' } : current);
+        }
       });
 
     return () => { cancelled = true; };
@@ -135,9 +145,13 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
   useEffect(() => {
     companiesRef.current = companies;
     saveLocalCrmSnapshot({ companies });
+    setSyncStatus({ state: isSupabaseConfigured ? 'local' : 'saved', message: isSupabaseConfigured ? 'Saved locally' : 'Saved locally' });
     if (!isSignedIn || !companiesLoaded) return;
     const timer = window.setTimeout(() => {
-      void saveCompanies(companies).catch(() => undefined);
+      setSyncStatus({ state: 'loading', message: 'Syncing companies' });
+      void saveCompanies(companies)
+        .then(() => setSyncStatus({ state: 'saved', message: 'All changes saved' }))
+        .catch(() => setSyncStatus({ state: 'error', message: 'Database sync failed' }));
     }, 500);
 
     return () => window.clearTimeout(timer);
@@ -214,7 +228,10 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
       })
       .catch(() => undefined)
       .finally(() => {
-        if (!cancelled) setRecordsLoaded(true);
+        if (!cancelled) {
+          setRecordsLoaded(true);
+          setSyncStatus((current) => current.state === 'loading' ? { state: 'local', message: 'Saved locally' } : current);
+        }
       });
 
     return () => { cancelled = true; };
@@ -232,9 +249,13 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
       Projects: projects,
     };
     saveLocalCrmSnapshot(moduleRecordsRef.current);
+    setSyncStatus({ state: isSupabaseConfigured ? 'local' : 'saved', message: isSupabaseConfigured ? 'Saved locally' : 'Saved locally' });
     if (!isSignedIn || !recordsLoaded) return;
     const timer = window.setTimeout(() => {
-      void saveAllModuleRecords(moduleRecordsRef.current).catch(() => undefined);
+      setSyncStatus({ state: 'loading', message: 'Syncing CRM records' });
+      void saveAllModuleRecords(moduleRecordsRef.current)
+        .then(() => setSyncStatus({ state: 'saved', message: 'All changes saved' }))
+        .catch(() => setSyncStatus({ state: 'error', message: 'Database sync failed' }));
     }, 500);
 
     return () => window.clearTimeout(timer);
@@ -907,6 +928,13 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
                 <h1>{activeModule}</h1>
               </div>
               <div className="flex items-center gap-2">
+                <SyncStatusPill status={syncStatus} />
+                <NotificationCenter
+                  schemaHealth={schemaHealth}
+                  companiesLoaded={companiesLoaded}
+                  recordsLoaded={recordsLoaded}
+                  lastAction={lastAction}
+                />
                 {permissions.canCreate && <QuickActions onAdd={setQuickAddType} />}
                 <div className="digital-wave-top-actions">
                   {permissions.canCreate && <button onClick={() => setImportOpen(true)} type="button"><Upload size={13} /> Import</button>}
@@ -935,6 +963,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
                 companiesLoaded={companiesLoaded}
                 recordsLoaded={recordsLoaded}
                 schemaHealth={schemaHealth}
+                userCount={users.length}
                 onNavigate={setActiveModule}
                 onOpenImport={permissions.canCreate ? () => setImportOpen(true) : undefined}
                 onExportAll={permissions.canExport ? exportAllData : undefined}

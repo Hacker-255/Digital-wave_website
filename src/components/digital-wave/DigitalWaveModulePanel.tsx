@@ -1,4 +1,4 @@
-import { Copy, FileEdit, List, Plus, Search, Trash2 } from 'lucide-react';
+import { Copy, Database, FileEdit, List, Plus, Search, Trash2 } from 'lucide-react';
 import { TableActions } from './TableActions';
 import type { ModuleItem } from '../../constants/data';
 import type { TableAction } from './TableActions';
@@ -32,8 +32,20 @@ const fallbackData: Record<string, ModuleItem[]> = {
   ],
 };
 
+const emptyCopy: Record<string, { title: string; detail: string }> = {
+  People: { title: 'No people yet', detail: 'Add contacts or import a CSV to build your customer directory.' },
+  Tasks: { title: 'No tasks yet', detail: 'Create follow-ups, reminders, and handoffs for the team.' },
+  Notes: { title: 'No notes yet', detail: 'Capture meeting notes, customer feedback, and internal context.' },
+  Opportunities: { title: 'No opportunities yet', detail: 'Track early-stage revenue before it becomes a deal.' },
+  Deals: { title: 'No deals yet', detail: 'Create your first deal to start forecasting pipeline value.' },
+  Leads: { title: 'No leads yet', detail: 'Add inbound or outbound leads to qualify future customers.' },
+  Meetings: { title: 'No meetings yet', detail: 'Schedule meetings to build a visible customer timeline.' },
+  Projects: { title: 'No projects yet', detail: 'Track implementation or delivery work after a deal closes.' },
+};
+
 export function DigitalWaveModulePanel({ module, onOpenCommand, items, onAdd, onEdit, onView, onDelete, onDuplicate }: DigitalWaveModulePanelProps) {
   const displayItems = items ?? fallbackData[module] ?? [];
+  const empty = emptyCopy[module] ?? { title: `No ${module.toLowerCase()} yet`, detail: 'Create a record to get started.' };
   const rowActions: TableAction[] = [
     ...(onEdit ? [{ key: 'edit', label: 'Edit', icon: FileEdit }] : []),
     ...(onDuplicate ? [{ key: 'duplicate', label: 'Duplicate', icon: Copy }] : []),
@@ -91,9 +103,16 @@ export function DigitalWaveModulePanel({ module, onOpenCommand, items, onAdd, on
           </div>
         ))}
         {displayItems.length === 0 && (
-          <div className="py-16 text-center text-xs" style={{ color: 'var(--crm-text-muted)' }}>
-            <div className="mb-2 opacity-50"><List size={24} className="mx-auto" /></div>
-            No {module.toLowerCase()} yet
+          <div className="flex flex-col items-center rounded-xl border py-14 text-center text-xs" style={{ borderColor: 'var(--crm-border)', color: 'var(--crm-text-muted)', background: 'var(--crm-surface)' }}>
+            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg" style={{ background: 'var(--crm-card-bg)', color: 'var(--crm-text-secondary)' }}>
+              <Database size={20} />
+            </div>
+            <p className="font-semibold" style={{ color: 'var(--crm-text)' }}>{empty.title}</p>
+            <p className="mt-1 max-w-sm leading-relaxed">{empty.detail}</p>
+            <div className="mt-4 flex gap-2">
+              {onAdd && <button onClick={onAdd} type="button" className="digital-wave-btn digital-wave-btn-primary"><Plus size={12} /> Add record</button>}
+              <button onClick={onOpenCommand} type="button" className="digital-wave-btn"><Search size={12} /> Search CRM</button>
+            </div>
           </div>
         )}
       </div>
