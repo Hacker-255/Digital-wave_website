@@ -23,8 +23,31 @@ create table if not exists public.companies (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists public.crm_records (
+  module text not null,
+  record_id text not null,
+  data jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  primary key (module, record_id)
+);
+
+create table if not exists public.invitations (
+  id uuid primary key default gen_random_uuid(),
+  email text not null,
+  role text not null default 'Employee',
+  token_hash text not null unique,
+  invited_by text not null,
+  status text not null default 'pending',
+  expires_at timestamptz not null,
+  created_at timestamptz not null default now(),
+  accepted_at timestamptz
+);
+
 alter table public.profiles enable row level security;
 alter table public.companies enable row level security;
+alter table public.crm_records enable row level security;
+alter table public.invitations enable row level security;
 
 drop policy if exists "Profiles are readable by signed-in users" on public.profiles;
 create policy "Profiles are readable by signed-in users"
@@ -70,6 +93,50 @@ using (
   )
 );
 
+drop policy if exists "CRM records are readable by signed-in users" on public.crm_records;
+create policy "CRM records are readable by signed-in users"
+on public.crm_records for select
+using (auth.jwt()->>'sub' is not null);
+
+drop policy if exists "CRM records are insertable by signed-in users" on public.crm_records;
+create policy "CRM records are insertable by signed-in users"
+on public.crm_records for insert
+with check (auth.jwt()->>'sub' is not null);
+
+drop policy if exists "CRM records are updatable by signed-in users" on public.crm_records;
+create policy "CRM records are updatable by signed-in users"
+on public.crm_records for update
+using (auth.jwt()->>'sub' is not null)
+with check (auth.jwt()->>'sub' is not null);
+
+drop policy if exists "CRM records are deletable by signed-in users" on public.crm_records;
+create policy "CRM records are deletable by signed-in users"
+on public.crm_records for delete
+using (auth.jwt()->>'sub' is not null);
+
+drop policy if exists "Invitations are readable by signed-in users" on public.invitations;
+create policy "Invitations are readable by signed-in users"
+on public.invitations for select
+using (auth.jwt()->>'sub' is not null);
+
+drop policy if exists "Managers can create invitations" on public.invitations;
+create policy "Managers can create invitations"
+on public.invitations for insert
+with check (
+  exists (
+    select 1
+    from public.profiles
+    where profiles.id = auth.jwt()->>'sub'
+      and profiles.role in ('Owner', 'Admin', 'Manager')
+  )
+);
+
+drop policy if exists "Signed-in users can accept invitations" on public.invitations;
+create policy "Signed-in users can accept invitations"
+on public.invitations for update
+using (auth.jwt()->>'sub' is not null)
+with check (auth.jwt()->>'sub' is not null);
+
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
@@ -88,4 +155,9 @@ for each row execute function public.set_updated_at();
 drop trigger if exists companies_set_updated_at on public.companies;
 create trigger companies_set_updated_at
 before update on public.companies
+for each row execute function public.set_updated_at();
+
+drop trigger if exists crm_records_set_updated_at on public.crm_records;
+create trigger crm_records_set_updated_at
+before update on public.crm_records
 for each row execute function public.set_updated_at();

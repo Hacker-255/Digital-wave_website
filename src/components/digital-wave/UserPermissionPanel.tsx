@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Shield, ShieldCheck, ShieldAlert, UserCog, Trash2, AlertTriangle, X, Check, Search } from 'lucide-react';
+import { ShieldCheck, UserCog, Trash2, AlertTriangle, Check, Search, UserPlus } from 'lucide-react';
 import { SelectDropdown } from './SelectDropdown';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -22,8 +22,11 @@ const ROLE_COLORS: Record<string, string> = {
 };
 
 export function UserPermissionPanel() {
-  const { users, isManager, updateUserRole, deleteUser, refreshUsers, loading } = useAuth();
+  const { users, isManager, updateUserRole, deleteUser, inviteUser, loading } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteRole, setInviteRole] = useState('Employee');
+  const [inviting, setInviting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
 
@@ -57,6 +60,21 @@ export function UserPermissionPanel() {
     }
   };
 
+  const handleInviteUser = async () => {
+    setInviting(true);
+    const error = await inviteUser(inviteEmail, inviteRole as any);
+    setInviting(false);
+    if (error) {
+      setFeedback(error);
+      setTimeout(() => setFeedback(null), 5000);
+      return;
+    }
+    setInviteEmail('');
+    setInviteRole('Employee');
+    setFeedback('Invitation sent successfully');
+    setTimeout(() => setFeedback(null), 3000);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 mb-4">
@@ -79,6 +97,39 @@ export function UserPermissionPanel() {
           {feedback}
         </div>
       )}
+
+      <div className="rounded-lg border p-3"
+        style={{ borderColor: 'var(--crm-border)', background: 'var(--crm-surface)' }}>
+        <div className="mb-3 flex items-center gap-2">
+          <UserPlus size={14} style={{ color: '#3b82f6' }} />
+          <span className="text-xs font-semibold" style={{ color: 'var(--crm-text)' }}>Invite User</span>
+        </div>
+        <div className="grid gap-2 md:grid-cols-[1fr_140px_auto]">
+          <input
+            value={inviteEmail}
+            onChange={(e) => setInviteEmail(e.target.value)}
+            placeholder="employee@company.com"
+            className="rounded-lg border bg-transparent px-3 py-2 text-xs outline-none"
+            style={{ borderColor: 'var(--crm-border-accent)', color: 'var(--crm-text)' }}
+            type="email"
+          />
+          <SelectDropdown
+            value={inviteRole}
+            onChange={setInviteRole}
+            options={['Manager', 'Employee', 'Viewer']}
+          />
+          <button
+            onClick={handleInviteUser}
+            disabled={inviting || !inviteEmail.trim()}
+            className="inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-60"
+            style={{ background: '#2563eb', color: '#fff' }}
+            type="button"
+          >
+            <UserPlus size={13} />
+            {inviting ? 'Sending...' : 'Send Invite'}
+          </button>
+        </div>
+      </div>
 
       <label className="flex items-center gap-2 rounded-lg border px-3 py-2"
         style={{ borderColor: 'var(--crm-border-accent)', background: 'var(--crm-surface)' }}>

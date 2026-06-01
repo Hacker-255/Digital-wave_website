@@ -115,3 +115,52 @@ export async function deleteCompanies(ids: string[]) {
   const { error } = await supabase.from('companies').delete().in('id', ids);
   if (error) throw error;
 }
+
+export async function listModuleRecords<T extends { id: string }>(module: string) {
+  if (!isSupabaseConfigured) return null;
+  const supabase = requireSupabase();
+  const { data, error } = await supabase
+    .from('crm_records')
+    .select('record_id,data')
+    .eq('module', module)
+    .order('updated_at', { ascending: false });
+
+  if (error) throw error;
+  return (data ?? []).map((record) => ({
+    id: record.record_id,
+    ...(record.data as Omit<T, 'id'>),
+  })) as T[];
+}
+
+export async function saveModuleRecords<T extends { id: string }>(module: string, records: T[]) {
+  if (!isSupabaseConfigured) return;
+  const supabase = requireSupabase();
+  const rows = records.map(({ id, ...data }) => ({
+    module,
+    record_id: id,
+    data,
+    updated_at: new Date().toISOString(),
+  }));
+
+  if (rows.length > 0) {
+    const { error } = await supabase
+      .from('crm_records')
+      .upsert(rows, { onConflict: 'module,record_id' });
+    if (error) throw error;
+  }
+
+  const ids = records.map((record) => record.id);
+  let deleteQuery = supabase.from('crm_records').delete().eq('module', module);
+  if (ids.length > 0) deleteQuery = deleteQuery.not('record_id', 'in', `(${ids.map((id) => `"${id}"`).join(',')})`);
+  const { error: deleteError } = await deleteQuery;
+  if (deleteError) throw deleteError;
+}
+
+export async function listAllModuleRecords<T extends { id: string }>(modules: string[]) {
+  const entries = await Promise.all(modules.map(async (module) => [module, await listModuleRecords<T>(module)] as const));
+  return Object.fromEntries(entries) as Record<string, T[] | null>;
+}
+
+export async function saveAllModuleRecords(recordsByModule: Record<string, Array<{ id: string }>>) {
+  await Promise.all(Object.entries(recordsByModule).map(([module, records]) => saveModuleRecords(module, records)));
+}

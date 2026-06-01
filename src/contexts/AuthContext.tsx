@@ -30,6 +30,8 @@ interface AuthContextValue {
   updateUserRole: (userId: string, newRole: Role) => Promise<string | null>;
   deleteUser: (userId: string) => Promise<string | null>;
   createUser: (data: { clerkId: string; email: string; name: string; role?: Role }) => Promise<string | null>;
+  inviteUser: (email: string, inviteRole: Role) => Promise<string | null>;
+  acceptInvitation: (token: string) => Promise<string | null>;
 }
 
 const AuthContext = createContext<AuthContextValue>({
@@ -44,6 +46,8 @@ const AuthContext = createContext<AuthContextValue>({
   updateUserRole: async () => null,
   deleteUser: async () => null,
   createUser: async () => null,
+  inviteUser: async () => null,
+  acceptInvitation: async () => null,
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -52,8 +56,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [users, setUsers] = useState<CrmUser[]>([]);
   const [sessions, setSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [profileRole, setProfileRole] = useState<Role>(() => getCurrentRole());
 
-  const role = getCurrentRole();
+  const role = profileRole;
   const isManager = role === 'Owner' || role === 'Admin';
 
   const currentUser: CrmUser | null = clerkUser && isSignedIn
@@ -105,6 +110,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return null;
   }, [refreshUsers]);
 
+  const inviteUser = useCallback(async (email: string, inviteRole: Role): Promise<string | null> => {
+    const { error } = await api.users.invite(email, inviteRole);
+    if (error) return error;
+    await refreshUsers();
+    return null;
+  }, [refreshUsers]);
+
+  const acceptInvitation = useCallback(async (token: string): Promise<string | null> => {
+    const { data, error } = await api.users.acceptInvitation(token);
+    if (error) return error;
+    if (data?.role) setProfileRole(data.role as Role);
+    await refreshUsers();
+    return null;
+  }, [refreshUsers]);
+
   useEffect(() => {
     configureSupabaseAuth(() => getToken({ template: 'supabase' }).catch(() => getToken().catch(() => null)));
   }, [getToken]);
@@ -115,14 +135,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const email = clerkUser.emailAddresses[0]?.emailAddress || '';
     const name = clerkUser.fullName || email || 'Unknown';
 
-    upsertProfile({
-      id: clerkUser.id,
-      email,
-      full_name: name,
-      avatar_url: clerkUser.imageUrl,
-      role,
-    }).catch(() => undefined);
+    listProfiles()
+      .then((profiles) => {
+        const existing = profiles.find((profile) => profile.id === clerkUser.id);
+        const nextRole = existing?.role || role;
+        if (existing?.role) setProfileRole(existing.role);
+        return upsertProfile({
+          id: clerkUser.id,
+          email,
+          full_name: name,
+          avatar_url: clerkUser.imageUrl,
+          role: nextRole,
+        });
+      })
+      .catch(() => upsertProfile({
+        id: clerkUser.id,
+        email,
+        full_name: name,
+        avatar_url: clerkUser.imageUrl,
+        role,
+      }).catch(() => undefined));
   }, [clerkUser, isSignedIn, role]);
+
+  useEffect(() => {
+    if (!isSignedIn) return;
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('invitation_token');
+    if (!token) return;
+
+    acceptInvitation(token)
+      .then((error) => {
+        if (!error) {
+          params.delete('invitation_token');
+          const nextQuery = params.toString();
+          window.history.replaceState({}, '', `${window.location.pathname}${nextQuery ? `?${nextQuery}` : ''}`);
+        }
+      })
+      .catch(() => undefined);
+  }, [acceptInvitation, isSignedIn]);
 
   useEffect(() => {
     if (isSignedIn) {
@@ -166,6 +216,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       updateUserRole,
       deleteUser,
       createUser,
+      inviteUser,
+      acceptInvitation,
     }}>
       {children}
     </AuthContext.Provider>

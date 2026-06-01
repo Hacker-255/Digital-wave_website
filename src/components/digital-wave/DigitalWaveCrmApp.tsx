@@ -28,7 +28,7 @@ import { WorkflowDashboard } from './WorkflowDashboard';
 import { SettingsPanel } from './SettingsPanel';
 import { AuthRequired } from '../crm/AuthRequired';
 import type { ExecuteResult } from '../../services/aiExecutionEngine';
-import { listCompanies, saveCompanies } from '../../services/supabaseCrmService';
+import { listAllModuleRecords, listCompanies, saveAllModuleRecords, saveCompanies } from '../../services/supabaseCrmService';
 
 interface DigitalWaveCrmAppProps {
   clerkMissing: boolean;
@@ -36,6 +36,7 @@ interface DigitalWaveCrmAppProps {
 
 const AI_MODULES = ['AI Execute', 'AI Ask'];
 const MODULE_ACTIONS = ['Companies', 'Workflows', ...AI_MODULES];
+const PERSISTED_MODULES = ['People', 'Tasks', 'Notes', 'Opportunities', 'Deals', 'Leads', 'Meetings', 'Projects'];
 
 type CrudEntity = CrmPerson | CrmTask | CrmNote | CrmOpportunity | CrmDeal | CrmLead | CrmMeeting | CrmProject | CompanyTableRow;
 
@@ -63,6 +64,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
   const [activeModule, setActiveModule] = useState(() => window.location.pathname.startsWith('/crm/workflows') ? 'Workflows' : 'Companies');
   const [companies, setCompanies] = useState(initialCompanies);
   const [companiesLoaded, setCompaniesLoaded] = useState(false);
+  const [recordsLoaded, setRecordsLoaded] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [query, setQuery] = useState('');
   const [commandOpen, setCommandOpen] = useState(false);
@@ -121,6 +123,71 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
   const [leads, setLeads] = useState<CrmLead[]>(initialLeads);
   const [meetings, setMeetings] = useState<CrmMeeting[]>(initialMeetings);
   const [projects, setProjects] = useState<CrmProject[]>(initialProjects);
+
+  useEffect(() => {
+    if (!isSignedIn) return;
+
+    let cancelled = false;
+    listAllModuleRecords(PERSISTED_MODULES)
+      .then((records) => {
+        if (cancelled) return;
+        const peopleRecords = records.People as CrmPerson[] | null;
+        const taskRecords = records.Tasks as CrmTask[] | null;
+        const noteRecords = records.Notes as CrmNote[] | null;
+        const opportunityRecords = records.Opportunities as CrmOpportunity[] | null;
+        const dealRecords = records.Deals as CrmDeal[] | null;
+        const leadRecords = records.Leads as CrmLead[] | null;
+        const meetingRecords = records.Meetings as CrmMeeting[] | null;
+        const projectRecords = records.Projects as CrmProject[] | null;
+
+        if (peopleRecords?.length) setPeople(peopleRecords);
+        if (taskRecords?.length) setTasks(taskRecords);
+        if (noteRecords?.length) setNotes(noteRecords);
+        if (opportunityRecords?.length) setOpportunities(opportunityRecords);
+        if (dealRecords?.length) setDeals(dealRecords);
+        if (leadRecords?.length) setLeads(leadRecords);
+        if (meetingRecords?.length) setMeetings(meetingRecords);
+        if (projectRecords?.length) setProjects(projectRecords);
+
+        const hasAnyRecords = Object.values(records).some((items) => Array.isArray(items) && items.length > 0);
+        if (!hasAnyRecords) {
+          void saveAllModuleRecords({
+            People: initialPeople,
+            Tasks: initialTasks,
+            Notes: initialNotes,
+            Opportunities: initialOpportunities,
+            Deals: initialDeals,
+            Leads: initialLeads,
+            Meetings: initialMeetings,
+            Projects: initialProjects,
+          });
+        }
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (!cancelled) setRecordsLoaded(true);
+      });
+
+    return () => { cancelled = true; };
+  }, [isSignedIn]);
+
+  useEffect(() => {
+    if (!isSignedIn || !recordsLoaded) return;
+    const timer = window.setTimeout(() => {
+      void saveAllModuleRecords({
+        People: people,
+        Tasks: tasks,
+        Notes: notes,
+        Opportunities: opportunities,
+        Deals: deals,
+        Leads: leads,
+        Meetings: meetings,
+        Projects: projects,
+      }).catch(() => undefined);
+    }, 500);
+
+    return () => window.clearTimeout(timer);
+  }, [deals, isSignedIn, leads, meetings, notes, opportunities, people, projects, recordsLoaded, tasks]);
 
   const [crudModal, setCrudModal] = useState<{ type: string; item?: CrudEntity } | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{ type: string; item: CrudEntity } | null>(null);

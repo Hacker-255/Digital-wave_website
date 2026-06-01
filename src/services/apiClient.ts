@@ -55,6 +55,16 @@ export const api = {
       request<{ user: any }>(`/users/${id}/role`, { method: 'PATCH', body: JSON.stringify({ role }) }),
     delete: (id: string) =>
       request<{ ok: boolean }>(`/users/${id}`, { method: 'DELETE' }),
+    invite: (email: string, role: string) =>
+      request<{ invitation: any; inviteLink: string }>('/users/invite', {
+        method: 'POST',
+        body: JSON.stringify({ email, role }),
+      }),
+    acceptInvitation: (token: string) =>
+      request<{ ok: boolean; role: string }>('/users/accept-invitation', {
+        method: 'POST',
+        body: JSON.stringify({ token }),
+      }),
     online: () => request<{ online: any[] }>('/users/online'),
     sessions: (userId?: string) =>
       request<{ sessions: any[] }>(`/users${userId ? `/sessions/${userId}` : '/sessions'}`),
