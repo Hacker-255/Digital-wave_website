@@ -4,7 +4,7 @@ import { requireAuth, requireManager } from '../middleware/auth';
 import {
   getUsers, getUserById, createUser, updateUserRole, deleteUser,
   recordLogin, recordLogout, getLoginSessions, getOnlineUsers,
-  getInvitations, inviteUser, transferOwnership, getUserByClerkId, acceptInvitation, deleteInvitation,
+  getInvitations, inviteUser, transferOwnership, getUserByClerkId, acceptInvitation,
 } from '../services/userService';
 import { sendInvitationEmail } from '../services/emailService';
 
@@ -54,16 +54,24 @@ router.post('/invite', requireManager, async (req, res) => {
         inviterName: requester.name,
       });
     } catch (emailError) {
-      deleteInvitation(invitation.id);
-      throw emailError;
+      const { token: _token, ...safeInvitation } = invitation;
+      const warning = emailError instanceof Error
+        ? emailError.message
+        : 'Resend could not send the email. Copy and send the invitation link manually.';
+      res.status(202).json({
+        invitation: safeInvitation,
+        inviteLink,
+        emailSent: false,
+        warning,
+      });
+      return;
     }
 
     const { token: _token, ...safeInvitation } = invitation;
-    res.status(201).json({ invitation: safeInvitation, inviteLink });
+    res.status(201).json({ invitation: safeInvitation, inviteLink, emailSent: true });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Failed to invite user';
-    const status = message.includes('RESEND') || message.toLowerCase().includes('resend') ? 502 : 400;
-    res.status(status).json({ error: message });
+    res.status(400).json({ error: message });
   }
 });
 

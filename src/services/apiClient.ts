@@ -62,7 +62,7 @@ export const api = {
     delete: (id: string) =>
       request<{ ok: boolean }>(`/users/${id}`, { method: 'DELETE' }),
     invite: (email: string, role: string) =>
-      request<{ invitation: any; inviteLink: string }>('/users/invite', {
+      request<{ invitation: any; inviteLink: string; emailSent?: boolean; warning?: string }>('/users/invite', {
         method: 'POST',
         body: JSON.stringify({ email, role }),
       }),

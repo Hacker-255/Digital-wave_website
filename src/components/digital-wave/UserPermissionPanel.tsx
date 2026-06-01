@@ -21,6 +21,12 @@ const ROLE_COLORS: Record<string, string> = {
   Viewer: '#6b7280',
 };
 
+type Feedback = {
+  type: 'success' | 'warning' | 'error';
+  message: string;
+  inviteLink?: string;
+};
+
 export function UserPermissionPanel() {
   const { users, isManager, updateUserRole, deleteUser, inviteUser, loading } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
@@ -28,7 +34,7 @@ export function UserPermissionPanel() {
   const [inviteRole, setInviteRole] = useState('Employee');
   const [inviting, setInviting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<Feedback | null>(null);
 
   if (!isManager) return null;
 
@@ -40,10 +46,10 @@ export function UserPermissionPanel() {
   const handleRoleChange = async (userId: string, newRole: string) => {
     const error = await updateUserRole(userId, newRole as any);
     if (error) {
-      setFeedback(error);
+      setFeedback({ type: 'error', message: error });
       setTimeout(() => setFeedback(null), 4000);
     } else {
-      setFeedback('Role updated successfully');
+      setFeedback({ type: 'success', message: 'Role updated successfully' });
       setTimeout(() => setFeedback(null), 2000);
     }
   };
@@ -52,26 +58,34 @@ export function UserPermissionPanel() {
     const error = await deleteUser(userId);
     setConfirmDelete(null);
     if (error) {
-      setFeedback(error);
+      setFeedback({ type: 'error', message: error });
       setTimeout(() => setFeedback(null), 4000);
     } else {
-      setFeedback('User removed');
+      setFeedback({ type: 'success', message: 'User removed' });
       setTimeout(() => setFeedback(null), 2000);
     }
   };
 
   const handleInviteUser = async () => {
     setInviting(true);
-    const error = await inviteUser(inviteEmail, inviteRole as any);
+    const result = await inviteUser(inviteEmail, inviteRole as any);
     setInviting(false);
-    if (error) {
-      setFeedback(error);
+    if (result.error) {
+      setFeedback({ type: 'error', message: result.error });
       setTimeout(() => setFeedback(null), 5000);
       return;
     }
     setInviteEmail('');
     setInviteRole('Employee');
-    setFeedback('Invitation sent successfully');
+    if (result.emailSent === false) {
+      setFeedback({
+        type: 'warning',
+        message: result.warning || 'Invitation link created, but the email was not sent. Copy and send the link manually.',
+        inviteLink: result.inviteLink,
+      });
+      return;
+    }
+    setFeedback({ type: 'success', message: 'Invitation sent successfully' });
     setTimeout(() => setFeedback(null), 3000);
   };
 
@@ -83,18 +97,34 @@ export function UserPermissionPanel() {
       </div>
 
       {feedback && (
-        <div className="flex items-center gap-2 rounded-lg border px-3 py-2 text-xs"
+        <div className="flex items-start gap-2 rounded-lg border px-3 py-2 text-xs"
           style={{
-            background: feedback.includes('success') || feedback.includes('updated') || feedback.includes('removed')
-              ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
-            borderColor: feedback.includes('success') || feedback.includes('updated') || feedback.includes('removed')
-              ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)',
-            color: feedback.includes('success') || feedback.includes('updated') || feedback.includes('removed')
-              ? '#22c55e' : '#ef4444',
+            background: feedback.type === 'success'
+              ? 'rgba(34,197,94,0.1)'
+              : feedback.type === 'warning'
+                ? 'rgba(245,158,11,0.1)'
+                : 'rgba(239,68,68,0.1)',
+            borderColor: feedback.type === 'success'
+              ? 'rgba(34,197,94,0.3)'
+              : feedback.type === 'warning'
+                ? 'rgba(245,158,11,0.35)'
+                : 'rgba(239,68,68,0.3)',
+            color: feedback.type === 'success'
+              ? '#22c55e'
+              : feedback.type === 'warning'
+                ? '#f59e0b'
+                : '#ef4444',
           }}>
-          {feedback.includes('success') || feedback.includes('updated') || feedback.includes('removed')
+          {feedback.type === 'success'
             ? <Check size={14} /> : <AlertTriangle size={14} />}
-          {feedback}
+          <span className="min-w-0">
+            {feedback.message}
+            {feedback.inviteLink && (
+              <span className="mt-1 block break-all" style={{ color: 'var(--crm-text-secondary)' }}>
+                Invite link: {feedback.inviteLink}
+              </span>
+            )}
+          </span>
         </div>
       )}
 

@@ -42,6 +42,10 @@ function escapeHtml(value: string) {
     .replace(/'/g, '&#39;');
 }
 
+function resendWarning(message?: string) {
+  return message || 'Resend could not send the email. Copy and send the invitation link manually.';
+}
+
 export default async function handler(request: VercelRequest<InviteBody>, response: VercelResponse) {
   setJsonHeaders(response);
 
@@ -68,10 +72,6 @@ export default async function handler(request: VercelRequest<InviteBody>, respon
     const role = request.body?.role && ALLOWED_ROLES.has(request.body.role) ? request.body.role : 'Employee';
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       response.status(400).json({ error: 'Enter a valid email address' });
-      return;
-    }
-    if (!process.env.RESEND_API_KEY) {
-      response.status(500).json({ error: 'RESEND_API_KEY is not configured' });
       return;
     }
 
@@ -105,44 +105,64 @@ export default async function handler(request: VercelRequest<InviteBody>, respon
 
     const origin = getOrigin(request);
     const inviteLink = `${origin}/crm?invitation_token=${encodeURIComponent(token)}`;
+    if (!process.env.RESEND_API_KEY) {
+      response.status(202).json({
+        invitation: invitation[0],
+        inviteLink,
+        emailSent: false,
+        warning: 'RESEND_API_KEY is not configured. Copy and send this invitation link manually.',
+      });
+      return;
+    }
+
     const companyName = 'Digital Wave CRM';
     const inviterName = requesterProfile.full_name || requester.name;
     const safeInviteLink = escapeHtml(inviteLink);
     const safeCompanyName = escapeHtml(companyName);
     const safeInviterName = escapeHtml(inviterName);
     const resend = new Resend(process.env.RESEND_API_KEY);
-    const { error } = await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL || 'Digital Wave CRM <onboarding@resend.dev>',
-      to: email,
-      subject: "You're Invited to Join Our CRM",
-      html: `
-        <div style="margin:0;padding:32px;background:#f6f8fb;font-family:Arial,sans-serif;color:#111827">
-          <div style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden">
-            <div style="padding:28px 32px;background:#0f172a;color:#ffffff">
-              <h1 style="margin:0;font-size:22px;line-height:1.3">You're invited to ${safeCompanyName}</h1>
-            </div>
-            <div style="padding:28px 32px">
-              <p style="margin:0 0 16px;font-size:15px;line-height:1.6">${safeInviterName} invited you to join the ${safeCompanyName} workspace.</p>
-              <p style="margin:0 0 24px;font-size:15px;line-height:1.6">Use the secure invitation link below to sign in and access the shared CRM data.</p>
-              <a href="${safeInviteLink}" style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;font-weight:700;padding:12px 18px;border-radius:8px">Accept Invitation</a>
-              <p style="margin:24px 0 0;font-size:12px;line-height:1.5;color:#6b7280">This invitation expires in 7 days. If you were not expecting this invitation, you can ignore this email.</p>
+    try {
+      const { error } = await resend.emails.send({
+        from: process.env.RESEND_FROM_EMAIL || 'Digital Wave CRM <onboarding@resend.dev>',
+        to: email,
+        subject: "You're Invited to Join Our CRM",
+        html: `
+          <div style="margin:0;padding:32px;background:#f6f8fb;font-family:Arial,sans-serif;color:#111827">
+            <div style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden">
+              <div style="padding:28px 32px;background:#0f172a;color:#ffffff">
+                <h1 style="margin:0;font-size:22px;line-height:1.3">You're invited to ${safeCompanyName}</h1>
+              </div>
+              <div style="padding:28px 32px">
+                <p style="margin:0 0 16px;font-size:15px;line-height:1.6">${safeInviterName} invited you to join the ${safeCompanyName} workspace.</p>
+                <p style="margin:0 0 24px;font-size:15px;line-height:1.6">Use the secure invitation link below to sign in and access the shared CRM data.</p>
+                <a href="${safeInviteLink}" style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;font-weight:700;padding:12px 18px;border-radius:8px">Accept Invitation</a>
+                <p style="margin:24px 0 0;font-size:12px;line-height:1.5;color:#6b7280">This invitation expires in 7 days. If you were not expecting this invitation, you can ignore this email.</p>
+              </div>
             </div>
           </div>
-        </div>
-      `,
-    });
+        `,
+      });
 
-    if (error) {
-      await supabaseRequest(
-        `invitations?id=eq.${encodeURIComponent(invitation[0].id)}`,
-        requester.token,
-        { method: 'DELETE' },
-      ).catch(() => undefined);
-      response.status(502).json({ error: error.message || 'Resend failed to send the invitation email' });
+      if (error) {
+        response.status(202).json({
+          invitation: invitation[0],
+          inviteLink,
+          emailSent: false,
+          warning: resendWarning(error.message),
+        });
+        return;
+      }
+    } catch (error) {
+      response.status(202).json({
+        invitation: invitation[0],
+        inviteLink,
+        emailSent: false,
+        warning: resendWarning(error instanceof Error ? error.message : undefined),
+      });
       return;
     }
 
-    response.status(201).json({ invitation: invitation[0], inviteLink });
+    response.status(201).json({ invitation: invitation[0], inviteLink, emailSent: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to invite user';
     response.status(message.includes('Authorization') ? 401 : 400).json({ error: message });

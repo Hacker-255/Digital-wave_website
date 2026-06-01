@@ -18,6 +18,13 @@ interface CrmUser {
   lastLogin?: string;
 }
 
+interface InviteUserResult {
+  error?: string;
+  inviteLink?: string;
+  warning?: string;
+  emailSent?: boolean;
+}
+
 interface AuthContextValue {
   currentUser: CrmUser | null;
   isManager: boolean;
@@ -30,7 +37,7 @@ interface AuthContextValue {
   updateUserRole: (userId: string, newRole: Role) => Promise<string | null>;
   deleteUser: (userId: string) => Promise<string | null>;
   createUser: (data: { clerkId: string; email: string; name: string; role?: Role }) => Promise<string | null>;
-  inviteUser: (email: string, inviteRole: Role) => Promise<string | null>;
+  inviteUser: (email: string, inviteRole: Role) => Promise<InviteUserResult>;
   acceptInvitation: (token: string) => Promise<string | null>;
 }
 
@@ -46,7 +53,7 @@ const AuthContext = createContext<AuthContextValue>({
   updateUserRole: async () => null,
   deleteUser: async () => null,
   createUser: async () => null,
-  inviteUser: async () => null,
+  inviteUser: async () => ({}),
   acceptInvitation: async () => null,
 });
 
@@ -110,11 +117,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return null;
   }, [refreshUsers]);
 
-  const inviteUser = useCallback(async (email: string, inviteRole: Role): Promise<string | null> => {
-    const { error } = await api.users.invite(email, inviteRole);
-    if (error) return error;
+  const inviteUser = useCallback(async (email: string, inviteRole: Role): Promise<InviteUserResult> => {
+    const { data, error } = await api.users.invite(email, inviteRole);
+    if (error) return { error };
     await refreshUsers();
-    return null;
+    return {
+      inviteLink: data?.inviteLink,
+      warning: data?.warning,
+      emailSent: data?.emailSent,
+    };
   }, [refreshUsers]);
 
   const acceptInvitation = useCallback(async (token: string): Promise<string | null> => {
