@@ -57,6 +57,8 @@ const AuthContext = createContext<AuthContextValue>({
   acceptInvitation: async () => null,
 });
 
+const VALID_ROLES = new Set<Role>(['Owner', 'Admin', 'Manager', 'Employee', 'Viewer']);
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { getToken } = useClerkAuth();
   const { user: clerkUser, isSignedIn } = useUser();
@@ -146,12 +148,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const email = clerkUser.emailAddresses[0]?.emailAddress || '';
     const name = clerkUser.fullName || email || 'Unknown';
+    const metadataRole = typeof clerkUser.publicMetadata?.role === 'string'
+      ? clerkUser.publicMetadata.role as Role
+      : null;
+    const invitedRole = metadataRole && VALID_ROLES.has(metadataRole) ? metadataRole : null;
     const welcomeKey = `crm-welcome-email-sent:${clerkUser.id}`;
 
     listProfiles()
       .then((profiles) => {
         const existing = profiles.find((profile) => profile.id === clerkUser.id);
-        const nextRole = existing?.role || role;
+        const nextRole = existing?.role || invitedRole || role;
         if (existing?.role) setProfileRole(existing.role);
         return upsertProfile({
           id: clerkUser.id,

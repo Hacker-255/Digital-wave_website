@@ -1,4 +1,5 @@
 import {
+  createClerkClient,
   createInvitationToken,
   getOrigin,
   hashToken,
@@ -52,6 +53,16 @@ function queryValue(request: InviteRequest, name: string) {
 
 function idsFilter(ids: string[]) {
   return `(${ids.map((id) => `"${String(id).replace(/"/g, '\\"')}"`).join(',')})`;
+}
+
+function createPendingInvitation(email: string, role: string, expiresAt: string): InvitationRow {
+  return {
+    id: `local-${Date.now()}`,
+    email,
+    role,
+    status: 'pending',
+    expires_at: expiresAt,
+  };
 }
 
 async function getRequesterProfile(requester: { id: string; email: string; name: string; avatarUrl?: string }) {
@@ -213,64 +224,89 @@ export default async function handler(request: InviteRequest, response: VercelRe
       return;
     }
 
-    const existing = await supabaseServiceRequest<InvitationRow[]>(
-      `invitations?select=id,email,role,status,expires_at&email=eq.${encodeURIComponent(email)}&status=eq.pending&expires_at=gt.${encodeURIComponent(new Date().toISOString())}`,
-    );
-    if (existing.length > 0) {
-      response.status(409).json({ error: 'There is already an active invitation for this email' });
-      return;
-    }
-
     const token = createInvitationToken();
     const tokenHash = hashToken(token);
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7).toISOString();
-    const invitation = await supabaseServiceRequest<InvitationRow[]>(
-      'invitations',
-      {
-        method: 'POST',
-        body: JSON.stringify([{
-          email,
-          role,
-          token_hash: tokenHash,
-          invited_by: requester.id,
-          status: 'pending',
-          expires_at: expiresAt,
-        }]),
-      },
-    );
+    let invitation = createPendingInvitation(email, role, expiresAt);
+    let persistenceWarning = '';
+    try {
+      const inserted = await supabaseServiceRequest<InvitationRow[]>(
+        'invitations',
+        {
+          method: 'POST',
+          body: JSON.stringify([{
+            email,
+            role,
+            token_hash: tokenHash,
+            invited_by: requester.id,
+            status: 'pending',
+            expires_at: expiresAt,
+          }]),
+        },
+      );
+      invitation = inserted[0] || invitation;
+    } catch (error) {
+      persistenceWarning = error instanceof Error ? error.message : 'Invitation audit storage is unavailable.';
+    }
 
     const origin = getOrigin(request);
     const inviteLink = `${origin}/crm?invitation_token=${encodeURIComponent(token)}`;
-    if (!process.env.RESEND_API_KEY) {
-      response.status(202).json({
-        invitation: invitation[0],
-        inviteLink,
-        emailSent: false,
-        warning: 'RESEND_API_KEY is not configured. Copy and send this invitation link manually.',
-      });
-      return;
-    }
-
     const companyName = 'Digital Wave CRM';
     const inviterName = requesterProfile.full_name || requester.name;
-    try {
-      await sendInvitationEmail({
-        to: email,
-        inviteLink,
-        inviterName,
-        companyName,
-      });
-    } catch (error) {
-      response.status(202).json({
-        invitation: invitation[0],
-        inviteLink,
-        emailSent: false,
-        warning: resendWarning(error instanceof Error ? error.message : undefined),
-      });
-      return;
+    let resendError = '';
+
+    if (process.env.RESEND_API_KEY) {
+      try {
+        await sendInvitationEmail({
+          to: email,
+          inviteLink,
+          inviterName,
+          companyName,
+        });
+        response.status(201).json({
+          invitation,
+          inviteLink,
+          emailSent: true,
+          warning: persistenceWarning || undefined,
+        });
+        return;
+      } catch (error) {
+        resendError = resendWarning(error instanceof Error ? error.message : undefined);
+      }
+    } else {
+      resendError = 'RESEND_API_KEY is not configured.';
     }
 
-    response.status(201).json({ invitation: invitation[0], inviteLink, emailSent: true });
+    try {
+      const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
+      await clerk.invitations.createInvitation({
+        emailAddress: email,
+        expiresInDays: 7,
+        ignoreExisting: true,
+        notify: true,
+        redirectUrl: `${origin}/crm`,
+        publicMetadata: {
+          role,
+          invitedBy: requester.id,
+          workspace: companyName,
+        },
+      });
+      response.status(201).json({
+        invitation,
+        inviteLink,
+        emailSent: true,
+        warning: persistenceWarning || (resendError ? `Resend failed, so Clerk sent the invitation instead. ${resendError}` : undefined),
+      });
+      return;
+    } catch (error) {
+      const clerkError = error instanceof Error ? error.message : 'Clerk could not send the invitation.';
+      response.status(202).json({
+        invitation,
+        inviteLink,
+        emailSent: false,
+        warning: `${resendError} ${clerkError} Copy and send the invitation link manually.`.trim(),
+      });
+    }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to invite user';
     const status = message.includes('Authorization')
