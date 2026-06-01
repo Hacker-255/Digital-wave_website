@@ -68,7 +68,6 @@ export function DigitalWaveSidebar({ activeModule, onModuleChange, onOpenCommand
         <button className="digital-wave-sidebar-item" onClick={() => navTo('Dashboards')} type="button"><span className="digital-wave-sidebar-icon bg-slate-500/20 text-slate-500"><BarChart3 size={14} /></span>Reports</button>
         <button className="digital-wave-sidebar-item" onClick={() => navTo('Meetings')} type="button"><span className="digital-wave-sidebar-icon bg-slate-500/20 text-slate-500"><CalendarIcon /></span>Calendar</button>
         <p className="digital-wave-section-label">AI</p>
-        <div className="sr-only">
         {aiSidebarItems.map(([Icon, label, tone]) => (
           <button
             key={label}
@@ -80,7 +79,6 @@ export function DigitalWaveSidebar({ activeModule, onModuleChange, onOpenCommand
             {label}
           </button>
         ))}
-        </div>
         <p className="digital-wave-section-label">Other</p>
         {[
           ...otherSidebarItems,

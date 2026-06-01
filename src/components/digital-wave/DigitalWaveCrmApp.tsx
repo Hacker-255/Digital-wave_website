@@ -215,6 +215,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
   const [lastAction, setLastAction] = useState('Ready');
   const [aiAnswer, setAiAnswer] = useState('');
   const [aiPrompt, setAiPrompt] = useState('Summarize my companies and next CRM actions.');
+  const [aiLoading, setAiLoading] = useState(false);
   const [quickAddType, setQuickAddType] = useState<QuickAddType | null>(null);
 
   const [people, setPeople] = useState<CrmPerson[]>(() => localSnapshot.People?.length ? localSnapshot.People : initialPeople);
@@ -1145,6 +1146,46 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
     }, 200);
   }, [audit, crudModal, permissions.canCreate, permissions.canEdit]);
 
+  const askAiChat = useCallback(async () => {
+    const prompt = aiPrompt.trim();
+    if (!prompt || aiLoading) return;
+    setChatOpen(true);
+    setAiLoading(true);
+    setAiAnswer('');
+    try {
+      const response = await fetch('/api/ai/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt,
+          context: {
+            workspace: 'Digital Wave CRM',
+            activeModule,
+            selectedIds,
+            companies: companies.slice(0, 25),
+            people: people.slice(0, 25),
+            leads: leads.slice(0, 25),
+            deals: deals.slice(0, 25),
+            tasks: tasks.slice(0, 25),
+            meetings: meetings.slice(0, 25),
+          },
+        }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || 'AI request failed. Check GEMINI_API_KEY on the server.');
+      }
+      setAiAnswer(String(data.answer || 'The AI service returned an empty response.'));
+      setLastAction('AI answer ready');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'AI request failed. Check the server configuration.';
+      setAiAnswer(message);
+      setLastAction('AI request failed');
+    } finally {
+      setAiLoading(false);
+    }
+  }, [activeModule, aiLoading, aiPrompt, companies, deals, leads, meetings, people, selectedIds, tasks]);
+
   const runCommand = useCallback((action: string) => {
     switch (action) {
       case 'new-company': createCompany(); break;
@@ -1167,16 +1208,15 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
         saveCurrentFilter();
         break;
       case 'ask-ai':
-        setAiAnswer(`AI summary: ${companies.length} companies, ${selectedIds.length} selected. Open AI Ask for a live response from the secure Digital Wave backend assistant.`);
         setChatOpen(true);
-        setLastAction('AI summary ready');
+        void askAiChat();
         break;
       default:
         if (MODULE_ACTIONS.includes(action)) setActiveModule(action);
         else setActiveModule(action);
     }
     setCommandOpen(false);
-  }, [audit, createCompany, exportView, companies, selectedIds, permissions.canDelete, mergeSelectedCompanies, saveCurrentFilter]);
+  }, [audit, createCompany, exportView, companies, selectedIds, permissions.canDelete, mergeSelectedCompanies, saveCurrentFilter, askAiChat]);
 
   const isAiModule = AI_MODULES.includes(activeModule);
   const isWorkflowsModule = activeModule === 'Workflows';
@@ -1251,6 +1291,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
                       <button onClick={() => setCommandOpen(true)} type="button"><SlidersHorizontal size={12} /> Customize</button>
                     </>
                   )}
+                  <button onClick={() => { setChatOpen(true); }} type="button"><Sparkles size={13} /> AI Chat</button>
                   {['Companies', 'People', 'Leads'].includes(activeModule) && permissions.canCreate && <button onClick={() => setImportOpen(true)} type="button"><Upload size={13} /> Import</button>}
                   {['Companies', 'People', 'Leads'].includes(activeModule) && permissions.canExport && <button onClick={exportAllData} type="button"><Download size={13} /> Export</button>}
                   {activeModule === 'Companies' && permissions.canCreate && (
@@ -1379,7 +1420,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
           <DigitalWaveCommandMenu query={query} setQuery={setQuery} onClose={() => setCommandOpen(false)} onRun={runCommand} activeModule={activeModule} />
         )}
         {chatOpen && (
-          <DigitalWaveChatPanel prompt={aiPrompt} setPrompt={setAiPrompt} answer={aiAnswer} onAsk={() => runCommand('ask-ai')} onClose={() => setChatOpen(false)} />
+          <DigitalWaveChatPanel prompt={aiPrompt} setPrompt={setAiPrompt} answer={aiAnswer} loading={aiLoading} onAsk={askAiChat} onClose={() => setChatOpen(false)} />
         )}
         {quickAddType && (
           <QuickAddModal type={quickAddType} onClose={() => setQuickAddType(null)} onSave={handleQuickAdd} />
