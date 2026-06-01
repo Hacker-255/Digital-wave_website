@@ -4,7 +4,7 @@ import { requireAuth, requireManager } from '../middleware/auth';
 import {
   getUsers, getUserById, createUser, updateUserRole, deleteUser,
   recordLogin, recordLogout, getLoginSessions, getOnlineUsers,
-  getInvitations, inviteUser, transferOwnership, getUserByClerkId, acceptInvitation,
+  getInvitations, inviteUser, transferOwnership, getUserByClerkId, acceptInvitation, deleteInvitation,
 } from '../services/userService';
 import { sendInvitationEmail } from '../services/emailService';
 
@@ -47,11 +47,16 @@ router.post('/invite', requireManager, async (req, res) => {
     const invitation = inviteUser(email, role, requester);
     const inviteLink = `${requestOrigin(req)}/crm?invitation_token=${encodeURIComponent(invitation.token)}`;
 
-    await sendInvitationEmail({
-      to: invitation.email,
-      inviteLink,
-      inviterName: requester.name,
-    });
+    try {
+      await sendInvitationEmail({
+        to: invitation.email,
+        inviteLink,
+        inviterName: requester.name,
+      });
+    } catch (emailError) {
+      deleteInvitation(invitation.id);
+      throw emailError;
+    }
 
     const { token: _token, ...safeInvitation } = invitation;
     res.status(201).json({ invitation: safeInvitation, inviteLink });

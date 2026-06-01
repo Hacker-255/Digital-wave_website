@@ -70,6 +70,10 @@ export default async function handler(request: VercelRequest<InviteBody>, respon
       response.status(400).json({ error: 'Enter a valid email address' });
       return;
     }
+    if (!process.env.RESEND_API_KEY) {
+      response.status(500).json({ error: 'RESEND_API_KEY is not configured' });
+      return;
+    }
 
     const existing = await supabaseRequest<InvitationRow[]>(
       `invitations?select=id,email,role,status,expires_at&email=eq.${encodeURIComponent(email)}&status=eq.pending&expires_at=gt.${encodeURIComponent(new Date().toISOString())}`,
@@ -98,11 +102,6 @@ export default async function handler(request: VercelRequest<InviteBody>, respon
         }]),
       },
     );
-
-    if (!process.env.RESEND_API_KEY) {
-      response.status(500).json({ error: 'RESEND_API_KEY is not configured' });
-      return;
-    }
 
     const origin = getOrigin(request);
     const inviteLink = `${origin}/crm?invitation_token=${encodeURIComponent(token)}`;
@@ -134,6 +133,11 @@ export default async function handler(request: VercelRequest<InviteBody>, respon
     });
 
     if (error) {
+      await supabaseRequest(
+        `invitations?id=eq.${encodeURIComponent(invitation[0].id)}`,
+        requester.token,
+        { method: 'DELETE' },
+      ).catch(() => undefined);
       response.status(502).json({ error: error.message || 'Resend failed to send the invitation email' });
       return;
     }

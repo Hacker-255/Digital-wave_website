@@ -152,6 +152,13 @@ export function getInvitations(): Invitation[] {
   return [...invitations];
 }
 
+export function deleteInvitation(id: string): boolean {
+  const index = invitations.findIndex((item) => item.id === id);
+  if (index === -1) return false;
+  invitations.splice(index, 1);
+  return true;
+}
+
 export function acceptInvitation(token: string, data: { clerkId: string; email: string; name: string; avatar?: string }): StoredUser {
   const invitation = invitations.find((item) => item.token === token && item.status === 'pending');
   if (!invitation) {
