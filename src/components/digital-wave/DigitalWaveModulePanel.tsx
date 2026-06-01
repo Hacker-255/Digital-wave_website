@@ -8,6 +8,7 @@ interface DigitalWaveModulePanelProps {
   items?: ModuleItem[];
   onAdd?: () => void;
   onEdit?: (item: ModuleItem) => void;
+  onView?: (item: ModuleItem) => void;
   onDelete?: (item: ModuleItem) => void;
   onDuplicate?: (item: ModuleItem) => void;
 }
@@ -30,7 +31,7 @@ const fallbackData: Record<string, ModuleItem[]> = {
   ],
 };
 
-export function DigitalWaveModulePanel({ module, onOpenCommand, items, onAdd, onEdit, onDelete, onDuplicate }: DigitalWaveModulePanelProps) {
+export function DigitalWaveModulePanel({ module, onOpenCommand, items, onAdd, onEdit, onView, onDelete, onDuplicate }: DigitalWaveModulePanelProps) {
   const displayItems = items ?? fallbackData[module] ?? [];
 
   const handleAction = (item: ModuleItem, action: string) => {
@@ -74,10 +75,10 @@ export function DigitalWaveModulePanel({ module, onOpenCommand, items, onAdd, on
             onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--crm-border-accent)'}
             onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--crm-border)'}
           >
-            <div className="min-w-0 flex-1">
+            <button onClick={() => onView?.(item)} type="button" className="min-w-0 flex-1 text-left">
               <div className="text-sm font-medium truncate" style={{ color: 'var(--crm-text)' }}>{item.label}</div>
               <div className="text-xs mt-0.5 truncate" style={{ color: 'var(--crm-text-muted)' }}>{item.detail}</div>
-            </div>
+            </button>
             {(onEdit || onDelete || onDuplicate) && (
               <TableActions onAction={(action) => handleAction(item, action)} />
             )}

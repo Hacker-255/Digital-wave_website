@@ -11,13 +11,14 @@ interface CompanyTableProps {
   toggleSelected: (id: string) => void;
   toggleAll: () => void;
   onEdit?: (company: CompanyTableRow) => void;
+  onView?: (company: CompanyTableRow) => void;
   onDelete?: (company: CompanyTableRow) => void;
   onDuplicate?: (company: CompanyTableRow) => void;
 }
 
 export function CompanyTable({
   companies, selectedIds, allSelected, compactRows, hiddenLinkedin,
-  toggleSelected, toggleAll, onEdit, onDelete, onDuplicate,
+  toggleSelected, toggleAll, onEdit, onView, onDelete, onDuplicate,
 }: CompanyTableProps) {
   return (
     <div className={compactRows ? 'digital-wave-table compact' : 'digital-wave-table'}>
@@ -39,10 +40,10 @@ export function CompanyTable({
             onClick={() => toggleSelected(company.id)}
             aria-label={`Select ${company.name}`}
           />
-          <span className="company-name">
+          <button className="company-name flex h-full items-center gap-1.5 border-l px-2 text-left" style={{ borderColor: 'var(--crm-border)', color: 'var(--crm-text)' }} onClick={() => onView?.(company)} type="button">
             <i className={company.color}>{company.icon}</i>
             {company.name}
-          </span>
+          </button>
           <span><em>{company.domain}</em></span>
           <span>{company.createdBy === 'System' ? '🛡️ System' : '📚 ' + company.createdBy}</span>
           <span>{company.owner}</span>
@@ -68,7 +69,7 @@ export function CompanyTable({
                   case 'edit': onEdit?.(company); break;
                   case 'delete': onDelete?.(company); break;
                   case 'duplicate': onDuplicate?.(company); break;
-                  case 'view': break;
+                  case 'view': onView?.(company); break;
                 }
               }} />
             )}

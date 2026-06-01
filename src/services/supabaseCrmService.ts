@@ -164,3 +164,21 @@ export async function listAllModuleRecords<T extends { id: string }>(modules: st
 export async function saveAllModuleRecords(recordsByModule: Record<string, Array<{ id: string }>>) {
   await Promise.all(Object.entries(recordsByModule).map(([module, records]) => saveModuleRecords(module, records)));
 }
+
+export async function checkCrmSchemaHealth() {
+  if (!isSupabaseConfigured) {
+    return { ok: false, missing: ['Supabase environment'] };
+  }
+
+  const supabase = requireSupabase();
+  const tables = ['profiles', 'companies', 'crm_records', 'workflows', 'invitations'];
+  const results = await Promise.all(tables.map(async (table) => {
+    const { error } = await supabase.from(table).select('*').limit(1);
+    return { table, ok: !error };
+  }));
+
+  return {
+    ok: results.every((result) => result.ok),
+    missing: results.filter((result) => !result.ok).map((result) => result.table),
+  };
+}

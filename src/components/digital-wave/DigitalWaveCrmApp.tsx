@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState, createElement, useEffect } from 'react';
-import { Building2, ChevronDown, LayoutDashboard, List, Plus, Search, SlidersHorizontal, ArrowUpDown, Download, Linkedin, Check, Sparkles, Zap, AlertTriangle } from 'lucide-react';
+import { Building2, ChevronDown, LayoutDashboard, List, Plus, Search, SlidersHorizontal, ArrowUpDown, Download, Linkedin, Check, Sparkles, Zap, AlertTriangle, Upload } from 'lucide-react';
 import { useUser } from '@clerk/clerk-react';
 import { useKeyboard } from '../../hooks/useKeyboard';
 import { setPresenceClerkId } from '../../hooks/usePresence';
@@ -26,9 +26,12 @@ import { AiExecutePanel } from './AiExecutePanel';
 import { AiAssistantPanel } from './AiAssistantPanel';
 import { WorkflowDashboard } from './WorkflowDashboard';
 import { SettingsPanel } from './SettingsPanel';
+import { CrmDashboard } from './CrmDashboard';
+import { CsvImportModal, type ImportTarget } from './CsvImportModal';
+import { RecordDetailDrawer } from './RecordDetailDrawer';
 import { AuthRequired } from '../crm/AuthRequired';
 import type { ExecuteResult } from '../../services/aiExecutionEngine';
-import { listAllModuleRecords, listCompanies, saveAllModuleRecords, saveCompanies } from '../../services/supabaseCrmService';
+import { checkCrmSchemaHealth, listAllModuleRecords, listCompanies, saveAllModuleRecords, saveCompanies } from '../../services/supabaseCrmService';
 
 interface DigitalWaveCrmAppProps {
   clerkMissing: boolean;
@@ -61,7 +64,7 @@ const moduleIconMap: Record<string, typeof Building2> = {
 
 export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
   const { user: clerkUser, isSignedIn } = useUser();
-  const [activeModule, setActiveModule] = useState(() => window.location.pathname.startsWith('/crm/workflows') ? 'Workflows' : 'Companies');
+  const [activeModule, setActiveModule] = useState(() => window.location.pathname.startsWith('/crm/workflows') ? 'Workflows' : 'Dashboards');
   const [companies, setCompanies] = useState(initialCompanies);
   const [companiesLoaded, setCompaniesLoaded] = useState(false);
   const [recordsLoaded, setRecordsLoaded] = useState(false);
@@ -71,12 +74,20 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState<'filter' | 'sort' | 'options' | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [detailRecord, setDetailRecord] = useState<{ type: string; item: CrudEntity } | null>(null);
+  const [schemaHealth, setSchemaHealth] = useState<{ ok: boolean; missing: string[] } | null>(null);
 
   useEffect(() => {
     if (isSignedIn && clerkUser) {
       setPresenceClerkId(clerkUser.id);
     }
   }, [isSignedIn, clerkUser]);
+
+  useEffect(() => {
+    if (!isSignedIn) return;
+    checkCrmSchemaHealth().then(setSchemaHealth).catch(() => setSchemaHealth({ ok: false, missing: ['schema check failed'] }));
+  }, [isSignedIn]);
 
   useEffect(() => {
     if (!isSignedIn) return;
@@ -400,9 +411,23 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
     return false;
   }, [deleteConfirm, crudModal, commandOpen, chatOpen, menuOpen]);
 
-  const handleNavigate = useCallback((module: string, _id?: string) => {
+  const handleNavigate = useCallback((module: string, id?: string) => {
     setActiveModule(module);
-  }, []);
+    if (!id) return;
+    const collections: Record<string, CrudEntity[]> = {
+      Companies: companies,
+      People: people,
+      Tasks: tasks,
+      Notes: notes,
+      Opportunities: opportunities,
+      Deals: deals,
+      Leads: leads,
+      Meetings: meetings,
+      Projects: projects,
+    };
+    const item = collections[module]?.find((record) => (record as { id: string }).id === id);
+    if (item) setDetailRecord({ type: module, item });
+  }, [companies, deals, leads, meetings, notes, opportunities, people, projects, tasks]);
 
   const keyMap: Record<string, () => void> = {
     'ctrl+k': () => setSearchOpen(true),
@@ -442,6 +467,94 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
     URL.revokeObjectURL(url);
     setLastAction('Companies exported');
   }, [visibleCompanies]);
+
+  const exportAllData = useCallback(() => {
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      companies,
+      people,
+      tasks,
+      notes,
+      opportunities,
+      deals,
+      leads,
+      meetings,
+      projects,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = 'digital-wave-crm-export.json';
+    anchor.click();
+    URL.revokeObjectURL(url);
+    setLastAction('CRM data exported');
+  }, [companies, deals, leads, meetings, notes, opportunities, people, projects, tasks]);
+
+  const handleCsvImport = useCallback((target: ImportTarget, rows: Array<Record<string, string>>) => {
+    const duplicates: string[] = [];
+    let created = 0;
+
+    if (target === 'Companies') {
+      const existingKeys = new Set(companies.flatMap((company) => [company.domain.toLowerCase(), company.name.toLowerCase()].filter(Boolean)));
+      const imported: CompanyTableRow[] = [];
+      for (const row of rows) {
+        const name = row.name || row.company || row['Company Name'] || '';
+        const domain = row.domain || row.website || '';
+        const key = (domain || name).toLowerCase();
+        if (!name || existingKeys.has(key)) {
+          duplicates.push(name || domain || 'Unnamed company');
+          continue;
+        }
+        existingKeys.add(key);
+        created += 1;
+        imported.push({
+          id: genId(),
+          name,
+          domain,
+          createdBy: 'CSV Import',
+          owner: row.owner || '',
+          createdAt: 'Just now',
+          employees: row.employees ? Number(row.employees) || '' : '',
+          linkedin: row.linkedin || '',
+          color: 'bg-blue-600',
+          icon: name.slice(0, 1).toUpperCase() || 'C',
+        });
+      }
+      if (imported.length > 0) setCompanies((current) => [...imported, ...current]);
+      setActiveModule('Companies');
+    } else {
+      const existingEmails = new Set(people.map((person) => person.email.toLowerCase()).filter(Boolean));
+      const imported: CrmPerson[] = [];
+      for (const row of rows) {
+        const name = row.name || row['Full Name'] || '';
+        const email = row.email || '';
+        if (!name || (email && existingEmails.has(email.toLowerCase()))) {
+          duplicates.push(name || email || 'Unnamed person');
+          continue;
+        }
+        if (email) existingEmails.add(email.toLowerCase());
+        created += 1;
+        imported.push({
+          id: genId(),
+          name,
+          email,
+          phone: row.phone || '',
+          title: row.title || '',
+          company: row.company || '',
+          address: row.address || '',
+          notes: row.notes || '',
+          status: row.status || 'Active',
+          tags: row.tags || '',
+        });
+      }
+      if (imported.length > 0) setPeople((current) => [...imported, ...current]);
+      setActiveModule('People');
+    }
+
+    setLastAction(`Imported ${created} ${target.toLowerCase()}`);
+    return { created, skipped: duplicates.length, duplicates };
+  }, [companies, people]);
 
   const handleExecuteAction = useCallback((result: ExecuteResult) => {
     if (!result.success) { setLastAction(result.message); return; }
@@ -563,6 +676,10 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
     setCrudModal({ type: 'Companies', item: company });
   }, []);
 
+  const openDetail = useCallback((type: string, item: CrudEntity) => {
+    setDetailRecord({ type, item });
+  }, []);
+
   const handleCompanyDelete = useCallback((company: CompanyTableRow) => {
     setDeleteConfirm({ type: 'Companies', item: company });
   }, []);
@@ -651,6 +768,11 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
       onOpenCommand={() => setCommandOpen(true)}
       items={moduleItems[type]}
       onAdd={() => openAdd(type)}
+      onView={(item) => {
+        const collections: Record<string, CrudEntity[]> = { People: people, Tasks: tasks, Notes: notes, Opportunities: opportunities, Deals: deals, Leads: leads, Meetings: meetings, Projects: projects };
+        const entity = collections[type]?.find((record) => (record as { id: string }).id === item.id);
+        if (entity) openDetail(type, entity);
+      }}
       onEdit={(item) => openEdit(type, entityConfigs[type]?.toEntity(entityConfigs[type].fromEntity(item as unknown as CrudEntity), (item as { id: string }).id) || (item as unknown as CrudEntity))}
       onDelete={(item) => requestDelete(type, item as unknown as CrudEntity)}
       onDuplicate={(item) => handleDuplicate(type, item as unknown as CrudEntity)}
@@ -676,6 +798,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
               <div className="flex items-center gap-2">
                 <QuickActions onAdd={setQuickAddType} />
                 <div className="digital-wave-top-actions">
+                  <button onClick={() => setImportOpen(true)} type="button"><Upload size={13} /> Import</button>
                   {activeModule === 'Companies' && (
                     <button onClick={createCompany} type="button"><Plus size={13} /> New Company</button>
                   )}
@@ -690,7 +813,22 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
               </div>
             </header>
 
-            {activeModule === 'Companies' ? (
+            {activeModule === 'Dashboards' ? (
+              <CrmDashboard
+                companies={companies}
+                people={people}
+                tasks={tasks}
+                leads={leads}
+                deals={deals}
+                meetings={meetings}
+                companiesLoaded={companiesLoaded}
+                recordsLoaded={recordsLoaded}
+                schemaHealth={schemaHealth}
+                onNavigate={setActiveModule}
+                onOpenImport={() => setImportOpen(true)}
+                onExportAll={exportAllData}
+              />
+            ) : activeModule === 'Companies' ? (
               <div className="digital-wave-table-card">
                 <div className="digital-wave-viewbar">
                   <div className="digital-wave-view-title">
@@ -735,6 +873,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
                   toggleSelected={toggleSelected}
                   toggleAll={() => setSelectedIds(allSelected ? [] : visibleCompanies.map((c) => c.id))}
                   onEdit={handleCompanyEdit}
+                  onView={(company) => openDetail('Companies', company)}
                   onDelete={handleCompanyDelete}
                   onDuplicate={handleCompanyDuplicate}
                 />
@@ -801,6 +940,18 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
         {quickAddType && (
           <QuickAddModal type={quickAddType} onClose={() => setQuickAddType(null)} onSave={handleQuickAdd} />
         )}
+        {importOpen && (
+          <CsvImportModal onClose={() => setImportOpen(false)} onImport={handleCsvImport} />
+        )}
+        <RecordDetailDrawer
+          record={detailRecord}
+          related={{ companies, people, tasks, notes, deals, meetings }}
+          onClose={() => setDetailRecord(null)}
+          onEdit={detailRecord ? () => {
+            setCrudModal(detailRecord);
+            setDetailRecord(null);
+          } : undefined}
+        />
 
         {crudModal && (
           crudModal.type === 'Companies' ? (
