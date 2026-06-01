@@ -1,24 +1,18 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Activity, CheckCircle, ClipboardList, FileEdit, ListFilter, Play, Plus, Power, Trash2 } from 'lucide-react';
-
-type WorkflowStatus = 'active' | 'inactive';
-type TriggerType = 'contact.created' | 'company.created' | 'deal.created' | 'deal.stage_changed' | 'task.completed' | 'manual';
-type ActionType = 'create_task' | 'create_note' | 'update_deal_stage' | 'assign_record' | 'create_activity';
-
-type WorkflowCondition = { field: string; operator: string; value: string };
-type WorkflowAction = { type: ActionType; targetEntity: string; payload: Record<string, string> };
-type Workflow = {
-  _id: string;
-  name: string;
-  description: string;
-  status: WorkflowStatus;
-  trigger: { type: TriggerType; entity?: string; field?: string; from?: string; to?: string };
-  conditions: WorkflowCondition[];
-  actions: WorkflowAction[];
-  createdBy: string;
-  createdAt: string;
-  updatedAt: string;
-};
+import {
+  createWorkflow,
+  deleteWorkflow as deleteSupabaseWorkflow,
+  getWorkflows,
+  setWorkflowEnabled,
+  updateWorkflow,
+  type ActionType,
+  type TriggerType,
+  type Workflow,
+  type WorkflowAction,
+  type WorkflowCondition,
+  type WorkflowStatus,
+} from '../../services/supabaseWorkflowService';
 type WorkflowRun = {
   _id: string;
   workflowId: string;
@@ -58,23 +52,6 @@ function emptyWorkflow(): Partial<Workflow> {
   };
 }
 
-function normalizeWorkflow(workflow: Partial<Workflow>): Workflow {
-  const now = new Date().toISOString();
-
-  return {
-    _id: workflow._id ?? `wf-${Date.now()}`,
-    name: workflow.name ?? 'Untitled workflow',
-    description: workflow.description ?? '',
-    status: workflow.status === 'active' ? 'active' : 'inactive',
-    trigger: workflow.trigger ?? { type: 'manual' },
-    conditions: Array.isArray(workflow.conditions) ? workflow.conditions : [],
-    actions: Array.isArray(workflow.actions) ? workflow.actions : [],
-    createdBy: workflow.createdBy ?? 'Digital Wave Admin',
-    createdAt: workflow.createdAt ?? now,
-    updatedAt: workflow.updatedAt ?? now,
-  };
-}
-
 export function WorkflowDashboard() {
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [runs, setRuns] = useState<WorkflowRun[]>([]);
@@ -87,46 +64,19 @@ export function WorkflowDashboard() {
 
   const activeCount = useMemo(() => workflows.filter((workflow) => workflow.status === 'active').length, [workflows]);
 
-  const getAuthToken = useCallback(async () => {
-    const clerk = (window as unknown as { Clerk?: { session?: { getToken?: () => Promise<string | null> } } }).Clerk;
-    return clerk?.session?.getToken ? clerk.session.getToken().catch(() => null) : null;
-  }, []);
-
-  const apiRequest = useCallback(async <T,>(url: string, options: RequestInit = {}) => {
-    const token = await getAuthToken();
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...(options.headers ?? {}),
-      },
-    });
-    const contentType = response.headers.get('content-type') ?? '';
-    if (!contentType.includes('application/json')) {
-      throw new Error('Workflow API is not available on this server yet.');
-    }
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.error || 'Request failed');
-    return data as T;
-  }, [getAuthToken]);
-
   const load = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
-      const [workflowData, runData] = await Promise.all([
-        apiRequest<Workflow[]>('/api/v1/workflows'),
-        apiRequest<WorkflowRun[]>('/api/v1/workflow-runs'),
-      ]);
-      setWorkflows(Array.isArray(workflowData) ? workflowData.map(normalizeWorkflow) : []);
-      setRuns(Array.isArray(runData) ? runData : []);
+      const workflowData = await getWorkflows();
+      setWorkflows(workflowData);
+      setRuns([]);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to load workflows');
     } finally {
       setLoading(false);
     }
-  }, [apiRequest]);
+  }, []);
 
   useEffect(() => { void load(); }, [load]);
 
@@ -179,9 +129,7 @@ export function WorkflowDashboard() {
     setSaving(true);
     setError('');
     try {
-      const method = selected ? 'PATCH' : 'POST';
-      const url = selected ? `/api/v1/workflows/${selected._id}` : '/api/v1/workflows';
-      const workflow = await apiRequest<Workflow>(url, { method, body: JSON.stringify(draft) });
+      const workflow = selected ? await updateWorkflow(selected._id, draft) : await createWorkflow(draft);
       setSelected(workflow);
       setView('details');
       await load();
@@ -194,19 +142,27 @@ export function WorkflowDashboard() {
 
   async function deleteWorkflow(workflow: Workflow) {
     if (!confirm(`Delete ${workflow.name}?`)) return;
-    await apiRequest(`/api/v1/workflows/${workflow._id}`, { method: 'DELETE' });
+    await deleteSupabaseWorkflow(workflow._id);
     await load();
   }
 
   async function toggleWorkflow(workflow: Workflow) {
-    const action = workflow.status === 'active' ? 'deactivate' : 'activate';
-    await apiRequest(`/api/v1/workflows/${workflow._id}/${action}`, { method: 'PATCH' });
+    await setWorkflowEnabled(workflow._id, workflow.status !== 'active');
     await load();
   }
 
   async function testWorkflow(workflow: Workflow) {
-    await apiRequest(`/api/v1/workflows/${workflow._id}/test`, { method: 'POST', body: JSON.stringify({ triggerData: sampleTriggerData() }) });
-    await load();
+    const now = new Date().toISOString();
+    setRuns((current) => [{
+      _id: `run-${Date.now()}`,
+      workflowId: workflow._id,
+      status: 'success',
+      triggerData: sampleTriggerData(),
+      result: 'Workflow execution is coming soon.',
+      startedAt: now,
+      completedAt: now,
+    }, ...current]);
+    setError('Workflow execution is coming soon.');
     setView('runs');
   }
 

@@ -44,10 +44,25 @@ create table if not exists public.invitations (
   accepted_at timestamptz
 );
 
+create table if not exists public.workflows (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) default auth.uid(),
+  owner_id text not null default (auth.jwt()->>'sub'),
+  name text not null,
+  description text,
+  trigger_type text,
+  trigger_config jsonb not null default '{}'::jsonb,
+  actions jsonb not null default '[]'::jsonb,
+  enabled boolean not null default false,
+  created_at timestamp default now(),
+  updated_at timestamp default now()
+);
+
 alter table public.profiles enable row level security;
 alter table public.companies enable row level security;
 alter table public.crm_records enable row level security;
 alter table public.invitations enable row level security;
+alter table public.workflows enable row level security;
 
 drop policy if exists "Profiles are readable by signed-in users" on public.profiles;
 create policy "Profiles are readable by signed-in users"
@@ -137,6 +152,43 @@ on public.invitations for update
 using (auth.jwt()->>'sub' is not null)
 with check (auth.jwt()->>'sub' is not null);
 
+drop policy if exists "Users can read own workflows" on public.workflows;
+create policy "Users can read own workflows"
+on public.workflows for select
+using (
+  user_id = auth.uid()
+  or owner_id = auth.jwt()->>'sub'
+);
+
+drop policy if exists "Users can create own workflows" on public.workflows;
+create policy "Users can create own workflows"
+on public.workflows for insert
+with check (
+  auth.jwt()->>'sub' is not null
+  and (user_id is null or user_id = auth.uid())
+  and owner_id = auth.jwt()->>'sub'
+);
+
+drop policy if exists "Users can update own workflows" on public.workflows;
+create policy "Users can update own workflows"
+on public.workflows for update
+using (
+  user_id = auth.uid()
+  or owner_id = auth.jwt()->>'sub'
+)
+with check (
+  user_id = auth.uid()
+  or owner_id = auth.jwt()->>'sub'
+);
+
+drop policy if exists "Users can delete own workflows" on public.workflows;
+create policy "Users can delete own workflows"
+on public.workflows for delete
+using (
+  user_id = auth.uid()
+  or owner_id = auth.jwt()->>'sub'
+);
+
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
@@ -160,4 +212,9 @@ for each row execute function public.set_updated_at();
 drop trigger if exists crm_records_set_updated_at on public.crm_records;
 create trigger crm_records_set_updated_at
 before update on public.crm_records
+for each row execute function public.set_updated_at();
+
+drop trigger if exists workflows_set_updated_at on public.workflows;
+create trigger workflows_set_updated_at
+before update on public.workflows
 for each row execute function public.set_updated_at();
