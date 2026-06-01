@@ -1,17 +1,28 @@
 import { useState, useEffect } from 'react';
-import { Activity, Monitor, Smartphone, Globe, Clock, LogOut, Circle } from 'lucide-react';
+import { Activity, AlertTriangle, CheckCircle2, Clock, LogOut, Monitor, ShieldAlert, Circle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { setPresenceClerkId } from '../../hooks/usePresence';
+import { listAuditEvents, type AuditEvent } from '../../services/auditLogService';
 
 export function ActivityPanel() {
   const { sessions, currentUser, isManager, refreshSessions, users } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [auditEvents, setAuditEvents] = useState<AuditEvent[]>(() => listAuditEvents());
 
   useEffect(() => {
     if (isManager) {
       refreshSessions().finally(() => setLoading(false));
     }
   }, [isManager, refreshSessions]);
+
+  useEffect(() => {
+    const refresh = () => setAuditEvents(listAuditEvents());
+    window.addEventListener('crm-audit-log-updated', refresh);
+    window.addEventListener('storage', refresh);
+    return () => {
+      window.removeEventListener('crm-audit-log-updated', refresh);
+      window.removeEventListener('storage', refresh);
+    };
+  }, []);
 
   if (!isManager) return null;
 
@@ -35,6 +46,40 @@ export function ActivityPanel() {
           <p className="text-2xl font-bold" style={{ color: '#f59e0b' }}>{users.filter((u) => u.away).length}</p>
           <p className="text-xs mt-1" style={{ color: 'var(--crm-text-muted)' }}>Away</p>
         </div>
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-semibold" style={{ color: 'var(--crm-text-muted)' }}>CRM Audit Log</p>
+          <button onClick={() => setAuditEvents(listAuditEvents())} type="button" className="digital-wave-btn digital-wave-btn-ghost">Refresh</button>
+        </div>
+        {auditEvents.length === 0 ? (
+          <div className="flex flex-col items-center py-8 text-xs" style={{ color: 'var(--crm-text-muted)' }}>
+            <ShieldAlert size={24} className="mb-2 opacity-40" />
+            No CRM actions recorded yet
+          </div>
+        ) : (
+          <div className="space-y-2 max-h-[360px] overflow-y-auto">
+            {auditEvents.slice(0, 30).map((event) => {
+              const Icon = event.outcome === 'success' ? CheckCircle2 : event.outcome === 'blocked' ? ShieldAlert : AlertTriangle;
+              const color = event.outcome === 'success' ? '#22c55e' : event.outcome === 'blocked' ? '#f59e0b' : '#f87171';
+              return (
+                <div key={event.id} className="flex items-start gap-3 rounded-lg border p-3" style={{ borderColor: 'var(--crm-border)', background: 'var(--crm-surface)' }}>
+                  <Icon size={14} style={{ color, marginTop: 2 }} />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs font-medium" style={{ color: 'var(--crm-text)' }}>{event.action.replace(/_/g, ' ')}</span>
+                      <span className="rounded-full px-2 py-0.5 text-[10px]" style={{ color, background: `${color}1f` }}>{event.outcome}</span>
+                    </div>
+                    <p className="mt-0.5 text-[10px]" style={{ color: 'var(--crm-text-muted)' }}>
+                      {event.entityType} - {event.entityName} - {event.actor} - {new Date(event.createdAt).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <div className="space-y-2">
