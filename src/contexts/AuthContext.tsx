@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
 import { useAuth as useClerkAuth, useUser } from '@clerk/clerk-react';
-import { api } from '../services/apiClient';
+import { api, configureApiAuth } from '../services/apiClient';
 import { getCurrentRole, type Role } from '../services/permissions';
 import { configureSupabaseAuth } from '../lib/supabase';
 import { listProfiles, upsertProfile } from '../services/supabaseCrmService';
@@ -137,6 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [refreshUsers]);
 
   useEffect(() => {
+    configureApiAuth(() => getToken().catch(() => null));
     configureSupabaseAuth(() => getToken({ template: 'supabase' }).catch(() => getToken().catch(() => null)));
   }, [getToken]);
 

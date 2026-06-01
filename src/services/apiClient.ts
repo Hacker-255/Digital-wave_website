@@ -1,5 +1,13 @@
 const API_BASE = '/api';
 
+let tokenProvider: (() => Promise<string | null>) | null = null;
+let cachedToken: string | null = null;
+
+export function configureApiAuth(getToken: () => Promise<string | null>) {
+  tokenProvider = getToken;
+  cachedToken = null;
+}
+
 async function request<T = unknown>(
   path: string,
   options: RequestInit = {},
@@ -35,10 +43,16 @@ async function request<T = unknown>(
   }
 }
 
-let cachedToken: string | null = null;
-
 async function getSessionToken(): Promise<string | null> {
   try {
+    if (tokenProvider) {
+      if (!cachedToken) {
+        cachedToken = await tokenProvider();
+        setTimeout(() => { cachedToken = null; }, 1000 * 60 * 5);
+      }
+      return cachedToken;
+    }
+
     const clerk = (window as any).Clerk;
     if (clerk?.session) {
       if (!cachedToken) {
