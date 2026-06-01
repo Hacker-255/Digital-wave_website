@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState, createElement, useEffect, useRef } from 'react';
-import { Building2, ChevronDown, LayoutDashboard, List, Plus, Search, SlidersHorizontal, ArrowUpDown, Download, Linkedin, Check, Sparkles, Zap, AlertTriangle, Upload, Users, DollarSign, UserRound, Heart, Target } from 'lucide-react';
+import { Building2, Calendar, ChevronDown, LayoutDashboard, List, Plus, Search, SlidersHorizontal, ArrowUpDown, Download, Linkedin, Check, Sparkles, Zap, AlertTriangle, Upload, Users, DollarSign, UserRound, Heart, Target } from 'lucide-react';
 import { useUser } from '@clerk/clerk-react';
 import { useKeyboard } from '../../hooks/useKeyboard';
 import { setPresenceClerkId } from '../../hooks/usePresence';
@@ -32,6 +32,7 @@ import { RecordDetailDrawer } from './RecordDetailDrawer';
 import { DealPipelineBoard } from './DealPipelineBoard';
 import { NotificationCenter } from './NotificationCenter';
 import { SyncStatusPill, type SyncStatus } from './SyncStatusPill';
+import { ExactCompaniesView, ExactDashboardView, ExactLeadsView, ExactPeopleView } from './ExactCrmViews';
 import { AuthRequired } from '../crm/AuthRequired';
 import type { ExecuteResult } from '../../services/aiExecutionEngine';
 import { checkCrmSchemaHealth, listAllModuleRecords, listCompanies, saveAllModuleRecords, saveCompanies } from '../../services/supabaseCrmService';
@@ -1183,6 +1184,9 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
   const moduleIcon = moduleIconMap[activeModule] || LayoutDashboard;
 
   const crudModuleTypes = ['People', 'Tasks', 'Notes', 'Opportunities', 'Deals', 'Leads', 'Meetings', 'Projects', 'Files'];
+  const isExactScreen = ['Dashboards', 'Companies', 'People', 'Leads'].includes(activeModule);
+  const searchPlaceholder = activeModule === 'Companies' ? 'Search companies, domains...' : activeModule === 'People' ? 'Search people...' : activeModule === 'Leads' ? 'Search leads...' : 'Search anything...';
+  const addButtonLabel = activeModule === 'Companies' ? 'Add Company' : activeModule === 'People' ? 'Add Person' : activeModule === 'Leads' ? 'Add Lead' : 'Add';
 
   const renderModulePanel = (type: string) => (
     <DigitalWaveModulePanel
@@ -1235,117 +1239,64 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
               <div className="digital-wave-header-tools">
                 <button className="digital-wave-global-search" onClick={() => setSearchOpen(true)} type="button">
                   <Search size={17} />
-                  <span>Search anything...</span>
+                  <span>{searchPlaceholder}</span>
                   <kbd>Ctrl K</kbd>
                 </button>
-                <SyncStatusPill status={syncStatus} />
+                {!isExactScreen && <SyncStatusPill status={syncStatus} />}
+                {activeModule === 'Dashboards' && permissions.canCreate && <QuickActions onAdd={setQuickAddType} />}
+                <div className="digital-wave-top-actions">
+                  {activeModule === 'Dashboards' && (
+                    <>
+                      <button type="button"><Calendar size={13} /> May 16 - May 22, 2025 <ChevronDown size={13} /></button>
+                      <button onClick={() => setCommandOpen(true)} type="button"><SlidersHorizontal size={12} /> Customize</button>
+                    </>
+                  )}
+                  {['Companies', 'People', 'Leads'].includes(activeModule) && permissions.canCreate && <button onClick={() => setImportOpen(true)} type="button"><Upload size={13} /> Import</button>}
+                  {['Companies', 'People', 'Leads'].includes(activeModule) && permissions.canExport && <button onClick={exportAllData} type="button"><Download size={13} /> Export</button>}
+                  {activeModule === 'Companies' && permissions.canCreate && (
+                    <button className="exact-primary-action" onClick={createCompany} type="button"><Plus size={15} /> {addButtonLabel}</button>
+                  )}
+                  {['People', 'Leads'].includes(activeModule) && permissions.canCreate && (
+                    <button className="exact-primary-action" onClick={() => openAdd(activeModule)} type="button"><Plus size={15} /> {addButtonLabel} <ChevronDown size={13} /></button>
+                  )}
+                  {isWorkflowsModule && permissions.canManageWorkflows && (
+                    <button onClick={() => setCommandOpen(true)} type="button"><SlidersHorizontal size={12} /> Actions</button>
+                  )}
+                  {!isExactScreen && <button onClick={() => setCommandOpen(true)} type="button"><SlidersHorizontal size={12} /> Ctrl K</button>}
+                </div>
                 <NotificationCenter
                   schemaHealth={schemaHealth}
                   companiesLoaded={companiesLoaded}
                   recordsLoaded={recordsLoaded}
                   lastAction={lastAction}
                 />
-                {permissions.canCreate && <QuickActions onAdd={setQuickAddType} />}
-                <div className="digital-wave-top-actions">
-                  {permissions.canCreate && <button onClick={() => setImportOpen(true)} type="button"><Upload size={13} /> Import</button>}
-                  {activeModule === 'Companies' && permissions.canCreate && (
-                    <button onClick={createCompany} type="button"><Plus size={13} /> New Company</button>
-                  )}
-                  {crudModuleTypes.includes(activeModule) && permissions.canCreate && (
-                    <button onClick={() => openAdd(activeModule)} type="button"><Plus size={13} /> Add</button>
-                  )}
-                  {isWorkflowsModule && permissions.canManageWorkflows && (
-                    <button onClick={() => setCommandOpen(true)} type="button"><SlidersHorizontal size={12} /> Actions</button>
-                  )}
-                  <button onClick={() => setCommandOpen(true)} type="button"><SlidersHorizontal size={12} /> Ctrl K</button>
-                </div>
+                <button className="exact-help-button" onClick={() => setCommandOpen(true)} type="button">?</button>
+                {currentUser?.avatar ? <img className="exact-top-avatar" src={currentUser.avatar} alt="" /> : <span className="exact-top-avatar">{currentUser?.name?.[0] || 'M'}</span>}
               </div>
             </header>
 
             {activeModule === 'Dashboards' ? (
-              <CrmDashboard
+              <ExactDashboardView
                 companies={companies}
-                people={people}
-                tasks={tasks}
-                leads={leads}
                 deals={deals}
-                opportunities={opportunities}
+                leads={leads}
+                tasks={tasks}
                 meetings={meetings}
-                files={files}
-                companiesLoaded={companiesLoaded}
-                recordsLoaded={recordsLoaded}
-                schemaHealth={schemaHealth}
-                userCount={users.length}
                 onNavigate={setActiveModule}
-                onOpenImport={permissions.canCreate ? () => setImportOpen(true) : undefined}
-                onExportAll={permissions.canExport ? exportAllData : undefined}
               />
             ) : activeModule === 'Companies' ? (
-              <div className="space-y-5">
-                <ModuleKpiStrip items={companyKpis} />
-                <div className="digital-wave-table-card">
-                  <div className="digital-wave-viewbar">
-                    <div className="digital-wave-view-title">
-                      <List size={14} /> All Companies ({visibleCompanies.length}) <ChevronDown size={12} />
-                    </div>
-                    <label className="digital-wave-search">
-                      <Search size={13} />
-                      <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search companies, domains..." />
-                    </label>
-                    <div className="digital-wave-view-actions">
-                      <button onClick={() => setMenuOpen(menuOpen === 'filter' ? null : 'filter')} type="button">Filter</button>
-                      <button onClick={() => setMenuOpen(menuOpen === 'sort' ? null : 'sort')} type="button">Sort</button>
-                      <button onClick={() => setMenuOpen(menuOpen === 'options' ? null : 'options')} type="button">Options</button>
-                    </div>
-                    {menuOpen && (
-                      <div className="digital-wave-dropdown">
-                        {menuOpen === 'filter' && (
-                          <>
-                            <button onClick={() => setEmployeeFilter((v) => !v)} type="button"><Check size={12} /> Filter &gt;1K employees {employeeFilter ? 'on' : 'off'}</button>
-                            <button onClick={saveCurrentFilter} type="button"><Check size={12} /> Save current filter</button>
-                            {savedFilters.map((filter) => (
-                              <button key={filter.id} onClick={() => applySavedFilter(filter.id)} type="button">{filter.name}</button>
-                            ))}
-                          </>
-                        )}
-                        {menuOpen === 'sort' && (
-                          <>
-                            <button onClick={() => runCommand('sort-name')} type="button"><ArrowUpDown size={12} /> Sort by name</button>
-                            <button onClick={() => runCommand('sort-employees')} type="button"><ArrowUpDown size={12} /> Sort by employees</button>
-                          </>
-                        )}
-                        {menuOpen === 'options' && (
-                          <>
-                            <button onClick={() => setCompactRows((v) => !v)} type="button"><List size={12} /> Compact rows</button>
-                            <button onClick={() => setHiddenLinkedin((v) => !v)} type="button"><Linkedin size={12} /> Toggle LinkedIn</button>
-                            <button onClick={mergeSelectedCompanies} type="button"><Check size={12} /> Merge selected</button>
-                            {permissions.canExport && <button onClick={exportView} type="button"><Download size={12} /> Export view</button>}
-                          </>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  <CompanyTable
-                    companies={visibleCompanies}
-                    selectedIds={selectedIds}
-                    allSelected={allSelected}
-                    compactRows={compactRows}
-                    hiddenLinkedin={hiddenLinkedin}
-                    toggleSelected={toggleSelected}
-                    toggleAll={() => setSelectedIds(allSelected ? [] : visibleCompanies.map((c) => c.id))}
-                    onEdit={permissions.canEdit ? handleCompanyEdit : undefined}
-                    onView={(company) => openDetail('Companies', company)}
-                    onDelete={permissions.canDelete ? handleCompanyDelete : undefined}
-                    onDuplicate={permissions.canCreate ? handleCompanyDuplicate : undefined}
-                  />
-                  <footer className="digital-wave-table-footer">
-                    <span>Calculate <ChevronDown size={12} /></span>
-                    <span>Count all <b>{visibleCompanies.length}</b></span>
-                    <span>Max Empl <b>{maxEmployees.toLocaleString()}</b></span>
-                    <span>Selected <b>{selectedIds.length}</b></span>
-                  </footer>
-                </div>
-              </div>
+              <ExactCompaniesView
+                companies={visibleCompanies}
+                selectedIds={selectedIds}
+                allSelected={allSelected}
+                onToggleSelected={toggleSelected}
+                onToggleAll={() => setSelectedIds(allSelected ? [] : visibleCompanies.map((c) => c.id))}
+                onView={(company) => openDetail('Companies', company)}
+                onEdit={permissions.canEdit ? handleCompanyEdit : undefined}
+                onDelete={permissions.canDelete ? handleCompanyDelete : undefined}
+                onDuplicate={permissions.canCreate ? handleCompanyDuplicate : undefined}
+                onFilter={() => setMenuOpen(menuOpen === 'filter' ? null : 'filter')}
+              />
             ) : activeModule === 'AI Execute' ? (
               <div className="digital-wave-table-card">
                 <div className="p-4 min-h-[400px]">
@@ -1370,33 +1321,24 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
                 {renderModulePanel('Deals')}
               </div>
             ) : activeModule === 'People' ? (
-              <div className="space-y-5">
-                <ModuleKpiStrip items={peopleKpis} />
-                {renderModulePanel('People')}
-              </div>
+              <ExactPeopleView
+                people={people}
+                onOpen={(person) => openDetail('People', person)}
+                onEdit={permissions.canEdit ? (person) => openEdit('People', person) : undefined}
+                onDelete={permissions.canDelete ? (person) => requestDelete('People', person) : undefined}
+                onDuplicate={permissions.canCreate ? (person) => handleDuplicate('People', person) : undefined}
+                onFilter={() => setCommandOpen(true)}
+              />
             ) : activeModule === 'Leads' ? (
-              <div className="space-y-5">
-                <ModuleKpiStrip items={leadKpis} />
-                <div className="digital-wave-table-card p-4">
-                  <div className="mb-3 flex items-center justify-between">
-                    <div>
-                      <h2 className="text-sm font-semibold" style={{ color: 'var(--crm-text)' }}>Lead conversion queue</h2>
-                      <p className="text-xs" style={{ color: 'var(--crm-text-muted)' }}>Qualified leads can become a company, contact, and deal in one action.</p>
-                    </div>
-                    <span className="rounded-full px-2 py-1 text-[10px]" style={{ background: 'rgba(245,158,11,0.12)', color: '#f59e0b' }}>{leads.filter((lead) => lead.status !== 'Converted').length} open</span>
-                  </div>
-                  <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
-                    {leads.filter((lead) => lead.status !== 'Converted').slice(0, 6).map((lead) => (
-                      <div key={lead.id} className="rounded-lg border p-3" style={{ borderColor: 'var(--crm-border)', background: 'var(--crm-surface)' }}>
-                        <p className="text-sm font-semibold" style={{ color: 'var(--crm-text)' }}>{lead.name}</p>
-                        <p className="text-xs" style={{ color: 'var(--crm-text-muted)' }}>{lead.company} - {lead.source} - Score {lead.score || '-'}</p>
-                        <button onClick={() => convertLead(lead)} type="button" className="digital-wave-btn digital-wave-btn-primary mt-3 w-full">Convert lead</button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                {renderModulePanel('Leads')}
-              </div>
+              <ExactLeadsView
+                leads={leads}
+                onOpen={(lead) => openDetail('Leads', lead)}
+                onEdit={permissions.canEdit ? (lead) => openEdit('Leads', lead) : undefined}
+                onDelete={permissions.canDelete ? (lead) => requestDelete('Leads', lead) : undefined}
+                onDuplicate={permissions.canCreate ? (lead) => handleDuplicate('Leads', lead) : undefined}
+                onFilter={() => setCommandOpen(true)}
+                onConvert={convertLead}
+              />
             ) : crudModuleTypes.includes(activeModule) ? (
               renderModulePanel(activeModule)
             ) : activeModule === 'Settings' ? (
