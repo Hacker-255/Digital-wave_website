@@ -641,6 +641,7 @@ button, input { font: inherit; }
   .exact-person-cell b { @apply block truncate font-semibold; }
   .exact-person-cell small { @apply block truncate text-xs; color: var(--crm-text-muted); }
   .exact-check { @apply h-4 w-4 rounded border bg-transparent p-0; border-color: rgba(148,163,184,0.5) !important; }
+  .exact-check.checked { background: var(--crm-cta-bg) !important; border-color: transparent !important; box-shadow: inset 0 0 0 3px var(--crm-card-bg); }
   .exact-tags { @apply flex-wrap; }
   .exact-star { color: #f59e0b; fill: #f59e0b; }
   .exact-table-footer { @apply flex flex-wrap items-center justify-between gap-4 px-5 py-4 text-sm; color: var(--crm-text-secondary); }

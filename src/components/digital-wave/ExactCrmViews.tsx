@@ -9,7 +9,6 @@ import {
   Columns3,
   Crown,
   DollarSign,
-  Download,
   Heart,
   Mail,
   MoreHorizontal,
@@ -19,10 +18,10 @@ import {
   Star,
   Target,
   TrendingUp,
-  Upload,
   UserRound,
   Users,
 } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import type { CompanyTableRow, CrmDeal, CrmLead, CrmMeeting, CrmPerson, CrmTask } from '../../constants/data';
 import { TableActions } from './TableActions';
 
@@ -103,21 +102,25 @@ function MetricCard({ icon: Icon, label, value, trend, tone, spark }: { icon: ty
 }
 
 function Pagination({ total = '156' }: { total?: string }) {
+  const [current, setCurrent] = useState(1);
+  const [pageSize, setPageSize] = useState(8);
+  const lastPage = Math.max(2, Number(total) || 2);
+
   return (
     <div className="exact-pagination">
-      <button type="button"><ChevronLeft size={16} /></button>
-      <button type="button" className="active">1</button>
-      <button type="button">2</button>
-      <button type="button">3</button>
+      <button type="button" onClick={() => setCurrent((value) => Math.max(1, value - 1))}><ChevronLeft size={16} /></button>
+      {[1, 2, 3].map((page) => (
+        <button key={page} type="button" className={current === page ? 'active' : ''} onClick={() => setCurrent(page)}>{page}</button>
+      ))}
       <span>...</span>
-      <button type="button">{total}</button>
-      <button type="button"><ChevronRight size={16} /></button>
-      <button type="button" className="per-page">8 per page <ChevronDown size={14} /></button>
+      <button type="button" className={current === lastPage ? 'active' : ''} onClick={() => setCurrent(lastPage)}>{total}</button>
+      <button type="button" onClick={() => setCurrent((value) => Math.min(lastPage, value + 1))}><ChevronRight size={16} /></button>
+      <button type="button" className="per-page" onClick={() => setPageSize((value) => value === 8 ? 16 : 8)}>{pageSize} per page <ChevronDown size={14} /></button>
     </div>
   );
 }
 
-function TableToolButton({ icon: Icon, label, onClick }: { icon: typeof Search; label: string; onClick?: () => void }) {
+function TableToolButton({ icon: Icon, label, onClick }: { icon: typeof Search; label: string; onClick: () => void }) {
   return <button className="exact-tool-button" onClick={onClick} type="button"><Icon size={16} /> {label}</button>;
 }
 
@@ -128,6 +131,7 @@ export function ExactDashboardView({
   tasks,
   meetings,
   onNavigate,
+  onOpenCommand,
 }: {
   companies: CompanyTableRow[];
   deals: CrmDeal[];
@@ -135,7 +139,10 @@ export function ExactDashboardView({
   tasks: CrmTask[];
   meetings: CrmMeeting[];
   onNavigate: (module: string) => void;
+  onOpenCommand: () => void;
 }) {
+  const [pipelinePeriod, setPipelinePeriod] = useState<'This Month' | 'This Quarter'>('This Month');
+  const [revenuePeriod, setRevenuePeriod] = useState<'This Year' | 'Last Year'>('This Year');
   const totalRevenue = deals.reduce((sum, deal) => sum + numberFromMoney(deal.value), 0) || 2450000;
   const activeDeals = deals.length || 42;
   const newLeads = leads.length || 128;
@@ -168,7 +175,7 @@ export function ExactDashboardView({
         <section className="exact-card exact-pipeline">
           <div className="exact-card-head">
             <h2>Sales Pipeline</h2>
-            <button type="button">This Month <ChevronDown size={14} /></button>
+            <button type="button" onClick={() => setPipelinePeriod((value) => value === 'This Month' ? 'This Quarter' : 'This Month')}>{pipelinePeriod} <ChevronDown size={14} /></button>
           </div>
           <div className="exact-stage-list">
             {pipelineStages.map(([stage, count, value, tone]) => (
@@ -184,7 +191,7 @@ export function ExactDashboardView({
         <section className="exact-card exact-revenue">
           <div className="exact-card-head">
             <h2>Revenue Overview</h2>
-            <button type="button">This Year <ChevronDown size={14} /></button>
+            <button type="button" onClick={() => setRevenuePeriod((value) => value === 'This Year' ? 'Last Year' : 'This Year')}>{revenuePeriod} <ChevronDown size={14} /></button>
           </div>
           <p className="exact-big-money">{money(totalRevenue)}</p>
           <small className="exact-green">+ 25.3% vs last year</small>
@@ -246,7 +253,7 @@ export function ExactDashboardView({
         </section>
 
         <section className="exact-card exact-side-list">
-          <div className="exact-card-head"><h2>Recent Activity</h2><button type="button">View All</button></div>
+          <div className="exact-card-head"><h2>Recent Activity</h2><button onClick={onOpenCommand} type="button">View All</button></div>
           {activity.map((item) => (
             <div key={item.name} className="exact-activity-row">
               <CompanyBadge name={item.name} />
@@ -271,6 +278,8 @@ export function ExactCompaniesView({
   onDelete,
   onDuplicate,
   onFilter,
+  onSort,
+  onColumns,
 }: {
   companies: CompanyTableRow[];
   selectedIds: string[];
@@ -282,7 +291,10 @@ export function ExactCompaniesView({
   onDelete?: ActionHandler<CompanyTableRow>;
   onDuplicate?: ActionHandler<CompanyTableRow>;
   onFilter?: () => void;
+  onSort: () => void;
+  onColumns: () => void;
 }) {
+  const [insightPeriod, setInsightPeriod] = useState<'This Month' | 'This Quarter'>('This Month');
   const rows = companies.slice(0, 8);
   const totalEmployees = companies.reduce((sum, company) => sum + Number(company.employees || 0), 0);
   const actions = [
@@ -302,7 +314,11 @@ export function ExactCompaniesView({
         <section className="exact-card exact-data-card">
           <div className="exact-card-head">
             <h2>All Companies ({companies.length}) <ChevronDown size={14} /></h2>
-            <TableToolButton icon={SlidersHorizontal} label="Filter" onClick={onFilter} />
+            <div className="flex gap-2">
+              <TableToolButton icon={SlidersHorizontal} label="Filter" onClick={onFilter || onSort} />
+              <TableToolButton icon={ArrowDownUp} label="Sort" onClick={onSort} />
+              <TableToolButton icon={Columns3} label="Columns" onClick={onColumns} />
+            </div>
           </div>
           <div className="exact-company-table">
             <div className="exact-company-table-head">
@@ -324,7 +340,7 @@ export function ExactCompaniesView({
         </section>
         <aside className="exact-insights">
           <section className="exact-card">
-            <div className="exact-card-head"><h2>Company Insights</h2><button type="button">This Month <ChevronDown size={14} /></button></div>
+            <div className="exact-card-head"><h2>Company Insights</h2><button type="button" onClick={() => setInsightPeriod((value) => value === 'This Month' ? 'This Quarter' : 'This Month')}>{insightPeriod} <ChevronDown size={14} /></button></div>
             <div className="exact-donut-wrap compact"><div className="exact-donut"><b>{companies.length}</b><span>Companies</span></div><div className="exact-legend"><p><i className="dot-0" /> Active 8 (66.7%)</p><p><i className="dot-4" /> Inactive 2 (16.7%)</p><p><i className="dot-3" /> Prospect 2 (16.7%)</p></div></div>
           </section>
           <section className="exact-card">
@@ -348,6 +364,8 @@ export function ExactPeopleView({
   onDelete,
   onDuplicate,
   onFilter,
+  onSort,
+  onColumns,
 }: {
   people: CrmPerson[];
   onOpen: ActionHandler<CrmPerson>;
@@ -355,8 +373,20 @@ export function ExactPeopleView({
   onDelete?: ActionHandler<CrmPerson>;
   onDuplicate?: ActionHandler<CrmPerson>;
   onFilter?: () => void;
+  onSort: () => void;
+  onColumns: () => void;
 }) {
-  const rows = (people.length >= 8 ? people : peopleFallback).slice(0, 8);
+  const [activeTab, setActiveTab] = useState('All People');
+  const [selected, setSelected] = useState<string[]>([]);
+  const baseRows = people.length >= 8 ? people : peopleFallback;
+  const rows = useMemo(() => baseRows.filter((person) => {
+    if (activeTab === 'Customers') return /customer/i.test(person.status);
+    if (activeTab === 'Leads') return /lead/i.test(person.status);
+    if (activeTab === 'Vendors') return /vendor/i.test(person.status);
+    if (activeTab === 'Inactive') return /inactive/i.test(person.status);
+    return true;
+  }).slice(0, 8), [activeTab, baseRows]);
+  const toggleSelected = (id: string) => setSelected((items) => items.includes(id) ? items.filter((item) => item !== id) : [...items, id]);
   const actions = [
     ...(onEdit ? [{ key: 'edit', label: 'Edit', icon: Target }] : []),
     ...(onDuplicate ? [{ key: 'duplicate', label: 'Duplicate', icon: Columns3 }] : []),
@@ -372,12 +402,20 @@ export function ExactPeopleView({
         <MetricCard icon={Heart} label="Inactive" value="88" trend="- 8.1% vs last month" tone="pink" />
       </div>
       <section className="exact-card exact-data-card">
-        <div className="exact-tabs"><button className="active">All People (1,248)</button><button>Customers (842)</button><button>Leads (256)</button><button>Vendors (62)</button><button>Inactive (88)</button><span /><TableToolButton icon={SlidersHorizontal} label="Filter" onClick={onFilter} /><TableToolButton icon={ArrowDownUp} label="Sort" /><TableToolButton icon={Columns3} label="Columns" /></div>
+        <div className="exact-tabs">
+          {['All People', 'Customers', 'Leads', 'Vendors', 'Inactive'].map((tab) => (
+            <button key={tab} className={activeTab === tab ? 'active' : ''} onClick={() => setActiveTab(tab)} type="button">{tab} ({tab === 'All People' ? '1,248' : tab === 'Customers' ? '842' : tab === 'Leads' ? '256' : tab === 'Vendors' ? '62' : '88'})</button>
+          ))}
+          <span />
+          <TableToolButton icon={SlidersHorizontal} label="Filter" onClick={onFilter || onSort} />
+          <TableToolButton icon={ArrowDownUp} label="Sort" onClick={onSort} />
+          <TableToolButton icon={Columns3} label="Columns" onClick={onColumns} />
+        </div>
         <div className="exact-people-table">
           <div className="exact-people-head"><span /><span>Person</span><span>Company</span><span>Job Title</span><span>Email</span><span>Phone</span><span>Status</span><span>Tags</span><span>Last Contact</span><span>Actions</span></div>
           {rows.map((person, index) => (
             <div className="exact-people-row" key={person.id}>
-              <button className="exact-check" type="button" />
+              <button className={selected.includes(person.id) ? 'exact-check checked' : 'exact-check'} onClick={() => toggleSelected(person.id)} type="button" aria-label={`Select ${person.name}`} />
               <button onClick={() => onOpen(person)} type="button" className="exact-person-cell"><Avatar name={person.name} /><span><b>{person.name}</b><small>{person.email}</small></span></button>
               <span><CompanyBadge name={person.company} /> {person.company}</span>
               <span>{person.title}</span>
@@ -404,6 +442,8 @@ export function ExactLeadsView({
   onDuplicate,
   onFilter,
   onConvert,
+  onSort,
+  onColumns,
 }: {
   leads: CrmLead[];
   onOpen: ActionHandler<CrmLead>;
@@ -412,8 +452,19 @@ export function ExactLeadsView({
   onDuplicate?: ActionHandler<CrmLead>;
   onFilter?: () => void;
   onConvert?: ActionHandler<CrmLead>;
+  onSort: () => void;
+  onColumns: () => void;
 }) {
-  const rows = (leads.length >= 8 ? leads : leadFallback).slice(0, 8);
+  const [activeTab, setActiveTab] = useState('All Leads');
+  const [search, setSearch] = useState('');
+  const [selected, setSelected] = useState<string[]>([]);
+  const baseRows = leads.length >= 8 ? leads : leadFallback;
+  const rows = useMemo(() => baseRows.filter((lead) => {
+    const matchesTab = activeTab === 'All Leads' || lead.status === activeTab || (activeTab === 'Closed Won' && lead.status === 'Converted') || activeTab === 'Closed Lost';
+    const matchesSearch = [lead.name, lead.email, lead.company, lead.source, lead.owner].join(' ').toLowerCase().includes(search.toLowerCase());
+    return matchesTab && matchesSearch;
+  }).slice(0, 8), [activeTab, baseRows, search]);
+  const toggleSelected = (id: string) => setSelected((items) => items.includes(id) ? items.filter((item) => item !== id) : [...items, id]);
   const actions = [
     ...(onConvert ? [{ key: 'convert', label: 'Convert', icon: CheckCircle2 }] : []),
     ...(onEdit ? [{ key: 'edit', label: 'Edit', icon: Target }] : []),
@@ -430,13 +481,17 @@ export function ExactLeadsView({
         <MetricCard icon={Heart} label="Conversion Rate" value="16.4%" trend="+ 2.4% vs last month" tone="pink" />
       </div>
       <section className="exact-card exact-data-card">
-        <div className="exact-tabs lead-tabs"><button className="active">All Leads<br /><b>256</b></button><button>New<br /><b>128</b></button><button>Contacted<br /><b>64</b></button><button>Qualified<br /><b>42</b></button><button>Proposal<br /><b>16</b></button><button>Negotiation<br /><b>4</b></button><button>Closed Won<br /><b>2</b></button><button>Closed Lost<br /><b>0</b></button></div>
-        <div className="exact-table-toolbar"><label><Search size={16} /><input placeholder="Search leads..." /></label><span /><TableToolButton icon={SlidersHorizontal} label="Filter" onClick={onFilter} /><TableToolButton icon={ArrowDownUp} label="Sort" /><TableToolButton icon={Columns3} label="Columns" /></div>
+        <div className="exact-tabs lead-tabs">
+          {[
+            ['All Leads', '256'], ['New', '128'], ['Contacted', '64'], ['Qualified', '42'], ['Proposal', '16'], ['Negotiation', '4'], ['Closed Won', '2'], ['Closed Lost', '0'],
+          ].map(([tab, count]) => <button key={tab} className={activeTab === tab ? 'active' : ''} onClick={() => setActiveTab(tab)} type="button">{tab}<br /><b>{count}</b></button>)}
+        </div>
+        <div className="exact-table-toolbar"><label><Search size={16} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search leads..." /></label><span /><TableToolButton icon={SlidersHorizontal} label="Filter" onClick={onFilter || onSort} /><TableToolButton icon={ArrowDownUp} label="Sort" onClick={onSort} /><TableToolButton icon={Columns3} label="Columns" onClick={onColumns} /></div>
         <div className="exact-leads-table">
           <div className="exact-leads-head"><span /><span>Lead</span><span>Company</span><span>Status</span><span>Lead Score</span><span>Source</span><span>Owner</span><span>Last Contact</span><span>Actions</span></div>
           {rows.map((lead, index) => (
             <div className="exact-leads-row" key={lead.id}>
-              <button className="exact-check" type="button" />
+              <button className={selected.includes(lead.id) ? 'exact-check checked' : 'exact-check'} onClick={() => toggleSelected(lead.id)} type="button" aria-label={`Select ${lead.name}`} />
               <button onClick={() => onOpen(lead)} type="button" className="exact-person-cell"><Avatar name={lead.name} /><span><b>{lead.name}</b><small>{index === 0 ? 'CTO' : index === 1 ? 'Head of Ops' : index === 2 ? 'Operations Manager' : index === 3 ? 'Sales Director' : index === 4 ? 'Product Manager' : index === 5 ? 'CEO' : index === 6 ? 'Cloud Architect' : 'IT Manager'}<br />{lead.email}</small></span></button>
               <span><CompanyBadge name={lead.company} /> {lead.company}</span>
               <span><StatusBadge value={lead.status} /></span>

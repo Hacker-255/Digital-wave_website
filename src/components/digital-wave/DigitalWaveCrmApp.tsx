@@ -1247,7 +1247,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
                 <div className="digital-wave-top-actions">
                   {activeModule === 'Dashboards' && (
                     <>
-                      <button type="button"><Calendar size={13} /> May 16 - May 22, 2025 <ChevronDown size={13} /></button>
+                      <button onClick={() => setCommandOpen(true)} type="button"><Calendar size={13} /> May 16 - May 22, 2025 <ChevronDown size={13} /></button>
                       <button onClick={() => setCommandOpen(true)} type="button"><SlidersHorizontal size={12} /> Customize</button>
                     </>
                   )}
@@ -1283,6 +1283,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
                 tasks={tasks}
                 meetings={meetings}
                 onNavigate={setActiveModule}
+                onOpenCommand={() => setCommandOpen(true)}
               />
             ) : activeModule === 'Companies' ? (
               <ExactCompaniesView
@@ -1295,7 +1296,9 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
                 onEdit={permissions.canEdit ? handleCompanyEdit : undefined}
                 onDelete={permissions.canDelete ? handleCompanyDelete : undefined}
                 onDuplicate={permissions.canCreate ? handleCompanyDuplicate : undefined}
-                onFilter={() => setMenuOpen(menuOpen === 'filter' ? null : 'filter')}
+                onFilter={() => setCommandOpen(true)}
+                onSort={() => runCommand('sort-name')}
+                onColumns={() => setCommandOpen(true)}
               />
             ) : activeModule === 'AI Execute' ? (
               <div className="digital-wave-table-card">
@@ -1328,6 +1331,8 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
                 onDelete={permissions.canDelete ? (person) => requestDelete('People', person) : undefined}
                 onDuplicate={permissions.canCreate ? (person) => handleDuplicate('People', person) : undefined}
                 onFilter={() => setCommandOpen(true)}
+                onSort={() => setCommandOpen(true)}
+                onColumns={() => setCommandOpen(true)}
               />
             ) : activeModule === 'Leads' ? (
               <ExactLeadsView
@@ -1338,6 +1343,8 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
                 onDuplicate={permissions.canCreate ? (lead) => handleDuplicate('Leads', lead) : undefined}
                 onFilter={() => setCommandOpen(true)}
                 onConvert={convertLead}
+                onSort={() => setCommandOpen(true)}
+                onColumns={() => setCommandOpen(true)}
               />
             ) : crudModuleTypes.includes(activeModule) ? (
               renderModulePanel(activeModule)
