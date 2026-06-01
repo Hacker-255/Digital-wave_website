@@ -7,8 +7,8 @@ import {
   supabaseRequest,
   type VercelRequest,
   type VercelResponse,
-} from '../_serverHelpers';
-import { sendInvitationEmail } from '../_emailService';
+} from '../_serverHelpers.js';
+import { sendInvitationEmail } from '../_emailService.js';
 
 type InviteBody = {
   email?: string;

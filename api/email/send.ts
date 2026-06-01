@@ -4,13 +4,13 @@ import {
   supabaseRequest,
   type VercelRequest,
   type VercelResponse,
-} from '../_serverHelpers';
+} from '../_serverHelpers.js';
 import {
   EmailDeliveryError,
   sendCrmNotificationEmail,
   sendPasswordResetEmail,
   sendPaymentConfirmationEmail,
-} from '../_emailService';
+} from '../_emailService.js';
 
 type EmailType = 'password-reset' | 'crm-notification' | 'payment-confirmation';
 

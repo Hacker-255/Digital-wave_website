@@ -1,4 +1,4 @@
-import { getWorkflowStore, type Workflow } from '../../_workflowStore';
+import { getWorkflowStore, type Workflow } from '../../_workflowStore.js';
 
 type VercelResponse = {
   status: (code: number) => VercelResponse;

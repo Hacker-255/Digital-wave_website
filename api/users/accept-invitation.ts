@@ -5,7 +5,7 @@ import {
   supabaseRequest,
   type VercelRequest,
   type VercelResponse,
-} from '../_serverHelpers';
+} from '../_serverHelpers.js';
 
 type AcceptBody = {
   token?: string;

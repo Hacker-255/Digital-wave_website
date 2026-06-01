@@ -1,4 +1,4 @@
-import { generateGeminiAnswer } from '../_geminiService';
+import { generateGeminiAnswer } from '../_geminiService.js';
 
 type AskRequest = {
   prompt?: string;

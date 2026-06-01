@@ -1,4 +1,4 @@
-import { createId, getWorkflowStore, type Workflow } from '../../_workflowStore';
+import { createId, getWorkflowStore, type Workflow } from '../../_workflowStore.js';
 
 type VercelResponse = {
   status: (code: number) => VercelResponse;

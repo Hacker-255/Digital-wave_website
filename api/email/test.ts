@@ -4,8 +4,8 @@ import {
   supabaseRequest,
   type VercelRequest,
   type VercelResponse,
-} from '../_serverHelpers';
-import { EmailDeliveryError, sendTestEmail } from '../_emailService';
+} from '../_serverHelpers.js';
+import { EmailDeliveryError, sendTestEmail } from '../_emailService.js';
 
 type TestEmailBody = {
   to?: string;

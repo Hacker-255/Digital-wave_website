@@ -3,8 +3,8 @@ import {
   setJsonHeaders,
   type VercelRequest,
   type VercelResponse,
-} from '../_serverHelpers';
-import { EmailDeliveryError, sendWelcomeEmail } from '../_emailService';
+} from '../_serverHelpers.js';
+import { EmailDeliveryError, sendWelcomeEmail } from '../_emailService.js';
 
 export default async function handler(request: VercelRequest, response: VercelResponse) {
   setJsonHeaders(response);
