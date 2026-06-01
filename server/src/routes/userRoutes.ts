@@ -1,10 +1,12 @@
 import { Router } from 'express';
+import type { Request } from 'express';
 import { requireAuth, requireManager } from '../middleware/auth';
 import {
   getUsers, getUserById, createUser, updateUserRole, deleteUser,
   recordLogin, recordLogout, getLoginSessions, getOnlineUsers,
-  getInvitations, inviteUser, transferOwnership, getUserByClerkId,
+  getInvitations, inviteUser, transferOwnership, getUserByClerkId, acceptInvitation,
 } from '../services/userService';
+import { sendInvitationEmail } from '../services/emailService';
 
 const router = Router();
 
@@ -31,15 +33,48 @@ router.get('/invitations', requireManager, (_req, res) => {
   res.json({ invitations: getInvitations() });
 });
 
-router.post('/invite', requireManager, (req, res) => {
+function requestOrigin(req: Request) {
+  const proto = req.headers['x-forwarded-proto'] || req.protocol || 'http';
+  const host = req.headers['x-forwarded-host'] || req.headers.host || '127.0.0.1:5173';
+  return `${Array.isArray(proto) ? proto[0] : proto}://${Array.isArray(host) ? host[0] : host}`;
+}
+
+router.post('/invite', requireManager, async (req, res) => {
   try {
     const requester = req.authUser ? getUserByClerkId(req.authUser.clerkId) : undefined;
     if (!requester) return res.status(401).json({ error: 'Inviting user not found' });
     const { email, role = 'Employee' } = req.body;
     const invitation = inviteUser(email, role, requester);
-    res.status(201).json({ invitation });
+    const inviteLink = `${requestOrigin(req)}/crm?invitation_token=${encodeURIComponent(invitation.token)}`;
+
+    await sendInvitationEmail({
+      to: invitation.email,
+      inviteLink,
+      inviterName: requester.name,
+    });
+
+    const { token: _token, ...safeInvitation } = invitation;
+    res.status(201).json({ invitation: safeInvitation, inviteLink });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Failed to invite user';
+    const status = message.includes('RESEND') || message.toLowerCase().includes('resend') ? 502 : 400;
+    res.status(status).json({ error: message });
+  }
+});
+
+router.post('/accept-invitation', (req, res) => {
+  try {
+    if (!req.authUser) return res.status(401).json({ error: 'Not authenticated' });
+    const { token } = req.body;
+    if (!token) return res.status(400).json({ error: 'Invitation token is required' });
+    const user = acceptInvitation(token, {
+      clerkId: req.authUser.clerkId,
+      email: req.authUser.email,
+      name: req.authUser.name,
+    });
+    res.json({ ok: true, role: user.role });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Failed to accept invitation';
     res.status(400).json({ error: message });
   }
 });

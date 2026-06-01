@@ -30,8 +30,10 @@ export interface Invitation {
   email: string;
   role: Role;
   invitedBy: string;
+  token: string;
   status: 'pending' | 'accepted';
   createdAt: string;
+  expiresAt: string;
 }
 
 const users: StoredUser[] = [];
@@ -137,8 +139,10 @@ export function inviteUser(email: string, role: Role, invitedBy: StoredUser): In
     email,
     role,
     invitedBy: invitedBy.id,
+    token: `inv_${Date.now()}_${Math.random().toString(36).slice(2, 18)}`,
     status: 'pending',
     createdAt: new Date().toISOString(),
+    expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7).toISOString(),
   };
   invitations.push(invitation);
   return invitation;
@@ -146,6 +150,39 @@ export function inviteUser(email: string, role: Role, invitedBy: StoredUser): In
 
 export function getInvitations(): Invitation[] {
   return [...invitations];
+}
+
+export function acceptInvitation(token: string, data: { clerkId: string; email: string; name: string; avatar?: string }): StoredUser {
+  const invitation = invitations.find((item) => item.token === token && item.status === 'pending');
+  if (!invitation) {
+    throw new Error('Invitation was not found or has already been used');
+  }
+  if (new Date(invitation.expiresAt).getTime() < Date.now()) {
+    throw new Error('Invitation has expired');
+  }
+  if (invitation.email.toLowerCase() !== data.email.toLowerCase()) {
+    throw new Error('This invitation belongs to a different email address');
+  }
+
+  const existing = getUserByClerkId(data.clerkId) || getUserByEmail(data.email);
+  if (existing) {
+    existing.clerkId = data.clerkId;
+    existing.name = data.name || existing.name;
+    existing.avatar = data.avatar || existing.avatar;
+    existing.role = invitation.role;
+    invitation.status = 'accepted';
+    return existing;
+  }
+
+  const user = createUser({
+    clerkId: data.clerkId,
+    email: data.email,
+    name: data.name,
+    avatar: data.avatar,
+    role: invitation.role,
+  }, 'Owner');
+  invitation.status = 'accepted';
+  return user;
 }
 
 export function transferOwnership(targetId: string, requestedBy: StoredUser): StoredUser {

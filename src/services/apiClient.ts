@@ -18,8 +18,14 @@ async function request<T = unknown>(
       headers,
     });
     if (!res.ok) {
-      const body = await res.json().catch(() => ({ error: res.statusText }));
-      return { error: body.error || `Request failed (${res.status})` };
+      const raw = await res.text().catch(() => '');
+      let body: { error?: string; message?: string; details?: string } = {};
+      try {
+        body = raw ? JSON.parse(raw) : {};
+      } catch {
+        body = { error: raw };
+      }
+      return { error: body.error || body.message || body.details || res.statusText || `Request failed (${res.status})` };
     }
     const data = await res.json();
     return { data: data as T };
