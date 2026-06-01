@@ -5,14 +5,23 @@ import {
   requireClerkUser,
   setJsonHeaders,
   supabaseRequest,
+  supabaseServiceRequest,
   type VercelRequest,
   type VercelResponse,
 } from '../_serverHelpers.js';
 import { sendInvitationEmail } from '../_emailService.js';
 
 type InviteBody = {
+  companies?: unknown[];
   email?: string;
+  ids?: string[];
+  module?: string;
+  records?: Array<{ id?: string; [key: string]: unknown }>;
   role?: string;
+};
+
+type InviteRequest = VercelRequest<InviteBody> & {
+  query?: Record<string, string | string[] | undefined>;
 };
 
 type ProfileRow = {
@@ -37,11 +46,123 @@ function resendWarning(message?: string) {
   return message || 'Resend could not send the email. Copy and send the invitation link manually.';
 }
 
-export default async function handler(request: VercelRequest<InviteBody>, response: VercelResponse) {
+function queryValue(request: InviteRequest, name: string) {
+  const value = request.query?.[name];
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function idsFilter(ids: string[]) {
+  return `(${ids.map((id) => `"${String(id).replace(/"/g, '\\"')}"`).join(',')})`;
+}
+
+async function handleCrmSync(request: InviteRequest, response: VercelResponse) {
+  const resource = queryValue(request, 'crmResource');
+
+  if (resource === 'companies') {
+    if (request.method === 'GET') {
+      const companies = await supabaseServiceRequest('companies?select=*&order=inserted_at.desc');
+      response.status(200).json({ companies });
+      return;
+    }
+
+    if (request.method === 'PUT') {
+      const companies = Array.isArray(request.body?.companies) ? request.body.companies : [];
+      if (companies.length > 0) {
+        await supabaseServiceRequest('companies?on_conflict=id', {
+          method: 'POST',
+          headers: { Prefer: 'resolution=merge-duplicates,return=representation' },
+          body: JSON.stringify(companies),
+        });
+      }
+      response.status(200).json({ ok: true });
+      return;
+    }
+
+    if (request.method === 'DELETE') {
+      const ids = Array.isArray(request.body?.ids) ? request.body.ids.filter(Boolean) : [];
+      if (ids.length > 0) {
+        await supabaseServiceRequest(`companies?id=in.${encodeURIComponent(idsFilter(ids))}`, { method: 'DELETE' });
+      }
+      response.status(200).json({ ok: true });
+      return;
+    }
+  }
+
+  if (resource === 'records') {
+    const module = (request.method === 'GET' ? queryValue(request, 'module') : request.body?.module)?.trim();
+    if (!module) {
+      response.status(400).json({ error: 'Module is required' });
+      return;
+    }
+
+    if (request.method === 'GET') {
+      const records = await supabaseServiceRequest(`crm_records?select=record_id,data&module=eq.${encodeURIComponent(module)}&order=updated_at.desc`);
+      response.status(200).json({ records });
+      return;
+    }
+
+    if (request.method === 'PUT') {
+      const records = Array.isArray(request.body?.records) ? request.body.records : [];
+      await supabaseServiceRequest(`crm_records?module=eq.${encodeURIComponent(module)}`, { method: 'DELETE' });
+
+      const rows = records
+        .filter((record) => record.id)
+        .map(({ id, ...data }) => ({
+          module,
+          record_id: id,
+          data,
+          updated_at: new Date().toISOString(),
+        }));
+
+      if (rows.length > 0) {
+        await supabaseServiceRequest('crm_records?on_conflict=module,record_id', {
+          method: 'POST',
+          headers: { Prefer: 'resolution=merge-duplicates,return=representation' },
+          body: JSON.stringify(rows),
+        });
+      }
+      response.status(200).json({ ok: true });
+      return;
+    }
+  }
+
+  if (resource === 'health' && request.method === 'GET') {
+    const tables = ['profiles', 'companies', 'crm_records', 'workflows', 'invitations'];
+    const results = await Promise.all(tables.map(async (table) => {
+      try {
+        await supabaseServiceRequest(`${table}?select=*&limit=1`);
+        return { table, ok: true };
+      } catch {
+        return { table, ok: false };
+      }
+    }));
+
+    response.status(200).json({
+      ok: results.every((result) => result.ok),
+      missing: results.filter((result) => !result.ok).map((result) => result.table),
+    });
+    return;
+  }
+
+  response.status(405).json({ error: 'Method not allowed' });
+}
+
+export default async function handler(request: InviteRequest, response: VercelResponse) {
   setJsonHeaders(response);
 
   if (request.method === 'OPTIONS') {
     response.status(204).json({});
+    return;
+  }
+
+  if (queryValue(request, 'crmResource')) {
+    try {
+      await requireClerkUser(request);
+      await handleCrmSync(request, response);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'CRM sync failed';
+      response.status(message.includes('Authorization') ? 401 : 400).json({ error: message });
+    }
     return;
   }
 

@@ -1,6 +1,7 @@
 import type { CompanyTableRow } from '../constants/data';
 import type { Role } from './permissions';
 import { isSupabaseConfigured, requireSupabase } from '../lib/supabase';
+import { api } from './apiClient';
 
 export type ProfileRecord = {
   id: string;
@@ -55,6 +56,10 @@ function toCompanyRecord(company: CompanyTableRow): CompanyRecord {
   };
 }
 
+function shouldFallbackToBrowserSupabase(error?: string) {
+  return Boolean(error && (error.includes('Authorization') || error.includes('service environment')));
+}
+
 export async function upsertProfile(profile: ProfileRecord) {
   if (!isSupabaseConfigured) return null;
   const supabase = requireSupabase();
@@ -89,6 +94,12 @@ export async function listProfiles() {
 
 export async function listCompanies() {
   if (!isSupabaseConfigured) return null;
+  const apiResult = await api.crm.listCompanies();
+  if (apiResult.data?.companies) {
+    return (apiResult.data.companies as CompanyRecord[]).map(fromCompanyRecord);
+  }
+  if (apiResult.error && !shouldFallbackToBrowserSupabase(apiResult.error)) throw new Error(apiResult.error);
+
   const supabase = requireSupabase();
   const { data, error } = await supabase
     .from('companies')
@@ -101,6 +112,10 @@ export async function listCompanies() {
 
 export async function saveCompanies(companies: CompanyTableRow[]) {
   if (!isSupabaseConfigured) return;
+  const apiResult = await api.crm.saveCompanies(companies.map(toCompanyRecord));
+  if (!apiResult.error) return;
+  if (!shouldFallbackToBrowserSupabase(apiResult.error)) throw new Error(apiResult.error);
+
   const supabase = requireSupabase();
   const { error } = await supabase
     .from('companies')
@@ -111,6 +126,10 @@ export async function saveCompanies(companies: CompanyTableRow[]) {
 
 export async function deleteCompanies(ids: string[]) {
   if (!isSupabaseConfigured || ids.length === 0) return;
+  const apiResult = await api.crm.deleteCompanies(ids);
+  if (!apiResult.error) return;
+  if (!shouldFallbackToBrowserSupabase(apiResult.error)) throw new Error(apiResult.error);
+
   const supabase = requireSupabase();
   const { error } = await supabase.from('companies').delete().in('id', ids);
   if (error) throw error;
@@ -118,6 +137,15 @@ export async function deleteCompanies(ids: string[]) {
 
 export async function listModuleRecords<T extends { id: string }>(module: string) {
   if (!isSupabaseConfigured) return null;
+  const apiResult = await api.crm.listRecords(module);
+  if (apiResult.data?.records) {
+    return apiResult.data.records.map((record) => ({
+      id: record.record_id,
+      ...(record.data as Omit<T, 'id'>),
+    })) as T[];
+  }
+  if (apiResult.error && !shouldFallbackToBrowserSupabase(apiResult.error)) throw new Error(apiResult.error);
+
   const supabase = requireSupabase();
   const { data, error } = await supabase
     .from('crm_records')
@@ -134,6 +162,10 @@ export async function listModuleRecords<T extends { id: string }>(module: string
 
 export async function saveModuleRecords<T extends { id: string }>(module: string, records: T[]) {
   if (!isSupabaseConfigured) return;
+  const apiResult = await api.crm.saveRecords(module, records);
+  if (!apiResult.error) return;
+  if (!shouldFallbackToBrowserSupabase(apiResult.error)) throw new Error(apiResult.error);
+
   const supabase = requireSupabase();
   const rows = records.map(({ id, ...data }) => ({
     module,
@@ -169,6 +201,9 @@ export async function checkCrmSchemaHealth() {
   if (!isSupabaseConfigured) {
     return { ok: false, missing: ['Supabase environment'] };
   }
+
+  const apiResult = await api.crm.health();
+  if (apiResult.data) return apiResult.data;
 
   const supabase = requireSupabase();
   const tables = ['profiles', 'companies', 'crm_records', 'workflows', 'invitations'];

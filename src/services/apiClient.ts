@@ -118,6 +118,27 @@ export const api = {
         method: 'POST',
       }),
   },
+  crm: {
+    listCompanies: () => request<{ companies: any[] }>('/users/invite?crmResource=companies'),
+    saveCompanies: (companies: any[]) =>
+      request<{ ok: boolean }>('/users/invite?crmResource=companies', {
+        method: 'PUT',
+        body: JSON.stringify({ companies }),
+      }),
+    deleteCompanies: (ids: string[]) =>
+      request<{ ok: boolean }>('/users/invite?crmResource=companies', {
+        method: 'DELETE',
+        body: JSON.stringify({ ids }),
+      }),
+    listRecords: (module: string) =>
+      request<{ records: Array<{ record_id: string; data: Record<string, unknown> }> }>(`/users/invite?crmResource=records&module=${encodeURIComponent(module)}`),
+    saveRecords: (module: string, records: Array<{ id: string }>) =>
+      request<{ ok: boolean }>('/users/invite?crmResource=records', {
+        method: 'PUT',
+        body: JSON.stringify({ module, records }),
+      }),
+    health: () => request<{ ok: boolean; missing: string[] }>('/users/invite?crmResource=health'),
+  },
   workflows: {
     list: () => request<{ workflows: any[] }>('/workflows'),
     run: (id: string) =>

@@ -90,3 +90,29 @@ export async function supabaseRequest<T = unknown>(
   return data;
 }
 
+export async function supabaseServiceRequest<T = unknown>(
+  path: string,
+  options: RequestInit = {},
+) {
+  const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
+  if (!url || !key) throw new Error('Supabase service environment variables are not configured');
+
+  const response = await fetch(`${url}/rest/v1/${path}`, {
+    ...options,
+    headers: {
+      apikey: key,
+      Authorization: `Bearer ${key}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation',
+      ...(options.headers || {}),
+    },
+  });
+
+  const data = await response.json().catch(() => null) as T;
+  if (!response.ok) {
+    const message = typeof data === 'object' && data && 'message' in data ? String((data as { message: unknown }).message) : 'Supabase service request failed';
+    throw new Error(message);
+  }
+  return data;
+}

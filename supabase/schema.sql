@@ -64,6 +64,13 @@ alter table public.crm_records enable row level security;
 alter table public.invitations enable row level security;
 alter table public.workflows enable row level security;
 
+grant usage on schema public to anon, authenticated;
+grant select, insert, update, delete on table public.profiles to anon, authenticated;
+grant select, insert, update, delete on table public.companies to anon, authenticated;
+grant select, insert, update, delete on table public.crm_records to anon, authenticated;
+grant select, insert, update, delete on table public.invitations to anon, authenticated;
+grant select, insert, update, delete on table public.workflows to anon, authenticated;
+
 drop policy if exists "Profiles are readable by signed-in users" on public.profiles;
 create policy "Profiles are readable by signed-in users"
 on public.profiles for select
