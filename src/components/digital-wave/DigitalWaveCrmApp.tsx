@@ -448,22 +448,11 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
       setLastAction('You do not have permission to create companies');
       return;
     }
-    const newCompany: CompanyTableRow = {
-      id: `new-${Date.now()}`,
-      name: `New Company ${companies.length + 1}`,
-      domain: `newcompany${companies.length + 1}.com`,
-      createdBy: 'Digital Wave Ops',
-      owner: 'Digital Wave Team',
-      createdAt: 'Just now',
-      employees: 25,
-      linkedin: '',
-      color: 'bg-blue-600',
-      icon: 'N',
-    };
-    setCompanies((current) => [newCompany, ...current]);
+    setCrudError('');
+    setFieldErrors({});
+    setCrudModal({ type: 'Companies', item: undefined });
     setActiveModule('Companies');
-    setLastAction('New company created');
-  }, [companies.length, permissions.canCreate]);
+  }, [permissions.canCreate]);
 
   const exportView = useCallback(() => {
     if (!permissions.canExport) {
