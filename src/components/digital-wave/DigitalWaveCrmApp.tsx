@@ -309,7 +309,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
     Tasks: {
       fields: taskFields,
       empty: () => ({ title: '', description: '', status: 'Todo', priority: 'Medium', dueDate: '', assignee: '', tags: '' }),
-      toItem: (d, id) => ({ id, label: d.title || 'Untitled', detail: `${d.priority || 'Medium'} priority${d.dueDate ? ` · Due ${d.dueDate}` : ''}` }),
+      toItem: (d, id) => ({ id, label: d.title || 'Untitled', detail: `${d.priority || 'Medium'} priority${d.dueDate ? ` - Due ${d.dueDate}` : ''}` }),
       toEntity: (d, id) => ({ id, ...d }) as unknown as CrudEntity,
       fromEntity: (item) => {
         const t = item as CrmTask;
@@ -331,7 +331,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
     Opportunities: {
       fields: opportunityFields,
       empty: () => ({ name: '', company: '', value: '', stage: 'Discovery', probability: '', closeDate: '', owner: '' }),
-      toItem: (d, id) => ({ id, label: d.name || 'Untitled', detail: d.value ? `$${Number(d.value).toLocaleString()} · ${d.stage || 'Discovery'}` : d.stage || 'New opportunity' }),
+      toItem: (d, id) => ({ id, label: d.name || 'Untitled', detail: d.value ? `$${Number(d.value).toLocaleString()} - ${d.stage || 'Discovery'}` : d.stage || 'New opportunity' }),
       toEntity: (d, id) => ({ id, ...d }) as unknown as CrudEntity,
       fromEntity: (item) => {
         const o = item as CrmOpportunity;
@@ -342,7 +342,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
     Deals: {
       fields: dealFields,
       empty: () => ({ name: '', company: '', value: '', stage: 'Qualification', closeDate: '', owner: '' }),
-      toItem: (d, id) => ({ id, label: d.name || 'Untitled', detail: d.value ? `$${Number(d.value).toLocaleString()} · ${d.stage || 'Qualification'}` : d.stage || 'New deal' }),
+      toItem: (d, id) => ({ id, label: d.name || 'Untitled', detail: d.value ? `$${Number(d.value).toLocaleString()} - ${d.stage || 'Qualification'}` : d.stage || 'New deal' }),
       toEntity: (d, id) => ({ id, ...d }) as unknown as CrudEntity,
       fromEntity: (item) => {
         const d = item as CrmDeal;
@@ -353,7 +353,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
     Leads: {
       fields: leadFields,
       empty: () => ({ name: '', email: '', company: '', source: 'Website', status: 'New', score: '', owner: '' }),
-      toItem: (d, id) => ({ id, label: d.name || 'Unnamed', detail: `${d.company || 'No company'} · ${d.status || 'New'} · Score: ${d.score || '—'}` }),
+      toItem: (d, id) => ({ id, label: d.name || 'Unnamed', detail: `${d.company || 'No company'} - ${d.status || 'New'} - Score: ${d.score || '-'}` }),
       toEntity: (d, id) => ({ id, ...d }) as unknown as CrudEntity,
       fromEntity: (item) => {
         const l = item as CrmLead;
@@ -364,7 +364,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
     Meetings: {
       fields: meetingFields,
       empty: () => ({ title: '', date: '', duration: '60', attendees: '', location: '', notes: '' }),
-      toItem: (d, id) => ({ id, label: d.title || 'Untitled', detail: `${d.date || 'No date'}${d.duration ? ` · ${d.duration}min` : ''}` }),
+      toItem: (d, id) => ({ id, label: d.title || 'Untitled', detail: `${d.date || 'No date'}${d.duration ? ` - ${d.duration}min` : ''}` }),
       toEntity: (d, id) => ({ id, ...d }) as unknown as CrudEntity,
       fromEntity: (item) => {
         const m = item as CrmMeeting;
@@ -375,7 +375,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
     Projects: {
       fields: projectFields,
       empty: () => ({ name: '', description: '', status: 'Planning', startDate: '', endDate: '', priority: 'Medium', budget: '' }),
-      toItem: (d, id) => ({ id, label: d.name || 'Untitled', detail: `${d.status || 'Planning'} · ${d.priority || 'Medium'} priority` }),
+      toItem: (d, id) => ({ id, label: d.name || 'Untitled', detail: `${d.status || 'Planning'} - ${d.priority || 'Medium'} priority` }),
       toEntity: (d, id) => ({ id, ...d }) as unknown as CrudEntity,
       fromEntity: (item) => {
         const p = item as CrmProject;
@@ -387,13 +387,13 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
 
   const moduleItems: Record<string, ModuleItem[]> = useMemo(() => ({
     People: people.map((p) => ({ id: p.id, label: p.name, detail: p.title ? `${p.title}${p.company ? ` at ${p.company}` : ''}` : p.company || 'No details' })),
-    Tasks: tasks.map((t) => ({ id: t.id, label: t.title, detail: `${t.priority} priority${t.dueDate ? ` · Due ${t.dueDate}` : ''}` })),
-    Notes: notes.map((n) => ({ id: n.id, label: n.title, detail: `${n.category} · Created just now` })),
-    Opportunities: opportunities.map((o) => ({ id: o.id, label: o.name, detail: o.value ? `$${Number(o.value).toLocaleString()} · ${o.stage}` : o.stage })),
-    Deals: deals.map((d) => ({ id: d.id, label: d.name, detail: d.value ? `$${Number(d.value).toLocaleString()} · ${d.stage}` : d.stage })),
-    Leads: leads.map((l) => ({ id: l.id, label: l.name, detail: `${l.company} · ${l.status} · Score: ${l.score || '—'}` })),
-    Meetings: meetings.map((m) => ({ id: m.id, label: m.title, detail: `${m.date || 'No date'}${m.duration ? ` · ${m.duration}min` : ''}` })),
-    Projects: projects.map((pr) => ({ id: pr.id, label: pr.name, detail: `${pr.status} · ${pr.priority} priority` })),
+    Tasks: tasks.map((t) => ({ id: t.id, label: t.title, detail: `${t.priority} priority${t.dueDate ? ` - Due ${t.dueDate}` : ''}` })),
+    Notes: notes.map((n) => ({ id: n.id, label: n.title, detail: `${n.category} - Created just now` })),
+    Opportunities: opportunities.map((o) => ({ id: o.id, label: o.name, detail: o.value ? `$${Number(o.value).toLocaleString()} - ${o.stage}` : o.stage })),
+    Deals: deals.map((d) => ({ id: d.id, label: d.name, detail: d.value ? `$${Number(d.value).toLocaleString()} - ${d.stage}` : d.stage })),
+    Leads: leads.map((l) => ({ id: l.id, label: l.name, detail: `${l.company} - ${l.status} - Score: ${l.score || '-'}` })),
+    Meetings: meetings.map((m) => ({ id: m.id, label: m.title, detail: `${m.date || 'No date'}${m.duration ? ` - ${m.duration}min` : ''}` })),
+    Projects: projects.map((pr) => ({ id: pr.id, label: pr.name, detail: `${pr.status} - ${pr.priority} priority` })),
   }), [people, tasks, notes, opportunities, deals, leads, meetings, projects]);
 
   const visibleCompanies = useMemo(() =>
@@ -870,7 +870,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
               <div className="digital-wave-table-card">
                 <div className="digital-wave-viewbar">
                   <div className="digital-wave-view-title">
-                    <List size={14} /> All Companies · {visibleCompanies.length} <ChevronDown size={12} />
+                    <List size={14} /> All Companies - {visibleCompanies.length} <ChevronDown size={12} />
                   </div>
                   <label className="digital-wave-search">
                     <Search size={13} />

@@ -199,7 +199,7 @@ export function UserPermissionPanel() {
                 </div>
                 <div className="truncate text-xs mt-0.5" style={{ color: 'var(--crm-text-muted)' }}>
                   {user.email}
-                  {user.lastLogin && ` · Last login: ${new Date(user.lastLogin).toLocaleDateString()}`}
+                  {user.lastLogin && ` - Last login: ${new Date(user.lastLogin).toLocaleDateString()}`}
                 </div>
               </div>
 

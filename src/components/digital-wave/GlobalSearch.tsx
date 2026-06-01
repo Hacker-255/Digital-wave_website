@@ -201,7 +201,7 @@ export function GlobalSearch({ open, onClose, onRun, entities, onNavigate }: Glo
                     {result.label}
                   </div>
                   <div className="truncate text-xs mt-0.5" style={{ color: 'var(--crm-text-muted)' }}>
-                    {result.type} · {result.detail}
+                    {result.type} - {result.detail}
                   </div>
                 </div>
                 <ArrowRight size={13} className="opacity-0 group-hover:opacity-100 transition" />

@@ -146,7 +146,7 @@ export function AccountCenter() {
                 <div className="mt-1 rounded-lg px-2 py-1.5 text-xs"
                   style={{ background: 'rgba(34,197,94,0.1)', color: '#22c55e' }}>
                   <Monitor size={11} className="inline mr-1" />
-                  CRM Manager • {currentUser.role}
+                  CRM Manager - {currentUser.role}
                 </div>
               )}
             </div>

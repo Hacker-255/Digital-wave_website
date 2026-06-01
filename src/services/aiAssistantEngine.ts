@@ -43,7 +43,7 @@ export function askAssistant(input: string, state: CrmState): AssistantResult {
     }
     const empl = typeof company.employees === 'number' ? company.employees.toLocaleString() : 'N/A';
     return {
-      answer: `**${company.name}** — ${company.domain}\n• Created by: ${company.createdBy}\n• Owner: ${company.owner || 'Unassigned'}\n• Employees: ${empl}\n• Added: ${company.createdAt}`,
+      answer: `**${company.name}** - ${company.domain}\n- Created by: ${company.createdBy}\n- Owner: ${company.owner || 'Unassigned'}\n- Employees: ${empl}\n- Added: ${company.createdAt}`,
       sources: [company.name],
     };
   }
@@ -59,7 +59,7 @@ export function askAssistant(input: string, state: CrmState): AssistantResult {
     const emplA = typeof a.employees === 'number' ? a.employees.toLocaleString() : 'N/A';
     const emplB = typeof b.employees === 'number' ? b.employees.toLocaleString() : 'N/A';
     return {
-      answer: `**${a.name}** vs **${b.name}**\n• ${a.name}: ${emplA} employees, added ${a.createdAt}\n• ${b.name}: ${emplB} employees, added ${b.createdAt}\n• Both are in your CRM with ${a.createdBy === b.createdBy ? 'the same creator: ' + a.createdBy : 'different creators'}.`,
+      answer: `**${a.name}** vs **${b.name}**\n- ${a.name}: ${emplA} employees, added ${a.createdAt}\n- ${b.name}: ${emplB} employees, added ${b.createdAt}\n- Both are in your CRM with ${a.createdBy === b.createdBy ? 'the same creator: ' + a.createdBy : 'different creators'}.`,
       sources: [a.name, b.name],
     };
   }
@@ -92,7 +92,7 @@ export function askAssistant(input: string, state: CrmState): AssistantResult {
     const avgEmpl = avgEmployees(state.companies);
     const totalEmpl = totalEmployees(state.companies);
     return {
-      answer: `**CRM Analytics**\n• Total companies: ${total}\n• Total employees (known): ${totalEmpl.toLocaleString()}\n• Average employees: ${avgEmpl.toLocaleString()}\n• Companies with owners: ${state.companies.filter((c) => c.owner).length}\n• Recently added: ${state.companies.filter((c) => c.createdAt.includes('day') || c.createdAt.includes('Just')).length}\n\nTip: Track engagement metrics per company to identify cold leads.`,
+      answer: `**CRM Analytics**\n- Total companies: ${total}\n- Total employees (known): ${totalEmpl.toLocaleString()}\n- Average employees: ${avgEmpl.toLocaleString()}\n- Companies with owners: ${state.companies.filter((c) => c.owner).length}\n- Recently added: ${state.companies.filter((c) => c.createdAt.includes('day') || c.createdAt.includes('Just')).length}\n\nTip: Track engagement metrics per company to identify cold leads.`,
     };
   }
 
@@ -103,7 +103,7 @@ export function askAssistant(input: string, state: CrmState): AssistantResult {
     const avgEmpl = avgEmployees(state.companies);
     const names = state.companies.map((c) => c.name).join(', ');
     return {
-      answer: `**CRM Overview**\nYou have **${total}** companies in your workspace.\n${names ? `\nCompanies: ${names}` : ''}\n\n• ${withEmpl.length} companies have employee data (avg ${avgEmpl.toLocaleString()} employees)\n• ${state.companies.filter((c) => c.createdBy === 'System').length} added by system, ${state.companies.filter((c) => c.createdBy !== 'System').length} added manually`,
+      answer: `**CRM Overview**\nYou have **${total}** companies in your workspace.\n${names ? `\nCompanies: ${names}` : ''}\n\n- ${withEmpl.length} companies have employee data (avg ${avgEmpl.toLocaleString()} employees)\n- ${state.companies.filter((c) => c.createdBy === 'System').length} added by system, ${state.companies.filter((c) => c.createdBy !== 'System').length} added manually`,
       sources: ['CRM Database'],
     };
   }
@@ -117,7 +117,7 @@ export function askAssistant(input: string, state: CrmState): AssistantResult {
   }
 
   return {
-    answer: `I see **${total}** companies in your CRM. You can ask me:\n• "Summarize [company name]" — get company details\n• "Compare [A] and [B]" — side-by-side comparison\n• "Overview / Summary" — CRM analytics\n• "Recommendations / Improve" — suggestions to optimize\n• "Why is [company] cold" — lead analysis`,
+    answer: `I see **${total}** companies in your CRM. You can ask me:\n- "Summarize [company name]" - get company details\n- "Compare [A] and [B]" - side-by-side comparison\n- "Overview / Summary" - CRM analytics\n- "Recommendations / Improve" - suggestions to optimize\n- "Why is [company] cold" - lead analysis`,
     sources: state.companies.map((c) => c.name),
   };
 }

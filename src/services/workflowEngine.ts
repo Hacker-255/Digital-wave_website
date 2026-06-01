@@ -156,7 +156,7 @@ export async function executeWorkflow(
         const actionLabel = step.actionType.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
         exec.logs.push({
           stepId: step.id,
-          message: `Executing: ${actionLabel} — ${JSON.stringify(step.config)}`,
+          message: `Executing: ${actionLabel} - ${JSON.stringify(step.config)}`,
           timestamp: now(),
           status: 'success',
         });

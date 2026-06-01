@@ -69,9 +69,9 @@ export function ActivityPanel() {
                 </div>
                 <div className="flex items-center gap-2 mt-0.5 text-[10px]" style={{ color: 'var(--crm-text-muted)' }}>
                   <span>{session.browser}</span>
-                  <span>·</span>
+                  <span>-</span>
                   <span>{session.ip}</span>
-                  <span>·</span>
+                  <span>-</span>
                   <span>{new Date(session.loginTime).toLocaleString()}</span>
                   {session.logoutTime && (
                     <>

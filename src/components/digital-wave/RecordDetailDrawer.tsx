@@ -100,7 +100,7 @@ function summaryFields(type: string, item: Record<string, unknown>) {
     Opportunities: [['Value', item.value ? `$${Number(item.value).toLocaleString()}` : ''], ['Probability', item.probability ? `${item.probability}%` : ''], ['Close date', item.closeDate]],
     Tasks: [['Priority', item.priority], ['Due date', item.dueDate]],
     Meetings: [['Date', item.date], ['Duration', item.duration], ['Attendees', item.attendees], ['Location', item.location]],
-    Projects: [['Priority', item.priority], ['Budget', item.budget ? `$${Number(item.budget).toLocaleString()}` : ''], ['Dates', [item.startDate, item.endDate].filter(Boolean).join(' → ')]],
+    Projects: [['Priority', item.priority], ['Budget', item.budget ? `$${Number(item.budget).toLocaleString()}` : ''], ['Dates', [item.startDate, item.endDate].filter(Boolean).join(' -> ')]],
     Notes: [['Category', item.category], ['Content', item.content]],
   };
   return [...common, ...(typed[type] || [])]
@@ -112,11 +112,11 @@ function buildTimeline(type: string, subject: string, related: RecordDetailDrawe
   const lower = subject.toLowerCase();
   const matchesCompany = (value?: string) => value?.toLowerCase().includes(lower) || lower.includes(value?.toLowerCase() || '__no_match__');
   const events = [
-    ...related.deals.filter((deal) => matchesCompany(deal.company) || (type === 'Deals' && matchesCompany(deal.name))).map((deal) => ({ icon: Briefcase, color: '#22c55e', title: deal.name, detail: `Deal · ${deal.stage} · $${Number(deal.value || 0).toLocaleString()}` })),
-    ...related.tasks.filter((task) => matchesCompany(task.description) || matchesCompany(task.assignee) || matchesCompany(task.tags)).map((task) => ({ icon: CheckSquare, color: '#38bdf8', title: task.title, detail: `Task · ${task.status} · ${task.priority} priority` })),
-    ...related.meetings.filter((meeting) => matchesCompany(meeting.title) || matchesCompany(meeting.attendees) || matchesCompany(meeting.notes)).map((meeting) => ({ icon: Calendar, color: '#a78bfa', title: meeting.title, detail: `Meeting · ${meeting.date || 'No date'} · ${meeting.duration || 60} min` })),
-    ...related.notes.filter((note) => matchesCompany(note.title) || matchesCompany(note.content)).map((note) => ({ icon: FileText, color: '#f59e0b', title: note.title, detail: `Note · ${note.category}` })),
-    ...related.people.filter((person) => matchesCompany(person.company) || (type === 'People' && matchesCompany(person.name))).map((person) => ({ icon: User, color: '#ec4899', title: person.name, detail: `${person.title || 'Contact'} · ${person.email}` })),
+    ...related.deals.filter((deal) => matchesCompany(deal.company) || (type === 'Deals' && matchesCompany(deal.name))).map((deal) => ({ icon: Briefcase, color: '#22c55e', title: deal.name, detail: `Deal - ${deal.stage} - $${Number(deal.value || 0).toLocaleString()}` })),
+    ...related.tasks.filter((task) => matchesCompany(task.description) || matchesCompany(task.assignee) || matchesCompany(task.tags)).map((task) => ({ icon: CheckSquare, color: '#38bdf8', title: task.title, detail: `Task - ${task.status} - ${task.priority} priority` })),
+    ...related.meetings.filter((meeting) => matchesCompany(meeting.title) || matchesCompany(meeting.attendees) || matchesCompany(meeting.notes)).map((meeting) => ({ icon: Calendar, color: '#a78bfa', title: meeting.title, detail: `Meeting - ${meeting.date || 'No date'} - ${meeting.duration || 60} min` })),
+    ...related.notes.filter((note) => matchesCompany(note.title) || matchesCompany(note.content)).map((note) => ({ icon: FileText, color: '#f59e0b', title: note.title, detail: `Note - ${note.category}` })),
+    ...related.people.filter((person) => matchesCompany(person.company) || (type === 'People' && matchesCompany(person.name))).map((person) => ({ icon: User, color: '#ec4899', title: person.name, detail: `${person.title || 'Contact'} - ${person.email}` })),
   ];
   if ('email' in (related.people[0] || {})) {
     events.push({ icon: Mail, color: '#22c55e', title: 'Email activity', detail: 'Email sync is not connected yet.' });

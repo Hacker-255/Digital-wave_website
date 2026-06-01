@@ -36,7 +36,7 @@ export function CompanyTable({
         <span><GitBranch size={12} /> Domain</span>
         <span><BriefcaseBusiness size={12} /> Created by</span>
         <span><Users size={12} /> Owner</span>
-        <span><span className="text-[10px]">▣</span> Created</span>
+        <span><span className="text-[10px]">#</span> Created</span>
         <span><Users size={12} /> Employees</span>
         {!hiddenLinkedin && <span><Linkedin size={12} /> LinkedIn</span>}
         <span></span>

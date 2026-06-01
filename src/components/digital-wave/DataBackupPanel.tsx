@@ -96,7 +96,7 @@ export function DataBackupPanel({ settings, onChange }: { settings: DataBackupSe
                 <FileText size={13} style={{ color: 'var(--crm-text-muted)' }} />
                 <div>
                   <p className="text-xs" style={{ color: 'var(--crm-text)' }}>{b.name}</p>
-                  <p className="text-[10px]" style={{ color: 'var(--crm-text-muted)' }}>{b.createdAt} · {b.size} · {b.type}</p>
+                  <p className="text-[10px]" style={{ color: 'var(--crm-text-muted)' }}>{b.createdAt} - {b.size} - {b.type}</p>
                 </div>
               </div>
               <div className="flex items-center gap-1">

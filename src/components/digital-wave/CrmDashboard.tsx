@@ -113,7 +113,7 @@ export function CrmDashboard({
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold" style={{ color: 'var(--crm-text)' }}>{deal.name}</p>
-                    <p className="text-xs" style={{ color: 'var(--crm-text-muted)' }}>{deal.company} · {deal.stage}</p>
+                    <p className="text-xs" style={{ color: 'var(--crm-text-muted)' }}>{deal.company} - {deal.stage}</p>
                   </div>
                   <b className="text-sm" style={{ color: '#22c55e' }}>{money(Number(deal.value) || 0)}</b>
                 </div>
@@ -124,7 +124,7 @@ export function CrmDashboard({
 
         <section className="digital-wave-table-card p-4">
           <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-sm font-semibold" style={{ color: 'var(--crm-text)' }}>Today’s work</h3>
+            <h3 className="text-sm font-semibold" style={{ color: 'var(--crm-text)' }}>Today's work</h3>
             <button className="digital-wave-btn digital-wave-btn-ghost" onClick={() => onNavigate('Tasks')} type="button">View tasks</button>
           </div>
           <div className="space-y-2">
@@ -135,7 +135,7 @@ export function CrmDashboard({
               <div key={task.id} className="flex items-center justify-between rounded-lg border p-3" style={{ borderColor: 'var(--crm-border)', background: 'var(--crm-surface)' }}>
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold" style={{ color: 'var(--crm-text)' }}>{task.title}</p>
-                  <p className="text-xs" style={{ color: 'var(--crm-text-muted)' }}>{task.priority} · Due {task.dueDate || 'unscheduled'}</p>
+                  <p className="text-xs" style={{ color: 'var(--crm-text-muted)' }}>{task.priority} - Due {task.dueDate || 'unscheduled'}</p>
                 </div>
                 <span className="rounded-full px-2 py-1 text-[10px]" style={{ background: 'rgba(56,189,248,0.12)', color: '#38bdf8' }}>{task.status}</span>
               </div>
@@ -156,7 +156,7 @@ export function CrmDashboard({
           ) : upcomingMeetings.map((meeting) => (
             <div key={meeting.id} className="rounded-lg border p-3" style={{ borderColor: 'var(--crm-border)', background: 'var(--crm-surface)' }}>
               <p className="truncate text-sm font-semibold" style={{ color: 'var(--crm-text)' }}>{meeting.title}</p>
-              <p className="mt-1 text-xs" style={{ color: 'var(--crm-text-muted)' }}>{meeting.date} · {meeting.duration || 60} min</p>
+              <p className="mt-1 text-xs" style={{ color: 'var(--crm-text-muted)' }}>{meeting.date} - {meeting.duration || 60} min</p>
               <p className="mt-1 truncate text-xs" style={{ color: 'var(--crm-text-muted)' }}><Users size={11} className="mr-1 inline" />{meeting.attendees || 'No attendees'}</p>
             </div>
           ))}

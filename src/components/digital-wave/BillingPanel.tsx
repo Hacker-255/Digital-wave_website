@@ -163,7 +163,7 @@ export function BillingPanel({ settings, onChange }: { settings: BillingSettings
             <div key={pm.id} className="flex items-center justify-between rounded-lg px-3 py-2" style={{ background: 'var(--crm-surface)' }}>
               <div className="flex items-center gap-2">
                 <CreditCard size={13} style={{ color: 'var(--crm-text-muted)' }} />
-                <span className="text-xs" style={{ color: 'var(--crm-text)' }}>{pm.brand} •••• {pm.last4}</span>
+                <span className="text-xs" style={{ color: 'var(--crm-text)' }}>{pm.brand} **** {pm.last4}</span>
                 {pm.isDefault && <span className="text-[10px] rounded px-1.5 py-0.5" style={{ background: 'rgba(34,197,94,0.1)', color: '#22c55e' }}>Default</span>}
               </div>
               <div className="flex gap-1">
@@ -183,8 +183,8 @@ export function BillingPanel({ settings, onChange }: { settings: BillingSettings
             <div key={inv.id} className="flex items-center justify-between rounded-lg px-3 py-2" style={{ background: 'var(--crm-surface)' }}>
               <div className="flex items-center gap-3">
                 <div>
-                  <p className="text-xs font-medium" style={{ color: 'var(--crm-text)' }}>{inv.plan} · ${inv.amount}</p>
-                  <p className="text-[10px]" style={{ color: 'var(--crm-text-muted)' }}>{inv.date} · {inv.periodStart} → {inv.periodEnd}</p>
+                  <p className="text-xs font-medium" style={{ color: 'var(--crm-text)' }}>{inv.plan} - ${inv.amount}</p>
+                  <p className="text-[10px]" style={{ color: 'var(--crm-text-muted)' }}>{inv.date} - {inv.periodStart} �' {inv.periodEnd}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">

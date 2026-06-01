@@ -319,7 +319,7 @@ export function SettingsPanel({ onNavigate }: SettingsPanelProps) {
                       <Smartphone size={13} style={{ color: 'var(--crm-text-muted)' }} />
                       <div>
                         <p className="text-xs" style={{ color: 'var(--crm-text)' }}>{s.device} {s.current && <span className="text-emerald-400 ml-1">Current</span>}</p>
-                        <p className="text-[10px]" style={{ color: 'var(--crm-text-muted)' }}>{s.location} · {s.lastActive}</p>
+                        <p className="text-[10px]" style={{ color: 'var(--crm-text-muted)' }}>{s.location} - {s.lastActive}</p>
                       </div>
                     </div>
                     {!s.current && <button type="button" className="digital-wave-btn-ghost digital-wave-btn-danger text-xs hover:underline">Revoke</button>}

@@ -99,7 +99,7 @@ export function ApiWebhookPanel({ settings, onChange }: { settings: ApiWebhookSe
                 <div className="min-w-0 flex-1">
                   <p className="text-xs truncate" style={{ color: 'var(--crm-text)' }}>{ak.name}</p>
                   <p className="text-[10px] font-mono truncate" style={{ color: 'var(--crm-text-muted)' }}>
-                    {ak.key.slice(0, 12)}... · {ak.permissions.join(', ')} · {ak.lastUsed || 'Never'}
+                    {ak.key.slice(0, 12)}... - {ak.permissions.join(', ')} - {ak.lastUsed || 'Never'}
                   </p>
                 </div>
               </div>

@@ -52,7 +52,7 @@ export function DigitalWaveModulePanel({ module, onOpenCommand, items, onAdd, on
     <div className="digital-wave-table-card min-h-[400px]">
       <div className="digital-wave-viewbar">
         <div className="digital-wave-view-title">
-          <List size={14} /> {module} · {displayItems.length}
+          <List size={14} /> {module} - {displayItems.length}
         </div>
         {onAdd && (
           <button
