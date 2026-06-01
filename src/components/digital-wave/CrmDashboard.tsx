@@ -2,8 +2,10 @@ import { BarChart3, Briefcase, Calendar, CheckSquare, Database, Download, Target
 import type {
   CompanyTableRow,
   CrmDeal,
+  CrmFile,
   CrmLead,
   CrmMeeting,
+  CrmOpportunity,
   CrmPerson,
   CrmTask,
 } from '../../constants/data';
@@ -15,7 +17,9 @@ interface CrmDashboardProps {
   tasks: CrmTask[];
   leads: CrmLead[];
   deals: CrmDeal[];
+  opportunities: CrmOpportunity[];
   meetings: CrmMeeting[];
+  files: CrmFile[];
   companiesLoaded: boolean;
   recordsLoaded: boolean;
   schemaHealth?: { ok: boolean; missing: string[] } | null;
@@ -35,7 +39,9 @@ export function CrmDashboard({
   tasks,
   leads,
   deals,
+  opportunities,
   meetings,
+  files,
   companiesLoaded,
   recordsLoaded,
   schemaHealth,
@@ -47,7 +53,14 @@ export function CrmDashboard({
   const openTasks = tasks.filter((task) => task.status !== 'Done' && task.status !== 'Cancelled');
   const overdueTasks = openTasks.filter((task) => task.dueDate && new Date(task.dueDate) < new Date());
   const pipelineValue = deals.reduce((sum, deal) => sum + (Number(deal.value) || 0), 0);
+  const forecastValue = deals.reduce((sum, deal) => {
+    const probability = deal.stage === 'Closed' ? 1 : deal.stage === 'Negotiation' ? 0.8 : deal.stage === 'Proposal' ? 0.6 : deal.stage === 'Demo' ? 0.35 : 0.2;
+    return sum + (Number(deal.value) || 0) * probability;
+  }, 0);
   const qualifiedLeads = leads.filter((lead) => ['Qualified', 'Contacted'].includes(lead.status));
+  const convertedLeads = leads.filter((lead) => lead.status === 'Converted');
+  const conversionRate = leads.length ? Math.round((convertedLeads.length / leads.length) * 100) : 0;
+  const activeOwners = new Set([...deals.map((deal) => deal.owner), ...tasks.map((task) => task.assignee)].filter(Boolean));
   const upcomingMeetings = meetings
     .filter((meeting) => meeting.date)
     .sort((a, b) => a.date.localeCompare(b.date))
@@ -59,6 +72,12 @@ export function CrmDashboard({
     { label: 'Open tasks', value: String(openTasks.length), icon: CheckSquare, module: 'Tasks', tone: '#38bdf8' },
     { label: 'Qualified leads', value: String(qualifiedLeads.length), icon: Target, module: 'Leads', tone: '#f59e0b' },
     { label: 'Companies', value: String(companies.length), icon: Briefcase, module: 'Companies', tone: '#a78bfa' },
+  ];
+  const businessStats = [
+    { label: 'Forecast', value: money(forecastValue), module: 'Deals' },
+    { label: 'Conversion', value: `${conversionRate}%`, module: 'Leads' },
+    { label: 'Team load', value: `${activeOwners.size || 1} owner(s)`, module: 'Tasks' },
+    { label: 'Files', value: String(files.length), module: 'Files' },
   ];
 
   return (
@@ -120,6 +139,15 @@ export function CrmDashboard({
         })}
       </div>
 
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        {businessStats.map((stat) => (
+          <button key={stat.label} onClick={() => onNavigate(stat.module)} className="rounded-xl border p-3 text-left" style={{ borderColor: 'var(--crm-border)', background: 'var(--crm-surface)' }} type="button">
+            <p className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--crm-text-muted)' }}>{stat.label}</p>
+            <p className="mt-1 text-lg font-bold" style={{ color: 'var(--crm-text)' }}>{stat.value}</p>
+          </button>
+        ))}
+      </div>
+
       <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
         <section className="digital-wave-table-card p-4">
           <div className="mb-3 flex items-center justify-between">
@@ -127,6 +155,12 @@ export function CrmDashboard({
             <button className="digital-wave-btn digital-wave-btn-ghost" onClick={() => onNavigate('Deals')} type="button">View deals</button>
           </div>
           <div className="space-y-2">
+            {opportunities.length > 0 && (
+              <div className="rounded-lg border p-3" style={{ borderColor: 'var(--crm-border)', background: 'var(--crm-card-bg)' }}>
+                <p className="text-xs font-semibold" style={{ color: 'var(--crm-text)' }}>Opportunity coverage</p>
+                <p className="mt-1 text-xs" style={{ color: 'var(--crm-text-muted)' }}>{opportunities.length} active opportunities feeding future pipeline.</p>
+              </div>
+            )}
             {deals.length === 0 ? (
               <EmptyLine icon={Database} text="No deals yet. Create your first deal to start forecasting." />
             ) : deals.slice(0, 5).map((deal) => (

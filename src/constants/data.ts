@@ -14,6 +14,7 @@ export type ModuleItem = {
 
 export type CrmPerson = {
   id: string;
+  companyId?: string;
   name: string;
   email: string;
   phone: string;
@@ -27,6 +28,10 @@ export type CrmPerson = {
 
 export type CrmTask = {
   id: string;
+  companyId?: string;
+  contactId?: string;
+  dealId?: string;
+  leadId?: string;
   title: string;
   description: string;
   status: string;
@@ -38,6 +43,10 @@ export type CrmTask = {
 
 export type CrmNote = {
   id: string;
+  companyId?: string;
+  contactId?: string;
+  dealId?: string;
+  leadId?: string;
   title: string;
   content: string;
   category: string;
@@ -45,6 +54,8 @@ export type CrmNote = {
 
 export type CrmOpportunity = {
   id: string;
+  companyId?: string;
+  contactId?: string;
   name: string;
   company: string;
   value: string;
@@ -56,6 +67,9 @@ export type CrmOpportunity = {
 
 export type CrmDeal = {
   id: string;
+  companyId?: string;
+  contactId?: string;
+  leadId?: string;
   name: string;
   company: string;
   value: string;
@@ -66,6 +80,8 @@ export type CrmDeal = {
 
 export type CrmLead = {
   id: string;
+  companyId?: string;
+  contactId?: string;
   name: string;
   email: string;
   company: string;
@@ -77,6 +93,10 @@ export type CrmLead = {
 
 export type CrmMeeting = {
   id: string;
+  companyId?: string;
+  contactId?: string;
+  dealId?: string;
+  leadId?: string;
   title: string;
   date: string;
   duration: string;
@@ -87,6 +107,8 @@ export type CrmMeeting = {
 
 export type CrmProject = {
   id: string;
+  companyId?: string;
+  dealId?: string;
   name: string;
   description: string;
   status: string;
@@ -94,6 +116,20 @@ export type CrmProject = {
   endDate: string;
   priority: string;
   budget: string;
+};
+
+export type CrmFile = {
+  id: string;
+  companyId?: string;
+  contactId?: string;
+  dealId?: string;
+  leadId?: string;
+  name: string;
+  type: string;
+  size: string;
+  owner: string;
+  uploadedAt: string;
+  tags: string;
 };
 
 export const NAV_LINKS = [
@@ -149,6 +185,7 @@ export const sidebarItems: Array<[LucideIcon, string, string]> = [
   [Diamond, 'Deals', 'bg-pink-500/30 text-pink-100'],
   [Zap, 'Leads', 'bg-amber-500/30 text-amber-100'],
   [Calendar, 'Meetings', 'bg-cyan-500/30 text-cyan-100'],
+  [ClipboardList, 'Files', 'bg-sky-500/30 text-sky-100'],
   [FolderKanban, 'Projects', 'bg-blue-500/30 text-blue-100'],
   [CheckCircle2, 'Tasks', 'bg-emerald-500/30 text-emerald-100'],
   [ClipboardList, 'Notes', 'bg-teal-500/30 text-teal-100'],
@@ -194,21 +231,21 @@ export const initialCompanies: CompanyTableRow[] = [
 ];
 
 export const initialPeople: CrmPerson[] = [
-  { id: 'p1', name: 'Lina Carter', email: 'sarah@novagrid.example', phone: '+1-555-0101', title: 'CEO', company: 'NovaGrid Systems', address: '123 Market St, San Francisco, CA', notes: 'Key decision maker for enterprise deal', status: 'Active', tags: 'vip,enterprise' },
-  { id: 'p2', name: 'Omar Hale', email: 'marcus@northstar.example', phone: '+1-555-0102', title: 'CTO', company: 'Northstar Automation', address: '456 Tech Blvd, Austin, TX', notes: 'Technical evaluator for platform integration', status: 'Active', tags: 'technical,decision-maker' },
-  { id: 'p3', name: 'Maya Stone', email: 'emily@devstack.io', phone: '+1-555-0103', title: 'Operations Director', company: 'DevStack', address: '789 Innovation Dr, New York, NY', notes: 'Interested in workflow automation', status: 'Lead', tags: 'operations' },
+  { id: 'p1', companyId: 'novagrid', name: 'Lina Carter', email: 'sarah@novagrid.example', phone: '+1-555-0101', title: 'CEO', company: 'NovaGrid Systems', address: '123 Market St, San Francisco, CA', notes: 'Key decision maker for enterprise deal', status: 'Active', tags: 'vip,enterprise' },
+  { id: 'p2', companyId: 'northstar', name: 'Omar Hale', email: 'marcus@northstar.example', phone: '+1-555-0102', title: 'CTO', company: 'Northstar Automation', address: '456 Tech Blvd, Austin, TX', notes: 'Technical evaluator for platform integration', status: 'Active', tags: 'technical,decision-maker' },
+  { id: 'p3', companyId: 'devstack', name: 'Maya Stone', email: 'emily@devstack.io', phone: '+1-555-0103', title: 'Operations Director', company: 'DevStack', address: '789 Innovation Dr, New York, NY', notes: 'Interested in workflow automation', status: 'Lead', tags: 'operations' },
 ];
 
 export const initialTasks: CrmTask[] = [
-  { id: 't1', title: 'Send proposal follow-up', description: 'Follow up on the enterprise proposal sent last week', status: 'In Progress', priority: 'High', dueDate: '2026-06-05', assignee: 'me', tags: 'proposal,enterprise' },
-  { id: 't2', title: 'Prepare security answers', description: 'Complete security questionnaire for Northstar Automation', status: 'Todo', priority: 'Urgent', dueDate: '2026-06-03', assignee: 'me', tags: 'security,compliance' },
-  { id: 't3', title: 'Schedule onboarding call', description: 'Set up onboarding for new NovaGrid Systems team members', status: 'Todo', priority: 'Medium', dueDate: '2026-06-10', assignee: 'me', tags: 'onboarding' },
+  { id: 't1', companyId: 'novagrid', dealId: 'd1', title: 'Send proposal follow-up', description: 'Follow up on the enterprise proposal sent last week', status: 'In Progress', priority: 'High', dueDate: '2026-06-05', assignee: 'me', tags: 'proposal,enterprise' },
+  { id: 't2', companyId: 'northstar', dealId: 'd2', title: 'Prepare security answers', description: 'Complete security questionnaire for Northstar Automation', status: 'Todo', priority: 'Urgent', dueDate: '2026-06-03', assignee: 'me', tags: 'security,compliance' },
+  { id: 't3', companyId: 'novagrid', title: 'Schedule onboarding call', description: 'Set up onboarding for new NovaGrid Systems team members', status: 'Todo', priority: 'Medium', dueDate: '2026-06-10', assignee: 'me', tags: 'onboarding' },
 ];
 
 export const initialNotes: CrmNote[] = [
-  { id: 'n1', title: 'NovaGrid discovery notes', content: 'Discussed their cloud infrastructure needs. They are looking to migrate 200+ servers and need a CRM that can handle complex workflow automation. Key stakeholders include Sarah (CEO) and their VP of Engineering.', category: 'Meeting' },
-  { id: 'n2', title: 'Northstar security review', content: 'Reviewed their security requirements. They need SOC2 compliance documentation and penetration testing results before proceeding.', category: 'Feedback' },
-  { id: 'n3', title: 'Blue Harbor negotiation', content: 'Preliminary budget discussion. They are looking at $40-60k annual contract with potential expansion.', category: 'Idea' },
+  { id: 'n1', companyId: 'novagrid', dealId: 'd1', title: 'NovaGrid discovery notes', content: 'Discussed their cloud infrastructure needs. They are looking to migrate 200+ servers and need a CRM that can handle complex workflow automation. Key stakeholders include Sarah (CEO) and their VP of Engineering.', category: 'Meeting' },
+  { id: 'n2', companyId: 'northstar', dealId: 'd2', title: 'Northstar security review', content: 'Reviewed their security requirements. They need SOC2 compliance documentation and penetration testing results before proceeding.', category: 'Feedback' },
+  { id: 'n3', companyId: 'blueharbor', title: 'Blue Harbor negotiation', content: 'Preliminary budget discussion. They are looking at $40-60k annual contract with potential expansion.', category: 'Idea' },
 ];
 
 export const initialOpportunities: CrmOpportunity[] = [
@@ -218,22 +255,27 @@ export const initialOpportunities: CrmOpportunity[] = [
 ];
 
 export const initialDeals: CrmDeal[] = [
-  { id: 'd1', name: 'NovaGrid Systems - Enterprise Plan', company: 'NovaGrid Systems', value: '84000', stage: 'Proposal', closeDate: '2026-07-15', owner: 'me' },
-  { id: 'd2', name: 'Northstar Automation - Pro Plan', company: 'Northstar Automation', value: '62000', stage: 'Demo', closeDate: '2026-08-01', owner: 'me' },
+  { id: 'd1', companyId: 'novagrid', contactId: 'p1', name: 'NovaGrid Systems - Enterprise Plan', company: 'NovaGrid Systems', value: '84000', stage: 'Proposal', closeDate: '2026-07-15', owner: 'me' },
+  { id: 'd2', companyId: 'northstar', contactId: 'p2', name: 'Northstar Automation - Pro Plan', company: 'Northstar Automation', value: '62000', stage: 'Demo', closeDate: '2026-08-01', owner: 'me' },
 ];
 
 export const initialLeads: CrmLead[] = [
-  { id: 'l1', name: 'James Wilson', email: 'james@skybridge.tech', company: 'SkyBridge Tech', source: 'Website', status: 'New', score: '85', owner: 'me' },
-  { id: 'l2', name: 'Lisa Thompson', email: 'lisa@datapulse.io', company: 'DataPulse LLC', source: 'Referral', status: 'Contacted', score: '70', owner: 'me' },
-  { id: 'l3', name: 'David Park', email: 'david@arcanum.systems', company: 'Arcanum Systems', source: 'Conference', status: 'Qualified', score: '92', owner: 'me' },
+  { id: 'l1', companyId: 'skybridge', name: 'James Wilson', email: 'james@skybridge.tech', company: 'SkyBridge Tech', source: 'Website', status: 'New', score: '85', owner: 'me' },
+  { id: 'l2', companyId: 'datapulse', name: 'Lisa Thompson', email: 'lisa@datapulse.io', company: 'DataPulse LLC', source: 'Referral', status: 'Contacted', score: '70', owner: 'me' },
+  { id: 'l3', companyId: 'arcanum', name: 'David Park', email: 'david@arcanum.systems', company: 'Arcanum Systems', source: 'Conference', status: 'Qualified', score: '92', owner: 'me' },
 ];
 
 export const initialMeetings: CrmMeeting[] = [
-  { id: 'm1', title: 'NovaGrid Systems discovery call', date: '2026-06-02', duration: '60', attendees: 'Lina Carter, John Smith', location: 'Zoom', notes: 'Discussed requirements and timeline' },
-  { id: 'm2', title: 'Northstar Automation technical review', date: '2026-06-05', duration: '90', attendees: 'Omar Hale, Tech Team', location: 'Google Meet', notes: 'Deep dive on API integration' },
+  { id: 'm1', companyId: 'novagrid', contactId: 'p1', dealId: 'd1', title: 'NovaGrid Systems discovery call', date: '2026-06-02', duration: '60', attendees: 'Lina Carter, John Smith', location: 'Zoom', notes: 'Discussed requirements and timeline' },
+  { id: 'm2', companyId: 'northstar', contactId: 'p2', dealId: 'd2', title: 'Northstar Automation technical review', date: '2026-06-05', duration: '90', attendees: 'Omar Hale, Tech Team', location: 'Google Meet', notes: 'Deep dive on API integration' },
 ];
 
 export const initialProjects: CrmProject[] = [
   { id: 'pr1', name: 'NovaGrid Systems Migration', description: 'Migrate NovaGrid Systems from legacy CRM to our platform', status: 'Planning', startDate: '2026-06-15', endDate: '2026-09-15', priority: 'High', budget: '84000' },
   { id: 'pr2', name: 'Northstar Automation Integration', description: 'Build and deploy API integration for Northstar Automation platform', status: 'In Progress', startDate: '2026-05-01', endDate: '2026-07-30', priority: 'Critical', budget: '62000' },
+];
+
+export const initialFiles: CrmFile[] = [
+  { id: 'f1', companyId: 'novagrid', dealId: 'd1', name: 'NovaGrid proposal.pdf', type: 'Proposal', size: '2.4 MB', owner: 'me', uploadedAt: '2026-05-30', tags: 'proposal,enterprise' },
+  { id: 'f2', companyId: 'northstar', dealId: 'd2', name: 'Security questionnaire.xlsx', type: 'Security', size: '860 KB', owner: 'me', uploadedAt: '2026-05-28', tags: 'security,compliance' },
 ];

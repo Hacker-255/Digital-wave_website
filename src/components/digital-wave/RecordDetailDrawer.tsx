@@ -1,4 +1,4 @@
-import { Briefcase, Calendar, CheckSquare, FileText, Mail, Phone, Tag, User, X } from 'lucide-react';
+import { Briefcase, Calendar, CheckSquare, File, FileText, Mail, Phone, Tag, User, X } from 'lucide-react';
 import type {
   CompanyTableRow,
   CrmDeal,
@@ -6,6 +6,7 @@ import type {
   CrmNote,
   CrmPerson,
   CrmTask,
+  CrmFile,
 } from '../../constants/data';
 
 type DetailRecord = {
@@ -22,6 +23,7 @@ interface RecordDetailDrawerProps {
     deals: CrmDeal[];
     meetings: CrmMeeting[];
     companies: CompanyTableRow[];
+    files: CrmFile[];
   };
   onClose: () => void;
   onEdit?: () => void;
@@ -33,7 +35,7 @@ export function RecordDetailDrawer({ record, related, onClose, onEdit }: RecordD
   const item = record.item;
   const title = String(item.name || item.title || 'Untitled record');
   const companyName = String(item.company || (record.type === 'Companies' ? item.name : '') || '');
-  const timeline = buildTimeline(record.type, companyName || title, related);
+  const timeline = buildTimeline(record.type, item, companyName || title, related);
 
   return (
     <div className="fixed inset-0 z-[80] flex justify-end bg-black/40 backdrop-blur-sm" onClick={onClose}>
@@ -102,22 +104,33 @@ function summaryFields(type: string, item: Record<string, unknown>) {
     Meetings: [['Date', item.date], ['Duration', item.duration], ['Attendees', item.attendees], ['Location', item.location]],
     Projects: [['Priority', item.priority], ['Budget', item.budget ? `$${Number(item.budget).toLocaleString()}` : ''], ['Dates', [item.startDate, item.endDate].filter(Boolean).join(' -> ')]],
     Notes: [['Category', item.category], ['Content', item.content]],
+    Files: [['Type', item.type], ['Size', item.size], ['Uploaded', item.uploadedAt], ['Tags', item.tags]],
   };
   return [...common, ...(typed[type] || [])]
     .filter(([, value]) => value !== undefined)
     .map(([label, value]) => ({ label, value: String(value ?? '') }));
 }
 
-function buildTimeline(type: string, subject: string, related: RecordDetailDrawerProps['related']) {
+function buildTimeline(type: string, item: Record<string, unknown>, subject: string, related: RecordDetailDrawerProps['related']) {
   const lower = subject.toLowerCase();
+  const companyId = String(item.companyId || (type === 'Companies' ? item.id : '') || '');
+  const contactId = String(item.contactId || (type === 'People' ? item.id : '') || '');
+  const dealId = String(item.dealId || (type === 'Deals' ? item.id : '') || '');
+  const leadId = String(item.leadId || (type === 'Leads' ? item.id : '') || '');
   const matchesCompany = (value?: string) => value?.toLowerCase().includes(lower) || lower.includes(value?.toLowerCase() || '__no_match__');
+  const matchesRelation = (record: { companyId?: string; contactId?: string; dealId?: string; leadId?: string }) =>
+    Boolean((companyId && record.companyId === companyId) || (contactId && record.contactId === contactId) || (dealId && record.dealId === dealId) || (leadId && record.leadId === leadId));
   const events = [
-    ...related.deals.filter((deal) => matchesCompany(deal.company) || (type === 'Deals' && matchesCompany(deal.name))).map((deal) => ({ icon: Briefcase, color: '#22c55e', title: deal.name, detail: `Deal - ${deal.stage} - $${Number(deal.value || 0).toLocaleString()}` })),
-    ...related.tasks.filter((task) => matchesCompany(task.description) || matchesCompany(task.assignee) || matchesCompany(task.tags)).map((task) => ({ icon: CheckSquare, color: '#38bdf8', title: task.title, detail: `Task - ${task.status} - ${task.priority} priority` })),
-    ...related.meetings.filter((meeting) => matchesCompany(meeting.title) || matchesCompany(meeting.attendees) || matchesCompany(meeting.notes)).map((meeting) => ({ icon: Calendar, color: '#a78bfa', title: meeting.title, detail: `Meeting - ${meeting.date || 'No date'} - ${meeting.duration || 60} min` })),
-    ...related.notes.filter((note) => matchesCompany(note.title) || matchesCompany(note.content)).map((note) => ({ icon: FileText, color: '#f59e0b', title: note.title, detail: `Note - ${note.category}` })),
-    ...related.people.filter((person) => matchesCompany(person.company) || (type === 'People' && matchesCompany(person.name))).map((person) => ({ icon: User, color: '#ec4899', title: person.name, detail: `${person.title || 'Contact'} - ${person.email}` })),
+    ...related.deals.filter((deal) => matchesRelation(deal) || matchesCompany(deal.company) || (type === 'Deals' && matchesCompany(deal.name))).map((deal) => ({ icon: Briefcase, color: '#22c55e', title: deal.name, detail: `Deal - ${deal.stage} - $${Number(deal.value || 0).toLocaleString()}` })),
+    ...related.tasks.filter((task) => matchesRelation(task) || matchesCompany(task.description) || matchesCompany(task.assignee) || matchesCompany(task.tags)).map((task) => ({ icon: CheckSquare, color: '#38bdf8', title: task.title, detail: `Task - ${task.status} - ${task.priority} priority` })),
+    ...related.meetings.filter((meeting) => matchesRelation(meeting) || matchesCompany(meeting.title) || matchesCompany(meeting.attendees) || matchesCompany(meeting.notes)).map((meeting) => ({ icon: Calendar, color: '#a78bfa', title: meeting.title, detail: `Meeting - ${meeting.date || 'No date'} - ${meeting.duration || 60} min` })),
+    ...related.notes.filter((note) => matchesRelation(note) || matchesCompany(note.title) || matchesCompany(note.content)).map((note) => ({ icon: FileText, color: '#f59e0b', title: note.title, detail: `Note - ${note.category}` })),
+    ...related.files.filter((file) => matchesRelation(file) || matchesCompany(file.name) || matchesCompany(file.tags)).map((file) => ({ icon: File, color: '#38bdf8', title: file.name, detail: `File - ${file.type} - ${file.size || 'No size'}` })),
+    ...related.people.filter((person) => matchesRelation(person) || matchesCompany(person.company) || (type === 'People' && matchesCompany(person.name))).map((person) => ({ icon: User, color: '#ec4899', title: person.name, detail: `${person.title || 'Contact'} - ${person.email}` })),
   ];
+  if (item.owner) {
+    events.push({ icon: User, color: '#a78bfa', title: 'Ownership assigned', detail: `Current owner: ${String(item.owner)}` });
+  }
   if ('email' in (related.people[0] || {})) {
     events.push({ icon: Mail, color: '#22c55e', title: 'Email activity', detail: 'Email sync is not connected yet.' });
     events.push({ icon: Phone, color: '#38bdf8', title: 'Call log', detail: 'Call logging is ready for future activity capture.' });

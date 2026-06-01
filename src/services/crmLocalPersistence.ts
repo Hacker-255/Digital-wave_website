@@ -8,6 +8,7 @@ import type {
   CrmPerson,
   CrmProject,
   CrmTask,
+  CrmFile,
 } from '../constants/data';
 
 const STORAGE_KEY = 'digital-wave-crm-records';
@@ -22,6 +23,7 @@ export interface LocalCrmSnapshot {
   Leads?: CrmLead[];
   Meetings?: CrmMeeting[];
   Projects?: CrmProject[];
+  Files?: CrmFile[];
   savedAt?: string;
 }
 

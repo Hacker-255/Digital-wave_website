@@ -4,10 +4,10 @@ import { useUser } from '@clerk/clerk-react';
 import { useKeyboard } from '../../hooks/useKeyboard';
 import { setPresenceClerkId } from '../../hooks/usePresence';
 import {
-  initialCompanies, initialPeople, initialTasks, initialNotes,
+  initialCompanies, initialPeople, initialTasks, initialNotes, initialFiles,
   initialOpportunities, initialDeals, initialLeads, initialMeetings, initialProjects,
   type CompanyTableRow, type CrmPerson, type CrmTask, type CrmNote,
-  type CrmOpportunity, type CrmDeal, type CrmLead, type CrmMeeting, type CrmProject,
+  type CrmOpportunity, type CrmDeal, type CrmLead, type CrmMeeting, type CrmProject, type CrmFile,
 } from '../../constants/data';
 import type { ModuleItem } from '../../constants/data';
 import { DigitalWaveSidebar } from './DigitalWaveSidebar';
@@ -29,6 +29,7 @@ import { SettingsPanel } from './SettingsPanel';
 import { CrmDashboard } from './CrmDashboard';
 import { CsvImportModal, type ImportTarget } from './CsvImportModal';
 import { RecordDetailDrawer } from './RecordDetailDrawer';
+import { DealPipelineBoard } from './DealPipelineBoard';
 import { NotificationCenter } from './NotificationCenter';
 import { SyncStatusPill, type SyncStatus } from './SyncStatusPill';
 import { AuthRequired } from '../crm/AuthRequired';
@@ -46,9 +47,9 @@ interface DigitalWaveCrmAppProps {
 
 const AI_MODULES = ['AI Execute', 'AI Ask'];
 const MODULE_ACTIONS = ['Companies', 'Workflows', ...AI_MODULES];
-const PERSISTED_MODULES = ['People', 'Tasks', 'Notes', 'Opportunities', 'Deals', 'Leads', 'Meetings', 'Projects'];
+const PERSISTED_MODULES = ['People', 'Tasks', 'Notes', 'Opportunities', 'Deals', 'Leads', 'Meetings', 'Projects', 'Files'];
 
-type CrudEntity = CrmPerson | CrmTask | CrmNote | CrmOpportunity | CrmDeal | CrmLead | CrmMeeting | CrmProject | CompanyTableRow;
+type CrudEntity = CrmPerson | CrmTask | CrmNote | CrmOpportunity | CrmDeal | CrmLead | CrmMeeting | CrmProject | CrmFile | CompanyTableRow;
 
 interface EntityConfig {
   fields: CrudField[];
@@ -96,6 +97,13 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
   const [chatOpen, setChatOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [detailRecord, setDetailRecord] = useState<{ type: string; item: CrudEntity } | null>(null);
+  const [savedFilters, setSavedFilters] = useState<Array<{ id: string; name: string; query: string; employeeFilter: boolean }>>(() => {
+    try {
+      return JSON.parse(localStorage.getItem('digital-wave-saved-filters') || '[]');
+    } catch {
+      return [];
+    }
+  });
   const [schemaHealth, setSchemaHealth] = useState<{ ok: boolean; missing: string[] } | null>(null);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>(() => ({
     state: isSupabaseConfigured ? 'loading' : 'local',
@@ -172,6 +180,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
   const [leads, setLeads] = useState<CrmLead[]>(() => localSnapshot.Leads?.length ? localSnapshot.Leads : initialLeads);
   const [meetings, setMeetings] = useState<CrmMeeting[]>(() => localSnapshot.Meetings?.length ? localSnapshot.Meetings : initialMeetings);
   const [projects, setProjects] = useState<CrmProject[]>(() => localSnapshot.Projects?.length ? localSnapshot.Projects : initialProjects);
+  const [files, setFiles] = useState<CrmFile[]>(() => localSnapshot.Files?.length ? localSnapshot.Files : initialFiles);
   const moduleRecordsRef = useRef({
     People: people,
     Tasks: tasks,
@@ -181,6 +190,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
     Leads: leads,
     Meetings: meetings,
     Projects: projects,
+    Files: files,
   });
 
   useEffect(() => {
@@ -198,6 +208,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
         const leadRecords = records.Leads as CrmLead[] | null;
         const meetingRecords = records.Meetings as CrmMeeting[] | null;
         const projectRecords = records.Projects as CrmProject[] | null;
+        const fileRecords = records.Files as CrmFile[] | null;
 
         const mergedRecords = {
           People: peopleRecords?.length ? mergeById(moduleRecordsRef.current.People, peopleRecords) : moduleRecordsRef.current.People,
@@ -208,6 +219,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
           Leads: leadRecords?.length ? mergeById(moduleRecordsRef.current.Leads, leadRecords) : moduleRecordsRef.current.Leads,
           Meetings: meetingRecords?.length ? mergeById(moduleRecordsRef.current.Meetings, meetingRecords) : moduleRecordsRef.current.Meetings,
           Projects: projectRecords?.length ? mergeById(moduleRecordsRef.current.Projects, projectRecords) : moduleRecordsRef.current.Projects,
+          Files: fileRecords?.length ? mergeById(moduleRecordsRef.current.Files, fileRecords) : moduleRecordsRef.current.Files,
         };
 
         moduleRecordsRef.current = mergedRecords;
@@ -219,6 +231,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
         setLeads(mergedRecords.Leads);
         setMeetings(mergedRecords.Meetings);
         setProjects(mergedRecords.Projects);
+        setFiles(mergedRecords.Files);
         saveLocalCrmSnapshot(mergedRecords);
 
         const hasAnyRecords = Object.values(records).some((items) => Array.isArray(items) && items.length > 0);
@@ -247,6 +260,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
       Leads: leads,
       Meetings: meetings,
       Projects: projects,
+      Files: files,
     };
     saveLocalCrmSnapshot(moduleRecordsRef.current);
     setSyncStatus({ state: isSupabaseConfigured ? 'local' : 'saved', message: isSupabaseConfigured ? 'Saved locally' : 'Saved locally' });
@@ -259,7 +273,11 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
     }, 500);
 
     return () => window.clearTimeout(timer);
-  }, [deals, isSignedIn, leads, meetings, notes, opportunities, people, projects, recordsLoaded, tasks]);
+  }, [deals, files, isSignedIn, leads, meetings, notes, opportunities, people, projects, recordsLoaded, tasks]);
+
+  useEffect(() => {
+    localStorage.setItem('digital-wave-saved-filters', JSON.stringify(savedFilters));
+  }, [savedFilters]);
 
   useEffect(() => {
     const flushLocalRecords = () => {
@@ -356,6 +374,17 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
     { key: 'endDate', label: 'End Date', type: 'date' },
     { key: 'priority', label: 'Priority', type: 'select', options: ['Low', 'Medium', 'High', 'Critical'] },
     { key: 'budget', label: 'Budget ($)', type: 'number' },
+  ];
+
+  const fileFields: CrudField[] = [
+    { key: 'name', label: 'File Name', required: true },
+    { key: 'type', label: 'Type', type: 'select', options: ['Proposal', 'Contract', 'Security', 'Invoice', 'Recording', 'Other'] },
+    { key: 'size', label: 'Size' },
+    { key: 'owner', label: 'Owner' },
+    { key: 'uploadedAt', label: 'Uploaded At', type: 'date' },
+    { key: 'tags', label: 'Tags' },
+    { key: 'companyId', label: 'Company ID' },
+    { key: 'dealId', label: 'Deal ID' },
   ];
 
   const companyFields: CrudField[] = [
@@ -455,6 +484,17 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
       },
       setter: (items) => setProjects(items as CrmProject[]),
     },
+    Files: {
+      fields: fileFields,
+      empty: () => ({ name: '', type: 'Other', size: '', owner: '', uploadedAt: new Date().toISOString().slice(0, 10), tags: '', companyId: '', dealId: '' }),
+      toItem: (d, id) => ({ id, label: d.name || 'Untitled file', detail: `${d.type || 'File'} - ${d.size || 'No size'} - ${d.uploadedAt || 'No date'}` }),
+      toEntity: (d, id) => ({ id, ...d }) as unknown as CrudEntity,
+      fromEntity: (item) => {
+        const f = item as CrmFile;
+        return { name: f.name || '', type: f.type || 'Other', size: f.size || '', owner: f.owner || '', uploadedAt: f.uploadedAt || '', tags: f.tags || '', companyId: f.companyId || '', dealId: f.dealId || '' };
+      },
+      setter: (items) => setFiles(items as CrmFile[]),
+    },
   }), []);
 
   const moduleItems: Record<string, ModuleItem[]> = useMemo(() => ({
@@ -466,7 +506,8 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
     Leads: leads.map((l) => ({ id: l.id, label: l.name, detail: `${l.company} - ${l.status} - Score: ${l.score || '-'}` })),
     Meetings: meetings.map((m) => ({ id: m.id, label: m.title, detail: `${m.date || 'No date'}${m.duration ? ` - ${m.duration}min` : ''}` })),
     Projects: projects.map((pr) => ({ id: pr.id, label: pr.name, detail: `${pr.status} - ${pr.priority} priority` })),
-  }), [people, tasks, notes, opportunities, deals, leads, meetings, projects]);
+    Files: files.map((f) => ({ id: f.id, label: f.name, detail: `${f.type} - ${f.size || 'No size'} - ${f.uploadedAt || 'No date'}` })),
+  }), [people, tasks, notes, opportunities, deals, leads, meetings, projects, files]);
 
   const visibleCompanies = useMemo(() =>
     companies
@@ -500,10 +541,11 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
       Leads: leads,
       Meetings: meetings,
       Projects: projects,
+      Files: files,
     };
     const item = collections[module]?.find((record) => (record as { id: string }).id === id);
     if (item) setDetailRecord({ type: module, item });
-  }, [companies, deals, leads, meetings, notes, opportunities, people, projects, tasks]);
+  }, [companies, deals, files, leads, meetings, notes, opportunities, people, projects, tasks]);
 
   const keyMap: Record<string, () => void> = {
     'ctrl+k': () => setSearchOpen(true),
@@ -561,6 +603,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
       leads,
       meetings,
       projects,
+      files,
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -571,7 +614,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
     URL.revokeObjectURL(url);
     setLastAction('CRM data exported');
     audit('export', 'CRM', 'All CRM data');
-  }, [audit, companies, deals, leads, meetings, notes, opportunities, people, projects, tasks, permissions.canExport]);
+  }, [audit, companies, deals, files, leads, meetings, notes, opportunities, people, projects, tasks, permissions.canExport]);
 
   const handleCsvImport = useCallback((target: ImportTarget, rows: Array<Record<string, string>>) => {
     if (!permissions.canCreate) {
@@ -581,6 +624,21 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
     }
     const duplicates: string[] = [];
     let created = 0;
+    const before = { companies, people, tasks, notes, opportunities, deals, leads, meetings, projects, files };
+    const rollback = () => {
+      setCompanies(before.companies);
+      setPeople(before.people);
+      setTasks(before.tasks);
+      setNotes(before.notes);
+      setOpportunities(before.opportunities);
+      setDeals(before.deals);
+      setLeads(before.leads);
+      setMeetings(before.meetings);
+      setProjects(before.projects);
+      setFiles(before.files);
+      setLastAction(`Rolled back ${target} import`);
+      audit('rollback_import', target, `${rows.length} rows`);
+    };
 
     if (target === 'Companies') {
       const existingKeys = new Set(companies.flatMap((company) => [company.domain.toLowerCase(), company.name.toLowerCase()].filter(Boolean)));
@@ -610,7 +668,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
       }
       if (imported.length > 0) setCompanies((current) => [...imported, ...current]);
       setActiveModule('Companies');
-    } else {
+    } else if (target === 'People') {
       const existingEmails = new Set(people.map((person) => person.email.toLowerCase()).filter(Boolean));
       const imported: CrmPerson[] = [];
       for (const row of rows) {
@@ -637,12 +695,55 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
       }
       if (imported.length > 0) setPeople((current) => [...imported, ...current]);
       setActiveModule('People');
+    } else if (target === 'Leads') {
+      const existingEmails = new Set(leads.map((lead) => lead.email.toLowerCase()).filter(Boolean));
+      const imported: CrmLead[] = [];
+      for (const row of rows) {
+        const name = row.name || '';
+        const email = row.email || '';
+        if (!name || (email && existingEmails.has(email.toLowerCase()))) { duplicates.push(name || email || 'Unnamed lead'); continue; }
+        if (email) existingEmails.add(email.toLowerCase());
+        created += 1;
+        imported.push({ id: genId(), name, email, company: row.company || '', source: row.source || 'Other', status: row.status || 'New', score: row.score || '', owner: row.owner || '' });
+      }
+      if (imported.length > 0) setLeads((current) => [...imported, ...current]);
+      setActiveModule('Leads');
+    } else if (target === 'Deals') {
+      const imported: CrmDeal[] = [];
+      for (const row of rows) {
+        const name = row.name || '';
+        if (!name) { duplicates.push(row.company || 'Unnamed deal'); continue; }
+        created += 1;
+        imported.push({ id: genId(), name, company: row.company || '', value: row.value || '', stage: row.stage || 'Qualification', closeDate: row.closeDate || '', owner: row.owner || '' });
+      }
+      if (imported.length > 0) setDeals((current) => [...imported, ...current]);
+      setActiveModule('Deals');
+    } else if (target === 'Tasks') {
+      const imported = rows.map((row) => ({ id: genId(), title: row.title || 'Untitled task', description: row.description || '', status: row.status || 'Todo', priority: row.priority || 'Medium', dueDate: row.dueDate || '', assignee: row.assignee || '', tags: row.tags || '' }));
+      created = imported.length;
+      setTasks((current) => [...imported, ...current]);
+      setActiveModule('Tasks');
+    } else if (target === 'Notes') {
+      const imported = rows.map((row) => ({ id: genId(), title: row.title || 'Untitled note', content: row.content || '', category: row.category || 'General', companyId: companies.find((company) => company.name.toLowerCase() === (row.company || '').toLowerCase())?.id }));
+      created = imported.length;
+      setNotes((current) => [...imported, ...current]);
+      setActiveModule('Notes');
+    } else if (target === 'Meetings') {
+      const imported = rows.map((row) => ({ id: genId(), title: row.title || 'Untitled meeting', date: row.date || '', duration: row.duration || '60', attendees: row.attendees || '', location: row.location || '', notes: row.notes || '' }));
+      created = imported.length;
+      setMeetings((current) => [...imported, ...current]);
+      setActiveModule('Meetings');
+    } else if (target === 'Files') {
+      const imported = rows.map((row) => ({ id: genId(), name: row.name || 'Untitled file', type: row.type || 'Other', size: row.size || '', owner: row.owner || '', uploadedAt: row.uploadedAt || new Date().toISOString().slice(0, 10), tags: row.tags || '', companyId: companies.find((company) => company.name.toLowerCase() === (row.company || '').toLowerCase())?.id }));
+      created = imported.length;
+      setFiles((current) => [...imported, ...current]);
+      setActiveModule('Files');
     }
 
     setLastAction(`Imported ${created} ${target.toLowerCase()}`);
     audit('import', target, `${created} rows`);
-    return { created, skipped: duplicates.length, duplicates };
-  }, [audit, companies, people, permissions.canCreate]);
+    return { created, skipped: duplicates.length, duplicates, rollback };
+  }, [audit, companies, deals, files, leads, meetings, notes, opportunities, people, permissions.canCreate, projects, tasks]);
 
   const handleExecuteAction = useCallback((result: ExecuteResult) => {
     if (!result.success) { setLastAction(result.message); return; }
@@ -773,6 +874,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
       case 'Leads': setLeads((prev) => prev.filter((l) => l.id !== id)); break;
       case 'Meetings': setMeetings((prev) => prev.filter((m) => m.id !== id)); break;
       case 'Projects': setProjects((prev) => prev.filter((pr) => pr.id !== id)); break;
+      case 'Files': setFiles((prev) => prev.filter((f) => f.id !== id)); break;
       case 'Companies': setCompanies((prev) => prev.filter((c) => c.id !== id)); break;
     }
     setLastAction(`${type.slice(0, -1) || type} deleted`);
@@ -820,6 +922,116 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
     setCompanies((prev) => [newCompany, ...prev]);
     setLastAction('Company duplicated');
   }, []);
+
+  const saveCurrentFilter = useCallback(() => {
+    const name = query || (employeeFilter ? 'Companies over 1K employees' : 'All companies');
+    setSavedFilters((current) => [{ id: genId(), name, query, employeeFilter }, ...current].slice(0, 8));
+    setLastAction('Saved filter created');
+    audit('save_filter', 'Companies', name);
+  }, [audit, employeeFilter, query]);
+
+  const applySavedFilter = useCallback((filterId: string) => {
+    const filter = savedFilters.find((item) => item.id === filterId);
+    if (!filter) return;
+    setQuery(filter.query);
+    setEmployeeFilter(filter.employeeFilter);
+    setLastAction(`Applied saved filter: ${filter.name}`);
+  }, [savedFilters]);
+
+  const mergeSelectedCompanies = useCallback(() => {
+    if (selectedIds.length < 2) {
+      setLastAction('Select at least two companies to merge');
+      return;
+    }
+    if (!permissions.canEdit || !permissions.canDelete) {
+      setLastAction('You do not have permission to merge companies');
+      audit('merge_blocked', 'Companies', `${selectedIds.length} selected`, 'blocked');
+      return;
+    }
+
+    setCompanies((current) => {
+      const selected = current.filter((company) => selectedIds.includes(company.id));
+      const primary = selected[0];
+      if (!primary) return current;
+      const merged: CompanyTableRow = {
+        ...primary,
+        employees: selected.reduce((max, company) => Math.max(max, Number(company.employees || 0)), 0) || primary.employees,
+        linkedin: primary.linkedin || selected.find((company) => company.linkedin)?.linkedin || '',
+        owner: primary.owner || selected.find((company) => company.owner)?.owner || '',
+        createdAt: 'Merged just now',
+      };
+      const mergedNames = new Set(selected.map((company) => company.id));
+      return [merged, ...current.filter((company) => !mergedNames.has(company.id))];
+    });
+    setSelectedIds([]);
+    setLastAction('Selected companies merged');
+    audit('merge', 'Companies', `${selectedIds.length} companies`);
+  }, [audit, permissions.canDelete, permissions.canEdit, selectedIds]);
+
+  const moveDealStage = useCallback((dealId: string, stage: string) => {
+    setDeals((current) => current.map((deal) => deal.id === dealId ? { ...deal, stage } : deal));
+    setLastAction(`Deal moved to ${stage}`);
+    audit('move_stage', 'Deals', stage);
+  }, [audit]);
+
+  const convertLead = useCallback((lead: CrmLead) => {
+    if (!permissions.canCreate || !permissions.canEdit) {
+      setLastAction('You do not have permission to convert leads');
+      audit('convert_lead_blocked', 'Leads', lead.name, 'blocked');
+      return;
+    }
+
+    const existingCompany = companies.find((company) => company.name.toLowerCase() === lead.company.toLowerCase());
+    const companyId = existingCompany?.id || genId();
+    const contactId = genId();
+    const dealId = genId();
+
+    if (!existingCompany) {
+      setCompanies((current) => [{
+        id: companyId,
+        name: lead.company || `${lead.name} Company`,
+        domain: lead.email.includes('@') ? lead.email.split('@')[1] : '',
+        createdBy: 'Lead conversion',
+        owner: lead.owner || currentUser?.email || '',
+        createdAt: 'Just now',
+        employees: '',
+        linkedin: '',
+        color: 'bg-blue-600',
+        icon: (lead.company || lead.name || 'C')[0].toUpperCase(),
+      }, ...current]);
+    }
+
+    setPeople((current) => [{
+      id: contactId,
+      companyId,
+      name: lead.name,
+      email: lead.email,
+      phone: '',
+      title: '',
+      company: lead.company,
+      address: '',
+      notes: `Converted from ${lead.source || 'lead'} with score ${lead.score || '-'}.`,
+      status: 'Active',
+      tags: 'converted-lead',
+    }, ...current]);
+
+    setDeals((current) => [{
+      id: dealId,
+      companyId,
+      contactId,
+      leadId: lead.id,
+      name: `${lead.company || lead.name} - New Deal`,
+      company: lead.company,
+      value: String(Math.max(5000, Number(lead.score || 50) * 700)),
+      stage: 'Qualification',
+      closeDate: '',
+      owner: lead.owner || currentUser?.email || '',
+    }, ...current]);
+
+    setLeads((current) => current.map((item) => item.id === lead.id ? { ...item, status: 'Converted', companyId, contactId } : item));
+    setLastAction(`${lead.name} converted to contact and deal`);
+    audit('convert_lead', 'Leads', lead.name);
+  }, [audit, companies, currentUser, permissions.canCreate, permissions.canEdit]);
 
   const handleCompanyCrudSave = useCallback((data: Record<string, string>) => {
     if (!crudModal) return;
@@ -875,6 +1087,12 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
         setLastAction('Selected companies deleted');
         audit('delete_selected', 'Companies', `${selectedIds.length} selected`);
         break;
+      case 'merge-selected':
+        mergeSelectedCompanies();
+        break;
+      case 'save-filter':
+        saveCurrentFilter();
+        break;
       case 'ask-ai':
         setAiAnswer(`AI summary: ${companies.length} companies, ${selectedIds.length} selected. Open AI Ask for a live response from the secure Digital Wave backend assistant.`);
         setChatOpen(true);
@@ -885,14 +1103,14 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
         else setActiveModule(action);
     }
     setCommandOpen(false);
-  }, [audit, createCompany, exportView, companies, selectedIds, permissions.canDelete]);
+  }, [audit, createCompany, exportView, companies, selectedIds, permissions.canDelete, mergeSelectedCompanies, saveCurrentFilter]);
 
   const isAiModule = AI_MODULES.includes(activeModule);
   const isWorkflowsModule = activeModule === 'Workflows';
 
   const moduleIcon = moduleIconMap[activeModule] || LayoutDashboard;
 
-  const crudModuleTypes = ['People', 'Tasks', 'Notes', 'Opportunities', 'Deals', 'Leads', 'Meetings', 'Projects'];
+  const crudModuleTypes = ['People', 'Tasks', 'Notes', 'Opportunities', 'Deals', 'Leads', 'Meetings', 'Projects', 'Files'];
 
   const renderModulePanel = (type: string) => (
     <DigitalWaveModulePanel
@@ -901,13 +1119,25 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
       items={moduleItems[type]}
       onAdd={permissions.canCreate ? () => openAdd(type) : undefined}
       onView={(item) => {
-        const collections: Record<string, CrudEntity[]> = { People: people, Tasks: tasks, Notes: notes, Opportunities: opportunities, Deals: deals, Leads: leads, Meetings: meetings, Projects: projects };
+        const collections: Record<string, CrudEntity[]> = { People: people, Tasks: tasks, Notes: notes, Opportunities: opportunities, Deals: deals, Leads: leads, Meetings: meetings, Projects: projects, Files: files };
         const entity = collections[type]?.find((record) => (record as { id: string }).id === item.id);
         if (entity) openDetail(type, entity);
       }}
-      onEdit={permissions.canEdit ? (item) => openEdit(type, entityConfigs[type]?.toEntity(entityConfigs[type].fromEntity(item as unknown as CrudEntity), (item as { id: string }).id) || (item as unknown as CrudEntity)) : undefined}
-      onDelete={permissions.canDelete ? (item) => requestDelete(type, item as unknown as CrudEntity) : undefined}
-      onDuplicate={permissions.canCreate ? (item) => handleDuplicate(type, item as unknown as CrudEntity) : undefined}
+      onEdit={permissions.canEdit ? (item) => {
+        const collections: Record<string, CrudEntity[]> = { People: people, Tasks: tasks, Notes: notes, Opportunities: opportunities, Deals: deals, Leads: leads, Meetings: meetings, Projects: projects, Files: files };
+        const entity = collections[type]?.find((record) => (record as { id: string }).id === item.id);
+        if (entity) openEdit(type, entity);
+      } : undefined}
+      onDelete={permissions.canDelete ? (item) => {
+        const collections: Record<string, CrudEntity[]> = { People: people, Tasks: tasks, Notes: notes, Opportunities: opportunities, Deals: deals, Leads: leads, Meetings: meetings, Projects: projects, Files: files };
+        const entity = collections[type]?.find((record) => (record as { id: string }).id === item.id);
+        if (entity) requestDelete(type, entity);
+      } : undefined}
+      onDuplicate={permissions.canCreate ? (item) => {
+        const collections: Record<string, CrudEntity[]> = { People: people, Tasks: tasks, Notes: notes, Opportunities: opportunities, Deals: deals, Leads: leads, Meetings: meetings, Projects: projects, Files: files };
+        const entity = collections[type]?.find((record) => (record as { id: string }).id === item.id);
+        if (entity) handleDuplicate(type, entity);
+      } : undefined}
     />
   );
 
@@ -959,7 +1189,9 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
                 tasks={tasks}
                 leads={leads}
                 deals={deals}
+                opportunities={opportunities}
                 meetings={meetings}
+                files={files}
                 companiesLoaded={companiesLoaded}
                 recordsLoaded={recordsLoaded}
                 schemaHealth={schemaHealth}
@@ -986,7 +1218,13 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
                   {menuOpen && (
                     <div className="digital-wave-dropdown">
                       {menuOpen === 'filter' && (
-                        <button onClick={() => setEmployeeFilter((v) => !v)} type="button"><Check size={12} /> Filter &gt;1K employees {employeeFilter ? 'on' : 'off'}</button>
+                        <>
+                          <button onClick={() => setEmployeeFilter((v) => !v)} type="button"><Check size={12} /> Filter &gt;1K employees {employeeFilter ? 'on' : 'off'}</button>
+                          <button onClick={saveCurrentFilter} type="button"><Check size={12} /> Save current filter</button>
+                          {savedFilters.map((filter) => (
+                            <button key={filter.id} onClick={() => applySavedFilter(filter.id)} type="button">{filter.name}</button>
+                          ))}
+                        </>
                       )}
                       {menuOpen === 'sort' && (
                         <>
@@ -998,6 +1236,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
                         <>
                           <button onClick={() => setCompactRows((v) => !v)} type="button"><List size={12} /> Compact rows</button>
                           <button onClick={() => setHiddenLinkedin((v) => !v)} type="button"><Linkedin size={12} /> Toggle LinkedIn</button>
+                          <button onClick={mergeSelectedCompanies} type="button"><Check size={12} /> Merge selected</button>
                           {permissions.canExport && <button onClick={exportView} type="button"><Download size={12} /> Export view</button>}
                         </>
                       )}
@@ -1042,6 +1281,33 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
                   <WorkflowDashboard />
                 </div>
               </div>
+            ) : activeModule === 'Deals' ? (
+              <div className="space-y-4">
+                <DealPipelineBoard deals={deals} onMoveDeal={moveDealStage} onOpenDeal={(deal) => openDetail('Deals', deal)} />
+                {renderModulePanel('Deals')}
+              </div>
+            ) : activeModule === 'Leads' ? (
+              <div className="space-y-3">
+                <div className="digital-wave-table-card p-4">
+                  <div className="mb-3 flex items-center justify-between">
+                    <div>
+                      <h2 className="text-sm font-semibold" style={{ color: 'var(--crm-text)' }}>Lead conversion queue</h2>
+                      <p className="text-xs" style={{ color: 'var(--crm-text-muted)' }}>Qualified leads can become a company, contact, and deal in one action.</p>
+                    </div>
+                    <span className="rounded-full px-2 py-1 text-[10px]" style={{ background: 'rgba(245,158,11,0.12)', color: '#f59e0b' }}>{leads.filter((lead) => lead.status !== 'Converted').length} open</span>
+                  </div>
+                  <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+                    {leads.filter((lead) => lead.status !== 'Converted').slice(0, 6).map((lead) => (
+                      <div key={lead.id} className="rounded-lg border p-3" style={{ borderColor: 'var(--crm-border)', background: 'var(--crm-surface)' }}>
+                        <p className="text-sm font-semibold" style={{ color: 'var(--crm-text)' }}>{lead.name}</p>
+                        <p className="text-xs" style={{ color: 'var(--crm-text-muted)' }}>{lead.company} - {lead.source} - Score {lead.score || '-'}</p>
+                        <button onClick={() => convertLead(lead)} type="button" className="digital-wave-btn digital-wave-btn-primary mt-3 w-full">Convert lead</button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {renderModulePanel('Leads')}
+              </div>
             ) : crudModuleTypes.includes(activeModule) ? (
               renderModulePanel(activeModule)
             ) : activeModule === 'Settings' ? (
@@ -1085,7 +1351,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
         )}
         <RecordDetailDrawer
           record={detailRecord}
-          related={{ companies, people, tasks, notes, deals, meetings }}
+          related={{ companies, people, tasks, notes, deals, meetings, files }}
           onClose={() => setDetailRecord(null)}
           onEdit={detailRecord && permissions.canEdit ? () => {
             setCrudModal(detailRecord);

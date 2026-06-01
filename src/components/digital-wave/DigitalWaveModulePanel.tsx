@@ -41,6 +41,7 @@ const emptyCopy: Record<string, { title: string; detail: string }> = {
   Leads: { title: 'No leads yet', detail: 'Add inbound or outbound leads to qualify future customers.' },
   Meetings: { title: 'No meetings yet', detail: 'Schedule meetings to build a visible customer timeline.' },
   Projects: { title: 'No projects yet', detail: 'Track implementation or delivery work after a deal closes.' },
+  Files: { title: 'No files yet', detail: 'Attach proposals, contracts, recordings, and customer documents to records.' },
 };
 
 export function DigitalWaveModulePanel({ module, onOpenCommand, items, onAdd, onEdit, onView, onDelete, onDuplicate }: DigitalWaveModulePanelProps) {
