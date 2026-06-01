@@ -1,7 +1,9 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
-import { useUser } from '@clerk/clerk-react';
+import { useAuth as useClerkAuth, useUser } from '@clerk/clerk-react';
 import { api } from '../services/apiClient';
 import { getCurrentRole, type Role } from '../services/permissions';
+import { configureSupabaseAuth } from '../lib/supabase';
+import { listProfiles, upsertProfile } from '../services/supabaseCrmService';
 
 interface CrmUser {
   id: string;
@@ -45,6 +47,7 @@ const AuthContext = createContext<AuthContextValue>({
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const { getToken } = useClerkAuth();
   const { user: clerkUser, isSignedIn } = useUser();
   const [users, setUsers] = useState<CrmUser[]>([]);
   const [sessions, setSessions] = useState<any[]>([]);
@@ -103,10 +106,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [refreshUsers]);
 
   useEffect(() => {
+    configureSupabaseAuth(() => getToken({ template: 'supabase' }).catch(() => getToken().catch(() => null)));
+  }, [getToken]);
+
+  useEffect(() => {
+    if (!clerkUser || !isSignedIn) return;
+
+    const email = clerkUser.emailAddresses[0]?.emailAddress || '';
+    const name = clerkUser.fullName || email || 'Unknown';
+
+    upsertProfile({
+      id: clerkUser.id,
+      email,
+      full_name: name,
+      avatar_url: clerkUser.imageUrl,
+      role,
+    }).catch(() => undefined);
+  }, [clerkUser, isSignedIn, role]);
+
+  useEffect(() => {
     if (isSignedIn) {
       setLoading(false);
       if (isManager) {
-        refreshUsers();
+        listProfiles()
+          .then((profiles) => {
+            if (profiles.length === 0) {
+              void refreshUsers();
+              return;
+            }
+            setUsers(profiles.map((profile) => ({
+              id: profile.id,
+              clerkId: profile.id,
+              email: profile.email,
+              name: profile.full_name || profile.email,
+              role: profile.role,
+              avatar: profile.avatar_url || undefined,
+              online: false,
+              away: false,
+              createdAt: profile.created_at || new Date().toISOString(),
+            })));
+          })
+          .catch(() => refreshUsers());
       }
     } else {
       setLoading(false);

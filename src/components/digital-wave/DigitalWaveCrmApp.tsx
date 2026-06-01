@@ -28,6 +28,7 @@ import { WorkflowDashboard } from './WorkflowDashboard';
 import { SettingsPanel } from './SettingsPanel';
 import { AuthRequired } from '../crm/AuthRequired';
 import type { ExecuteResult } from '../../services/aiExecutionEngine';
+import { listCompanies, saveCompanies } from '../../services/supabaseCrmService';
 
 interface DigitalWaveCrmAppProps {
   clerkMissing: boolean;
@@ -61,6 +62,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
   const { user: clerkUser, isSignedIn } = useUser();
   const [activeModule, setActiveModule] = useState(() => window.location.pathname.startsWith('/crm/workflows') ? 'Workflows' : 'Companies');
   const [companies, setCompanies] = useState(initialCompanies);
+  const [companiesLoaded, setCompaniesLoaded] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [query, setQuery] = useState('');
   const [commandOpen, setCommandOpen] = useState(false);
@@ -73,6 +75,36 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
       setPresenceClerkId(clerkUser.id);
     }
   }, [isSignedIn, clerkUser]);
+
+  useEffect(() => {
+    if (!isSignedIn) return;
+
+    let cancelled = false;
+    listCompanies()
+      .then((items) => {
+        if (cancelled) return;
+        if (items && items.length > 0) {
+          setCompanies(items);
+        } else if (items && items.length === 0) {
+          void saveCompanies(initialCompanies);
+        }
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (!cancelled) setCompaniesLoaded(true);
+      });
+
+    return () => { cancelled = true; };
+  }, [isSignedIn]);
+
+  useEffect(() => {
+    if (!isSignedIn || !companiesLoaded) return;
+    const timer = window.setTimeout(() => {
+      void saveCompanies(companies).catch(() => undefined);
+    }, 500);
+
+    return () => window.clearTimeout(timer);
+  }, [companies, companiesLoaded, isSignedIn]);
   const [employeeFilter, setEmployeeFilter] = useState(false);
   const [compactRows, setCompactRows] = useState(false);
   const [hiddenLinkedin, setHiddenLinkedin] = useState(false);
