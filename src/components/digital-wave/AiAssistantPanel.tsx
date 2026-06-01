@@ -39,7 +39,7 @@ async function askDigitalWaveAi(prompt: string, companies: CompanyTableRow[], se
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(data.error || 'AI request failed. Check OPENAI_API_KEY on the server.');
+    throw new Error(data.error || 'AI request failed. Check GEMINI_API_KEY on the server.');
   }
 
   if (!data.answer) {

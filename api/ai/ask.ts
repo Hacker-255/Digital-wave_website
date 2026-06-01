@@ -1,3 +1,5 @@
+import { generateGeminiAnswer } from '../_geminiService';
+
 type AskRequest = {
   prompt?: string;
   context?: unknown;
@@ -28,12 +30,6 @@ export default async function handler(
     return;
   }
 
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    response.status(500).json({ error: 'OPENAI_API_KEY is not configured.' });
-    return;
-  }
-
   const prompt = request.body?.prompt?.trim();
   if (!prompt) {
     response.status(400).json({ error: 'Prompt is required.' });
@@ -41,42 +37,16 @@ export default async function handler(
   }
 
   try {
-    const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are Digital Wave CRM AI. Give concise, practical CRM and workflow automation help.',
-          },
-          {
-            role: 'user',
-            content: `${prompt}\n\nCRM context:\n${JSON.stringify(request.body?.context ?? {}, null, 2)}`,
-          },
-        ],
-        max_tokens: 700,
-      }),
+    const answer = await generateGeminiAnswer({
+      prompt,
+      context: request.body?.context,
+      maxOutputTokens: 700,
     });
-
-    const data = await aiResponse.json().catch(() => ({})) as {
-      choices?: Array<{ message?: { content?: string } }>;
-      error?: { message?: string };
-    };
-
-    if (!aiResponse.ok) {
-      response.status(aiResponse.status).json({ error: data.error?.message || 'OpenAI request failed.' });
-      return;
-    }
-
     response.status(200).json({
-      answer: data.choices?.[0]?.message?.content?.trim() || 'No answer returned.',
+      answer,
     });
-  } catch {
-    response.status(500).json({ error: 'AI request failed.' });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'AI request failed.';
+    response.status(message.includes('GEMINI_API_KEY') ? 500 : 502).json({ error: message });
   }
 }
