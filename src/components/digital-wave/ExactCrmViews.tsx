@@ -223,7 +223,7 @@ export function ExactDashboardView({
           ] as CrmTask[]).slice(0, 5).map((task) => (
             <button key={task.id} onClick={() => onNavigate('Tasks')} className="exact-task-row" type="button">
               <CheckCircle2 size={16} />
-              <span><b>{task.title}</b><small>{task.assignee} • {task.dueDate}</small></span>
+              <span><b>{task.title}</b><small>{task.assignee} - {task.dueDate}</small></span>
               <em className={task.priority.toLowerCase()}>{task.priority}</em>
             </button>
           ))}

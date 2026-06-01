@@ -4,7 +4,6 @@ import { AccountCenter } from './AccountCenter';
 import { cn } from '../../utils/cn';
 import { sidebarItems, aiSidebarItems, otherSidebarItems } from '../../constants/data';
 import { useTheme } from '../../contexts/ThemeContext';
-import digitalWaveLogo from '../../assets/digital-wave-logo.png';
 
 interface DigitalWaveSidebarProps {
   activeModule: string;
@@ -32,9 +31,7 @@ export function DigitalWaveSidebar({ activeModule, onModuleChange, onOpenCommand
     <aside className="digital-wave-sidebar flex flex-col">
       <div className="shrink-0">
         <div className="digital-wave-brand">
-          <span className="digital-wave-brand-mark">
-            <img src={digitalWaveLogo} alt="" />
-          </span>
+          <span className="digital-wave-brand-mark" aria-hidden="true" />
           <b>Digital Wave</b>
           <button onClick={onOpenCommand} type="button" aria-label="Open command menu">
             <Menu size={16} />

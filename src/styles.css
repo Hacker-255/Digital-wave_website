@@ -38,14 +38,14 @@
 }
 
 .light {
-  --crm-app-bg: #f7faff;
+  --crm-app-bg: #f5f8ff;
   --crm-sidebar-bg: #ffffff;
   --crm-text: #0f172a;
   --crm-text-secondary: #334155;
   --crm-text-muted: #64748b;
-  --crm-border: rgba(15,23,42,0.08);
-  --crm-border-light: rgba(15,23,42,0.04);
-  --crm-border-accent: rgba(15,23,42,0.12);
+  --crm-border: rgba(15,23,42,0.09);
+  --crm-border-light: rgba(15,23,42,0.05);
+  --crm-border-accent: rgba(15,23,42,0.13);
   --crm-card-bg: #ffffff;
   --crm-hover: rgba(91,77,245,0.08);
   --crm-hover-subtle: rgba(91,77,245,0.05);
@@ -65,7 +65,7 @@
   --crm-accent: #5b4df5;
   --crm-accent-strong: #4f46e5;
   --crm-accent-soft: rgba(91,77,245,0.12);
-  --crm-shadow: 0 18px 45px rgba(15,23,42,0.08);
+  --crm-shadow: 0 18px 45px rgba(15,23,42,0.07);
 }
 
 .light .digital-wave-crm-shell [class*="text-white"] {
@@ -199,15 +199,15 @@ button, input { font: inherit; }
 
   /* Digital Wave CRM Shell Styles - Theme Aware */
   .digital-wave-crm-shell {
-    @apply grid min-h-screen lg:grid-cols-[250px_1fr];
+    @apply grid min-h-screen lg:grid-cols-[252px_1fr];
     background: var(--crm-app-bg);
     background-image:
-      radial-gradient(circle at 85% 8%, var(--crm-hover-subtle), transparent 30%),
-      radial-gradient(circle at 18% 0%, rgba(59, 130, 246, 0.08), transparent 26%);
+      radial-gradient(circle at 76% 4%, rgba(91,77,245,0.07), transparent 32%),
+      linear-gradient(90deg, rgba(235,241,252,0.85), transparent 36%);
     transition: background-color 0.25s ease;
   }
   .digital-wave-sidebar {
-    @apply sticky top-0 h-screen overflow-hidden border-r p-5 backdrop-blur-xl;
+    @apply sticky top-0 h-screen overflow-hidden border-r px-5 py-6 backdrop-blur-xl;
     background: var(--crm-sidebar-bg);
     border-color: var(--crm-border);
     color: var(--crm-text);
@@ -215,14 +215,18 @@ button, input { font: inherit; }
     transition: background-color 0.25s ease, border-color 0.25s ease;
   }
   .digital-wave-brand {
-    @apply mb-6 flex items-center gap-3 text-xs;
+    @apply mb-6 flex h-10 items-center gap-3 text-xs;
   }
-  .digital-wave-brand b { @apply flex-1 text-base font-bold; }
+  .digital-wave-brand b { @apply flex-1 text-lg font-bold tracking-tight; color: #0f172a; }
+  .dark .digital-wave-brand b { color: var(--crm-text); }
   .digital-wave-brand button { @apply rounded-xl p-2; color: var(--crm-text-secondary); transition: background-color 0.2s ease, color 0.2s ease; }
   .digital-wave-brand button:hover { background: var(--crm-hover); }
-  .digital-wave-brand-mark { @apply flex h-7 w-7 items-center justify-center overflow-hidden rounded-lg text-[10px] font-bold text-white; background: var(--crm-cta-bg); box-shadow: 0 12px 24px rgba(91,77,245,0.24); }
-  .digital-wave-brand-mark img { @apply h-full w-full object-cover; }
-  .digital-wave-pill-nav { @apply mb-5 flex w-28 rounded-full border p-1; border-color: var(--crm-border); background: var(--crm-surface); }
+  .digital-wave-brand-mark { @apply relative flex h-7 w-7 items-center justify-center overflow-hidden rounded-lg text-[10px] font-bold text-white; background: linear-gradient(135deg, #7c5cff, #4f46e5); box-shadow: 0 12px 24px rgba(91,77,245,0.24); }
+  .digital-wave-brand-mark::before,
+  .digital-wave-brand-mark::after { content: ''; @apply absolute rounded-full bg-white/90; }
+  .digital-wave-brand-mark::before { width: 14px; height: 7px; transform: rotate(38deg); left: 5px; top: 8px; }
+  .digital-wave-brand-mark::after { width: 14px; height: 7px; transform: rotate(-38deg); right: 5px; bottom: 8px; }
+  .digital-wave-pill-nav { @apply mb-5 flex w-28 rounded-full border p-1; border-color: var(--crm-border); background: var(--crm-surface); box-shadow: 0 10px 26px rgba(15,23,42,0.04); }
   .digital-wave-pill-nav button { @apply flex h-8 flex-1 items-center justify-center rounded-full; color: var(--crm-text-secondary); transition: background-color 0.2s ease, color 0.2s ease; }
   .digital-wave-pill-nav button:hover { background: var(--crm-hover); }
   .digital-wave-pill-nav button.active { background: var(--crm-card-bg); color: var(--crm-accent); box-shadow: var(--crm-shadow); }
@@ -230,8 +234,9 @@ button, input { font: inherit; }
   .digital-wave-new-chat:hover { transform: translateY(-1px); box-shadow: 0 16px 34px rgba(91,77,245,0.28); }
   .digital-wave-section-label { @apply mb-2 mt-4 text-[11px]; color: var(--crm-text-muted); }
   .digital-wave-sidebar-item { @apply mb-1 flex w-full items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 text-left text-sm transition; color: var(--crm-text-secondary); }
+  .dark .digital-wave-sidebar-item { color: var(--crm-text-secondary); background: var(--crm-btn-bg); }
   .digital-wave-sidebar-item:hover { background: var(--crm-hover); }
-  .digital-wave-sidebar-item.active { background: var(--crm-accent-soft); border-color: rgba(91,77,245,0.14); color: var(--crm-accent-strong); box-shadow: inset 3px 0 0 var(--crm-accent); }
+  .digital-wave-sidebar-item.active { background: rgba(91,77,245,0.09); border-color: rgba(91,77,245,0.16); color: var(--crm-accent-strong); box-shadow: inset 4px 0 0 var(--crm-accent); }
   .digital-wave-sidebar-icon { @apply flex h-7 w-7 items-center justify-center rounded-lg; }
   .digital-wave-main {
     @apply min-w-0 p-5 lg:p-6;
@@ -239,9 +244,10 @@ button, input { font: inherit; }
     transition: color 0.25s ease;
   }
   .digital-wave-topbar { @apply mb-6 flex flex-wrap items-center justify-between gap-4; }
-  .digital-wave-title { @apply flex items-start gap-3 text-2xl font-bold; }
+  .digital-wave-title { @apply flex items-start gap-3 text-2xl font-bold tracking-tight; color: #020617; }
+  .dark .digital-wave-title { color: var(--crm-text); }
   .digital-wave-title > svg { @apply mt-1; }
-  .digital-wave-title-block p { @apply mt-1 text-sm font-normal; color: var(--crm-text-muted); }
+  .digital-wave-title-block p { @apply mt-1 text-sm font-normal leading-5; color: #64748b; }
   .digital-wave-header-tools { @apply flex flex-wrap items-center justify-end gap-3; }
   .digital-wave-global-search { @apply hidden h-11 min-w-[280px] items-center gap-2 rounded-xl border px-4 text-sm shadow-sm lg:flex; border-color: var(--crm-border-accent); background: var(--crm-card-bg); color: var(--crm-text-muted); }
   .digital-wave-global-search kbd { @apply ml-auto rounded-md border px-1.5 py-0.5 text-[10px]; border-color: var(--crm-border); color: var(--crm-text-muted); }
@@ -475,23 +481,25 @@ button, input { font: inherit; }
   .exact-dashboard-metrics { @apply grid gap-4 md:grid-cols-2 xl:grid-cols-5; }
 
   .exact-metric-card {
-    @apply relative min-h-[120px] overflow-hidden rounded-2xl border p-5;
+    @apply relative flex min-h-[120px] items-start gap-4 overflow-hidden rounded-2xl border p-5;
     background: var(--crm-card-bg);
     border-color: var(--crm-border-accent);
     box-shadow: var(--crm-shadow);
   }
-  .exact-metric-icon { @apply flex h-12 w-12 items-center justify-center rounded-2xl; }
+  .exact-metric-icon { @apply flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl; }
+  .exact-metric-icon svg { width: 22px; height: 22px; }
   .exact-metric-icon.purple { background: rgba(91,77,245,0.14); color: #5b4df5; }
   .exact-metric-icon.blue { background: rgba(59,130,246,0.14); color: #2563eb; }
   .exact-metric-icon.green { background: rgba(34,197,94,0.14); color: #16a34a; }
   .exact-metric-icon.orange { background: rgba(249,115,22,0.14); color: #f97316; }
   .exact-metric-icon.pink { background: rgba(236,72,153,0.14); color: #ec4899; }
-  .exact-metric-copy { @apply absolute left-[88px] top-5; }
-  .exact-metric-copy p { @apply text-sm; color: var(--crm-text-muted); }
-  .exact-metric-copy strong { @apply mt-1 block text-2xl font-bold; color: var(--crm-text); }
-  .exact-metric-copy small { @apply mt-2 block text-xs font-medium; color: #16a34a; }
+  .exact-metric-copy { @apply min-w-0 flex-1; }
+  .exact-metric-copy p { @apply text-sm leading-5; color: var(--crm-text-muted); }
+  .exact-metric-copy strong { @apply mt-1 block truncate text-2xl font-bold leading-tight; color: #020617; }
+  .dark .exact-metric-copy strong { color: var(--crm-text); }
+  .exact-metric-copy small { @apply mt-2 block text-xs font-medium leading-4; color: #16a34a; }
   .exact-metric-copy small.down { color: #ef4444; }
-  .exact-sparkline { @apply absolute bottom-4 left-6 right-6 h-8 opacity-90; }
+  .exact-sparkline { @apply absolute bottom-4 left-6 right-6 h-8 opacity-80; }
   .exact-sparkline::before {
     content: '';
     @apply absolute inset-0;
@@ -514,7 +522,9 @@ button, input { font: inherit; }
   }
   .exact-card-head { @apply flex items-center justify-between gap-3 p-5; }
   .exact-card-head h2,
-  .exact-panel-title { @apply flex items-center gap-1 text-base font-bold; color: var(--crm-text); }
+  .exact-panel-title { @apply flex items-center gap-1 text-base font-bold leading-tight; color: #020617; }
+  .dark .exact-card-head h2,
+  .dark .exact-panel-title { color: var(--crm-text); }
   .exact-card-head button,
   .exact-tool-button {
     @apply inline-flex h-10 items-center gap-2 rounded-xl border px-4 text-sm font-semibold;
@@ -528,6 +538,7 @@ button, input { font: inherit; }
   .exact-stage-list { @apply space-y-2 px-5; }
   .exact-stage {
     @apply flex w-full items-center justify-between rounded-lg border-0 px-4 py-3 text-left;
+    border-color: var(--crm-border-accent) !important;
     color: var(--crm-text) !important;
   }
   .exact-stage b { @apply block text-sm; }
@@ -543,7 +554,8 @@ button, input { font: inherit; }
   .exact-conversion b { @apply text-xl; color: var(--crm-text); }
   .exact-conversion em { @apply rounded-full px-3 py-1 text-xs not-italic; color: #16a34a; background: rgba(34,197,94,0.12); }
   .exact-revenue { @apply p-0 xl:col-span-1; }
-  .exact-big-money { @apply px-5 text-2xl font-bold; color: var(--crm-text); }
+  .exact-big-money { @apply px-5 text-2xl font-bold leading-tight; color: #020617; }
+  .dark .exact-big-money { color: var(--crm-text); }
   .exact-green { @apply px-5 text-xs font-medium; color: #16a34a; }
   .exact-chart { @apply px-5 pb-5 pt-2; }
   .exact-chart svg { @apply h-64 w-full; }
@@ -566,7 +578,7 @@ button, input { font: inherit; }
   .exact-task-row b,
   .exact-activity-row b { @apply block truncate font-semibold; }
   .exact-task-row small,
-  .exact-activity-row small { @apply block truncate text-xs; color: var(--crm-text-muted); }
+  .exact-activity-row small { @apply block truncate text-xs font-normal; color: var(--crm-text-muted); }
   .exact-task-row em { @apply rounded-full px-2 py-1 text-xs not-italic; }
   .exact-task-row em.high { color: #ef4444; background: rgba(239,68,68,0.12); }
   .exact-task-row em.medium { color: #f97316; background: rgba(249,115,22,0.12); }
