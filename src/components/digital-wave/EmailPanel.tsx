@@ -2,20 +2,25 @@ import { useState } from 'react';
 import { Mail, Send, Settings as SettingsIcon, FileText, Plus, Trash2, Check, AlertCircle } from 'lucide-react';
 import { SelectDropdown } from './SelectDropdown';
 import type { EmailSettings, EmailTemplate } from '../../services/settingsService';
+import { api } from '../../services/apiClient';
+import { useAuth } from '../../contexts/AuthContext';
 
 export function EmailPanel({ settings, onChange }: { settings: EmailSettings; onChange: (s: EmailSettings) => void }) {
+  const { isManager, currentUser } = useAuth();
   const [testEmail, setTestEmail] = useState('');
   const [testSending, setTestSending] = useState(false);
   const [testResult, setTestResult] = useState<{ ok: boolean; msg: string } | null>(null);
 
-  const sendTest = () => {
-    if (!testEmail) return;
+  const sendTest = async () => {
+    const recipient = testEmail.trim() || currentUser?.email || '';
+    if (!recipient) return;
     setTestSending(true);
     setTestResult(null);
-    setTimeout(() => {
-      setTestResult({ ok: true, msg: 'Test email sent successfully to ' + testEmail });
-      setTestSending(false);
-    }, 1000);
+    const { data, error } = await api.email.sendTest(recipient);
+    setTestResult(error
+      ? { ok: false, msg: error }
+      : { ok: true, msg: `Test email sent successfully to ${data?.to || recipient}` });
+    setTestSending(false);
   };
 
   const addTemplate = () => {
@@ -35,6 +40,18 @@ export function EmailPanel({ settings, onChange }: { settings: EmailSettings; on
 
   return (
     <div className="space-y-5">
+      <div className="rounded-xl border p-4" style={{ borderColor: 'var(--crm-border)', background: 'var(--crm-surface)' }}>
+        <div className="flex items-start gap-3">
+          <Mail size={16} style={{ color: '#3b82f6' }} />
+          <div>
+            <h3 className="text-sm font-semibold" style={{ color: 'var(--crm-text)' }}>Resend Transactional Email</h3>
+            <p className="mt-1 text-xs" style={{ color: 'var(--crm-text-secondary)' }}>
+              Emails are sent by the backend only. Store RESEND_API_KEY in .env.local, Vercel environment variables, or the server environment.
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Provider */}
       <div className="rounded-xl border p-4" style={{ borderColor: 'var(--crm-border)' }}>
         <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--crm-text)' }}>Email Provider</h3>
@@ -90,11 +107,14 @@ export function EmailPanel({ settings, onChange }: { settings: EmailSettings; on
       <div className="rounded-xl border p-4" style={{ borderColor: 'var(--crm-border)' }}>
         <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--crm-text)' }}>Test Email</h3>
         <div className="flex gap-2">
-          <input value={testEmail} onChange={(e) => setTestEmail(e.target.value)} placeholder="test@example.com" type="email" className="flex-1 rounded-lg border px-3 py-2 text-xs outline-none" style={{ background: 'var(--crm-surface)', borderColor: 'var(--crm-border)', color: 'var(--crm-text)' }} />
-          <button onClick={sendTest} disabled={testSending || !testEmail} type="button" className="digital-wave-btn digital-wave-btn-primary flex items-center gap-1.5 disabled:opacity-50">
-            <Send size={12} /> {testSending ? 'Sending...' : 'Send Test'}
+          <input value={testEmail} onChange={(e) => setTestEmail(e.target.value)} placeholder={currentUser?.email || 'test@example.com'} type="email" className="flex-1 rounded-lg border px-3 py-2 text-xs outline-none" style={{ background: 'var(--crm-surface)', borderColor: 'var(--crm-border)', color: 'var(--crm-text)' }} />
+          <button onClick={sendTest} disabled={testSending || !isManager || (!testEmail.trim() && !currentUser?.email)} type="button" className="digital-wave-btn digital-wave-btn-primary flex items-center gap-1.5 disabled:opacity-50">
+            <Send size={12} /> {testSending ? 'Sending...' : 'Send test email'}
           </button>
         </div>
+        {!isManager && (
+          <p className="mt-2 text-xs text-amber-400">Only admins and managers can send test emails.</p>
+        )}
         {testResult && (
           <p className={`mt-2 text-xs flex items-center gap-1 ${testResult.ok ? 'text-emerald-400' : 'text-red-400'}`}>
             {testResult.ok ? <Check size={12} /> : <AlertCircle size={12} />} {testResult.msg}

@@ -9,6 +9,7 @@ import { crmEventRoutes } from './routes/crmEventRoutes';
 import { workflowRoutes, workflowRunRoutes } from './routes/workflowRoutes';
 import { userRoutes } from './routes/userRoutes';
 import { settingsRoutes } from './routes/settingsRoutes';
+import { emailRoutes } from './routes/emailRoutes';
 import {
   securityHeaders,
   apiLimiter,
@@ -54,6 +55,8 @@ app.use('/api/docs', docsRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/email', emailRoutes);
+app.use('/api/v1/email', emailRoutes);
 
 app.use(errorHandler);
 

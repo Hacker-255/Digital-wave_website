@@ -93,6 +93,17 @@ export const api = {
         body: JSON.stringify({ settings }),
       }),
   },
+  email: {
+    sendTest: (to: string) =>
+      request<{ ok: boolean; id?: string; to: string }>('/email/test', {
+        method: 'POST',
+        body: JSON.stringify({ to }),
+      }),
+    sendWelcome: () =>
+      request<{ ok: boolean; id?: string; to: string }>('/email/welcome', {
+        method: 'POST',
+      }),
+  },
   workflows: {
     list: () => request<{ workflows: any[] }>('/workflows'),
     run: (id: string) =>

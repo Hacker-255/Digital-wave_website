@@ -145,6 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const email = clerkUser.emailAddresses[0]?.emailAddress || '';
     const name = clerkUser.fullName || email || 'Unknown';
+    const welcomeKey = `crm-welcome-email-sent:${clerkUser.id}`;
 
     listProfiles()
       .then((profiles) => {
@@ -157,6 +158,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           full_name: name,
           avatar_url: clerkUser.imageUrl,
           role: nextRole,
+        }).then((profile) => {
+          if (!existing && !localStorage.getItem(welcomeKey)) {
+            localStorage.setItem(welcomeKey, new Date().toISOString());
+            void api.email.sendWelcome().then(({ error }) => {
+              if (error) localStorage.removeItem(welcomeKey);
+            });
+          }
+          return profile;
         });
       })
       .catch(() => upsertProfile({
