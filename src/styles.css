@@ -7,57 +7,65 @@
    ============================ */
 
 :root, .dark {
-  --crm-app-bg: #0a0a0a;
-  --crm-sidebar-bg: #0f0f0f;
-  --crm-text: #ededed;
-  --crm-text-secondary: #a1a1aa;
-  --crm-text-muted: #71717a;
-  --crm-border: rgba(255,255,255,0.08);
-  --crm-border-light: rgba(255,255,255,0.04);
-  --crm-border-accent: rgba(255,255,255,0.12);
-  --crm-card-bg: #111111;
-  --crm-hover: rgba(255,255,255,0.06);
-  --crm-hover-subtle: rgba(255,255,255,0.04);
-  --crm-dropdown-bg: #18181b;
-  --crm-surface: rgba(255,255,255,0.04);
-  --crm-surface-alt: #141414;
+  --crm-app-bg: #0b1020;
+  --crm-sidebar-bg: #101827;
+  --crm-text: #f8fafc;
+  --crm-text-secondary: #cbd5e1;
+  --crm-text-muted: #94a3b8;
+  --crm-border: rgba(148,163,184,0.18);
+  --crm-border-light: rgba(148,163,184,0.1);
+  --crm-border-accent: rgba(148,163,184,0.26);
+  --crm-card-bg: #111a2d;
+  --crm-hover: rgba(99,102,241,0.14);
+  --crm-hover-subtle: rgba(99,102,241,0.08);
+  --crm-dropdown-bg: #111a2d;
+  --crm-surface: rgba(15,23,42,0.86);
+  --crm-surface-alt: #172138;
   --crm-overlay: rgba(0,0,0,0.6);
-  --crm-scrollbar: rgba(255,255,255,0.08);
-  --crm-scrollbar-hover: rgba(255,255,255,0.16);
-  --crm-btn-bg: rgba(255,255,255,0.04);
-  --crm-btn-text: #ededed;
-  --crm-btn-border: rgba(255,255,255,0.08);
-  --crm-btn-hover: rgba(255,255,255,0.08);
-  --crm-cta-bg: #ededed;
-  --crm-cta-text: #0a0a0a;
-  --crm-cta-hover: rgba(255,255,255,0.16);
+  --crm-scrollbar: rgba(148,163,184,0.22);
+  --crm-scrollbar-hover: rgba(148,163,184,0.36);
+  --crm-btn-bg: rgba(15,23,42,0.8);
+  --crm-btn-text: #e2e8f0;
+  --crm-btn-border: rgba(148,163,184,0.24);
+  --crm-btn-hover: rgba(99,102,241,0.18);
+  --crm-cta-bg: linear-gradient(135deg, #6d5dfc, #4f46e5);
+  --crm-cta-text: #ffffff;
+  --crm-cta-hover: #4f46e5;
+  --crm-accent: #5b4df5;
+  --crm-accent-strong: #4f46e5;
+  --crm-accent-soft: rgba(91,77,245,0.16);
+  --crm-shadow: 0 18px 50px rgba(0,0,0,0.28);
 }
 
 .light {
-  --crm-app-bg: #f5f5f5;
+  --crm-app-bg: #f7faff;
   --crm-sidebar-bg: #ffffff;
-  --crm-text: #09090b;
-  --crm-text-secondary: #52525b;
-  --crm-text-muted: #6b7280;
-  --crm-border: rgba(0,0,0,0.08);
-  --crm-border-light: rgba(0,0,0,0.04);
-  --crm-border-accent: rgba(0,0,0,0.12);
+  --crm-text: #0f172a;
+  --crm-text-secondary: #334155;
+  --crm-text-muted: #64748b;
+  --crm-border: rgba(15,23,42,0.08);
+  --crm-border-light: rgba(15,23,42,0.04);
+  --crm-border-accent: rgba(15,23,42,0.12);
   --crm-card-bg: #ffffff;
-  --crm-hover: rgba(0,0,0,0.05);
-  --crm-hover-subtle: rgba(0,0,0,0.03);
+  --crm-hover: rgba(91,77,245,0.08);
+  --crm-hover-subtle: rgba(91,77,245,0.05);
   --crm-dropdown-bg: #ffffff;
-  --crm-surface: rgba(0,0,0,0.03);
-  --crm-surface-alt: #fafafa;
+  --crm-surface: #f8fafc;
+  --crm-surface-alt: #f1f5f9;
   --crm-overlay: rgba(0,0,0,0.12);
   --crm-scrollbar: rgba(0,0,0,0.12);
   --crm-scrollbar-hover: rgba(0,0,0,0.2);
-  --crm-btn-bg: rgba(0,0,0,0.04);
-  --crm-btn-text: #09090b;
-  --crm-btn-border: rgba(0,0,0,0.08);
-  --crm-btn-hover: rgba(0,0,0,0.06);
-  --crm-cta-bg: #09090b;
-  --crm-cta-text: #f5f5f5;
-  --crm-cta-hover: rgba(255,255,255,0.12);
+  --crm-btn-bg: #ffffff;
+  --crm-btn-text: #0f172a;
+  --crm-btn-border: rgba(15,23,42,0.1);
+  --crm-btn-hover: #f8fafc;
+  --crm-cta-bg: linear-gradient(135deg, #6d5dfc, #4f46e5);
+  --crm-cta-text: #ffffff;
+  --crm-cta-hover: #4f46e5;
+  --crm-accent: #5b4df5;
+  --crm-accent-strong: #4f46e5;
+  --crm-accent-soft: rgba(91,77,245,0.12);
+  --crm-shadow: 0 18px 45px rgba(15,23,42,0.08);
 }
 
 .light .digital-wave-crm-shell [class*="text-white"] {
@@ -191,88 +199,100 @@ button, input { font: inherit; }
 
   /* Digital Wave CRM Shell Styles - Theme Aware */
   .digital-wave-crm-shell {
-    @apply grid min-h-screen lg:grid-cols-[220px_1fr];
+    @apply grid min-h-screen lg:grid-cols-[250px_1fr];
     background: var(--crm-app-bg);
+    background-image:
+      radial-gradient(circle at 85% 8%, var(--crm-hover-subtle), transparent 30%),
+      radial-gradient(circle at 18% 0%, rgba(59, 130, 246, 0.08), transparent 26%);
     transition: background-color 0.25s ease;
   }
   .digital-wave-sidebar {
-    @apply border-r p-3 backdrop-blur-xl;
+    @apply sticky top-0 h-screen overflow-hidden border-r p-5 backdrop-blur-xl;
     background: var(--crm-sidebar-bg);
     border-color: var(--crm-border);
     color: var(--crm-text);
+    box-shadow: 10px 0 30px rgba(15, 23, 42, 0.04);
     transition: background-color 0.25s ease, border-color 0.25s ease;
   }
   .digital-wave-brand {
-    @apply mb-5 flex items-center gap-2 text-xs;
+    @apply mb-6 flex items-center gap-3 text-xs;
   }
-  .digital-wave-brand b { @apply flex-1 text-sm; }
-  .digital-wave-brand button { @apply rounded-md p-1; color: var(--crm-text-secondary); transition: background-color 0.2s ease, color 0.2s ease; }
+  .digital-wave-brand b { @apply flex-1 text-base font-bold; }
+  .digital-wave-brand button { @apply rounded-xl p-2; color: var(--crm-text-secondary); transition: background-color 0.2s ease, color 0.2s ease; }
   .digital-wave-brand button:hover { background: var(--crm-hover); }
-  .digital-wave-brand-mark { @apply flex h-5 w-5 items-center justify-center rounded bg-lime-600 text-[10px] font-bold text-[#061b15]; }
-  .digital-wave-pill-nav { @apply mb-5 flex w-24 rounded-full border p-0.5; border-color: var(--crm-border); background: var(--crm-surface); }
-  .digital-wave-pill-nav button { @apply flex h-7 flex-1 items-center justify-center rounded-full; color: var(--crm-text-secondary); transition: background-color 0.2s ease, color 0.2s ease; }
+  .digital-wave-brand-mark { @apply flex h-7 w-7 items-center justify-center overflow-hidden rounded-lg text-[10px] font-bold text-white; background: var(--crm-cta-bg); box-shadow: 0 12px 24px rgba(91,77,245,0.24); }
+  .digital-wave-brand-mark img { @apply h-full w-full object-cover; }
+  .digital-wave-pill-nav { @apply mb-5 flex w-28 rounded-full border p-1; border-color: var(--crm-border); background: var(--crm-surface); }
+  .digital-wave-pill-nav button { @apply flex h-8 flex-1 items-center justify-center rounded-full; color: var(--crm-text-secondary); transition: background-color 0.2s ease, color 0.2s ease; }
   .digital-wave-pill-nav button:hover { background: var(--crm-hover); }
-  .digital-wave-pill-nav button.active { background: var(--crm-surface-alt); color: var(--crm-text); }
-  .digital-wave-new-chat { @apply mb-5 flex w-36 items-center justify-center gap-1.5 rounded-full border px-3 py-1.5 text-xs; border-color: var(--crm-border); background: var(--crm-surface); transition: background-color 0.2s ease, color 0.2s ease; }
-  .digital-wave-new-chat:hover { background: var(--crm-hover); }
+  .digital-wave-pill-nav button.active { background: var(--crm-card-bg); color: var(--crm-accent); box-shadow: var(--crm-shadow); }
+  .digital-wave-new-chat { @apply mb-6 flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold; border-color: transparent; background: var(--crm-cta-bg); color: var(--crm-cta-text); box-shadow: 0 14px 28px rgba(91,77,245,0.22); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  .digital-wave-new-chat:hover { transform: translateY(-1px); box-shadow: 0 16px 34px rgba(91,77,245,0.28); }
   .digital-wave-section-label { @apply mb-2 mt-4 text-[11px]; color: var(--crm-text-muted); }
-  .digital-wave-sidebar-item { @apply mb-0.5 flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition; color: var(--crm-text-secondary); }
+  .digital-wave-sidebar-item { @apply mb-1 flex w-full items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 text-left text-sm transition; color: var(--crm-text-secondary); }
   .digital-wave-sidebar-item:hover { background: var(--crm-hover); }
-  .digital-wave-sidebar-item.active { @apply shadow-inner; background: var(--crm-surface-alt); color: var(--crm-text); }
-  .digital-wave-sidebar-icon { @apply flex h-5 w-5 items-center justify-center rounded-md; }
+  .digital-wave-sidebar-item.active { background: var(--crm-accent-soft); border-color: rgba(91,77,245,0.14); color: var(--crm-accent-strong); box-shadow: inset 3px 0 0 var(--crm-accent); }
+  .digital-wave-sidebar-icon { @apply flex h-7 w-7 items-center justify-center rounded-lg; }
   .digital-wave-main {
-    @apply min-w-0 p-3;
+    @apply min-w-0 p-5 lg:p-6;
     color: var(--crm-text);
     transition: color 0.25s ease;
   }
-  .digital-wave-topbar { @apply mb-3 flex items-center justify-between; }
-  .digital-wave-title { @apply flex items-center gap-2 text-sm font-semibold; }
-  .digital-wave-top-actions { @apply flex gap-1.5; }
+  .digital-wave-topbar { @apply mb-6 flex flex-wrap items-center justify-between gap-4; }
+  .digital-wave-title { @apply flex items-start gap-3 text-2xl font-bold; }
+  .digital-wave-title > svg { @apply mt-1; }
+  .digital-wave-title-block p { @apply mt-1 text-sm font-normal; color: var(--crm-text-muted); }
+  .digital-wave-header-tools { @apply flex flex-wrap items-center justify-end gap-3; }
+  .digital-wave-global-search { @apply hidden h-11 min-w-[280px] items-center gap-2 rounded-xl border px-4 text-sm shadow-sm lg:flex; border-color: var(--crm-border-accent); background: var(--crm-card-bg); color: var(--crm-text-muted); }
+  .digital-wave-global-search kbd { @apply ml-auto rounded-md border px-1.5 py-0.5 text-[10px]; border-color: var(--crm-border); color: var(--crm-text-muted); }
+  .digital-wave-top-actions { @apply flex flex-wrap gap-2; }
   .digital-wave-top-actions button {
-    @apply flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs;
+    @apply flex h-11 items-center gap-2 rounded-xl border px-4 text-sm font-semibold shadow-sm;
     border-color: var(--crm-border);
-    background: var(--crm-surface);
+    background: var(--crm-card-bg);
     color: var(--crm-text);
     transition: background-color 0.2s ease, color 0.2s ease;
   }
   .digital-wave-top-actions button:hover { background: var(--crm-hover); }
-  .digital-wave-crm-shell button:not([class*="bg-"]) {
+  .digital-wave-crm-shell button:not([class*="bg-"]):not(.digital-wave-new-chat):not(.digital-wave-quick-add-button):not(.digital-wave-global-search) {
     @apply rounded-md border px-3 py-1.5 text-xs;
     border-color: var(--crm-btn-border);
     background: var(--crm-btn-bg);
     color: var(--crm-btn-text);
     transition: background-color 0.2s ease, color 0.2s ease;
   }
-  .digital-wave-crm-shell button:not([class*="bg-"]):hover {
+  .digital-wave-crm-shell button:not([class*="bg-"]):not(.digital-wave-new-chat):not(.digital-wave-quick-add-button):not(.digital-wave-global-search):hover {
     background: var(--crm-btn-hover);
   }
   .digital-wave-quick-add-button {
-    @apply flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium border transition;
-    border-color: var(--crm-btn-border);
+    @apply flex h-11 items-center gap-2 rounded-xl px-4 text-sm font-semibold border transition;
+    border-color: transparent;
     background: var(--crm-cta-bg);
     color: var(--crm-cta-text);
+    box-shadow: 0 14px 26px rgba(91,77,245,0.22);
   }
   .digital-wave-quick-add-button:hover {
     background: var(--crm-cta-hover);
   }
-  .digital-wave-crm-shell button:not([class*="bg-"]):hover {
+  .digital-wave-crm-shell button:not([class*="bg-"]):not(.digital-wave-new-chat):not(.digital-wave-quick-add-button):not(.digital-wave-global-search):hover {
     background: var(--crm-btn-hover);
   }
   .digital-wave-table-card {
-    @apply relative rounded-xl border backdrop-blur-xl;
+    @apply relative overflow-hidden rounded-2xl border backdrop-blur-xl;
     background: var(--crm-card-bg);
     border-color: var(--crm-border-accent);
+    box-shadow: var(--crm-shadow);
     transition: background-color 0.25s ease, border-color 0.25s ease;
   }
   .digital-wave-viewbar {
-    @apply relative flex min-h-[40px] flex-wrap items-center gap-2 border-b px-4 py-2;
+    @apply relative flex min-h-[72px] flex-wrap items-center gap-3 border-b px-5 py-4;
     border-color: var(--crm-border);
   }
-  .digital-wave-view-title { @apply flex items-center gap-1.5 text-sm font-semibold; }
+  .digital-wave-view-title { @apply flex items-center gap-2 text-base font-bold; }
   .digital-wave-search {
-    @apply ml-auto flex min-w-44 items-center gap-1.5 rounded-md border px-2 py-1.5;
+    @apply ml-auto flex h-11 min-w-56 items-center gap-2 rounded-xl border px-3;
     border-color: var(--crm-border-accent);
-    background: var(--crm-surface);
+    background: var(--crm-card-bg);
     color: var(--crm-text-secondary);
   }
   .digital-wave-search input {
@@ -280,11 +300,11 @@ button, input { font: inherit; }
     color: var(--crm-text);
   }
   .digital-wave-search input::placeholder { color: var(--crm-text-muted); }
-  .digital-wave-view-actions { @apply flex gap-3 text-xs; color: var(--crm-text-secondary); }
+  .digital-wave-view-actions { @apply flex gap-2 text-xs; color: var(--crm-text-secondary); }
   .digital-wave-view-actions button {
-    @apply rounded-md border px-3 py-1.5 text-xs;
+    @apply rounded-xl border px-4 py-2.5 text-sm font-semibold;
     border-color: var(--crm-border);
-    background: var(--crm-surface);
+    background: var(--crm-card-bg);
     color: var(--crm-text-secondary);
     transition: background-color 0.2s ease, color 0.2s ease;
   }
@@ -305,17 +325,17 @@ button, input { font: inherit; }
     transition: background-color 0.2s ease, color 0.2s ease;
   }
   .digital-wave-dropdown button:hover { background: var(--crm-hover); }
-  .digital-wave-table { @apply min-w-[780px] overflow-x-auto; }
-  .digital-wave-row { @apply grid min-h-[30px] grid-cols-[32px_130px_110px_110px_110px_85px_75px_110px_96px] items-center border-b text-xs; border-color: var(--crm-border); }
-  .digital-wave-table.compact .digital-wave-row { @apply min-h-[24px] text-[11px]; }
-  .digital-wave-row.header { @apply text-xs; color: var(--crm-text-muted); }
-  .digital-wave-row > span { @apply flex h-full items-center gap-1.5 border-l px-2; border-color: var(--crm-border); }
-  .digital-wave-check { @apply mx-auto h-3.5 w-3.5 rounded border-2; border-color: var(--crm-text-muted); }
-  .digital-wave-check.checked { @apply border-blue-200 bg-blue-300 shadow-[inset_0_0_0_2px_#06227b]; }
-  .company-name i { @apply flex h-4 min-w-4 items-center justify-center rounded text-[9px] not-italic text-white; }
-  .digital-wave-row em { @apply rounded-full border bg-white/5 px-2 py-0.5 not-italic; border-color: var(--crm-border-accent); }
+  .digital-wave-table { @apply min-w-[1050px] overflow-x-auto; }
+  .digital-wave-row { @apply grid min-h-[64px] grid-cols-[42px_minmax(220px,1.45fr)_minmax(160px,1fr)_minmax(140px,0.9fr)_minmax(130px,0.9fr)_110px_110px_minmax(130px,0.8fr)_92px] items-center border-b text-sm; border-color: var(--crm-border); }
+  .digital-wave-table.compact .digital-wave-row { @apply min-h-[44px] text-xs; }
+  .digital-wave-row.header { @apply min-h-[52px] text-xs font-semibold; background: var(--crm-surface); color: var(--crm-text-muted); }
+  .digital-wave-row > span { @apply flex h-full items-center gap-2 px-3; border-color: var(--crm-border); }
+  .digital-wave-check { @apply mx-auto h-4 w-4 rounded border-2; border-color: var(--crm-text-muted); }
+  .digital-wave-check.checked { border-color: var(--crm-accent); background: var(--crm-accent); box-shadow: inset 0 0 0 2px var(--crm-card-bg); }
+  .company-name i { @apply flex h-8 min-w-8 items-center justify-center rounded-lg text-[11px] not-italic text-white; }
+  .digital-wave-row em { @apply rounded-full border px-2.5 py-1 text-xs not-italic; background: var(--crm-surface); border-color: var(--crm-border-accent); }
   .digital-wave-table-footer {
-    @apply grid grid-cols-[140px_1fr_140px_90px] gap-3 border-t px-10 py-3 text-xs;
+    @apply grid grid-cols-[150px_1fr_160px_110px] gap-3 border-t px-6 py-4 text-sm;
     border-color: var(--crm-border);
     color: var(--crm-text-muted);
   }
@@ -341,12 +361,13 @@ button, input { font: inherit; }
   }
   .digital-wave-btn-primary {
     @apply font-medium;
-    background: var(--crm-text);
-    color: var(--crm-app-bg);
+    background: var(--crm-cta-bg);
+    color: var(--crm-cta-text);
     border-color: transparent;
+    box-shadow: 0 12px 24px rgba(91,77,245,0.18);
   }
   .digital-wave-btn-primary:hover {
-    background: rgba(255, 255, 255, 0.16);
+    background: var(--crm-cta-hover);
   }
   .digital-wave-btn-ghost {
     @apply rounded-lg text-xs transition;
@@ -378,13 +399,15 @@ button, input { font: inherit; }
   }
 
   .table-action-btn {
-    @apply inline-flex h-7 w-7 items-center justify-center rounded-md border text-white/70 transition hover:text-white;
+    @apply inline-flex h-8 w-8 items-center justify-center rounded-lg border transition;
     border-color: var(--crm-border);
     background: var(--crm-surface);
+    color: var(--crm-text-secondary);
   }
 
   .table-action-btn:hover {
     background: var(--crm-hover);
+    color: var(--crm-text);
   }
 
   .company-edit-btn {
@@ -418,10 +441,18 @@ button, input { font: inherit; }
   .digital-wave-table-card input,
   .digital-wave-table-card textarea,
   .digital-wave-table-card select {
-    @apply rounded-lg border px-3 py-2 text-sm text-white outline-none;
+    @apply rounded-lg border px-3 py-2 text-sm outline-none;
     border-color: var(--crm-border);
-    background: rgba(6, 23, 53, 0.72);
+    background: var(--crm-surface);
+    color: var(--crm-text);
   }
+
+  .digital-wave-kpi-grid { @apply mb-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4; }
+  .digital-wave-kpi-card { @apply rounded-2xl border p-5; background: var(--crm-card-bg); border-color: var(--crm-border-accent); box-shadow: var(--crm-shadow); }
+  .digital-wave-kpi-icon { @apply flex h-12 w-12 items-center justify-center rounded-2xl; }
+  .digital-wave-kpi-card p { color: var(--crm-text-muted); }
+  .digital-wave-kpi-card strong { @apply mt-1 block text-2xl; color: var(--crm-text); }
+  .digital-wave-kpi-card small { @apply mt-2 block text-xs font-medium; color: #16a34a; }
 }
 
 .reactflow__node {

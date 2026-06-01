@@ -17,8 +17,7 @@ const ThemeContext = createContext<ThemeContextValue>({
 function getInitialTheme(): Theme {
   const stored = localStorage.getItem('crm-theme');
   if (stored === 'light' || stored === 'dark') return stored;
-  if (window.matchMedia?.('(prefers-color-scheme: light)').matches) return 'light';
-  return 'dark';
+  return 'light';
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {

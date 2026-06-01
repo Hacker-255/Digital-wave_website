@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState, createElement, useEffect, useRef } from 'react';
-import { Building2, ChevronDown, LayoutDashboard, List, Plus, Search, SlidersHorizontal, ArrowUpDown, Download, Linkedin, Check, Sparkles, Zap, AlertTriangle, Upload } from 'lucide-react';
+import { Building2, ChevronDown, LayoutDashboard, List, Plus, Search, SlidersHorizontal, ArrowUpDown, Download, Linkedin, Check, Sparkles, Zap, AlertTriangle, Upload, Users, DollarSign, UserRound, Heart, Target } from 'lucide-react';
 import { useUser } from '@clerk/clerk-react';
 import { useKeyboard } from '../../hooks/useKeyboard';
 import { setPresenceClerkId } from '../../hooks/usePresence';
@@ -69,6 +69,50 @@ const moduleIconMap: Record<string, typeof Building2> = {
   Workflows: LayoutDashboard, 'AI Execute': Zap, 'AI Ask': Sparkles,
   Settings: LayoutDashboard, Documentation: LayoutDashboard,
 };
+
+const moduleSubtitleMap: Record<string, string> = {
+  Dashboards: 'Welcome back. Here is the health of your CRM workspace.',
+  Companies: 'Manage accounts, ownership, revenue, and relationship history.',
+  People: 'Manage your contacts and relationships.',
+  Leads: 'Manage and track your leads pipeline.',
+  Deals: 'Track open revenue and move deals through the pipeline.',
+  Tasks: 'Prioritize follow-ups, handoffs, and overdue work.',
+  Meetings: 'Keep customer conversations visible for the whole team.',
+  Files: 'Attach proposals, contracts, recordings, and customer documents.',
+  Settings: 'Control workspace, team, integrations, billing, and permissions.',
+};
+
+interface KpiItem {
+  label: string;
+  value: string;
+  trend: string;
+  icon: typeof Building2;
+  tone: string;
+}
+
+function ModuleKpiStrip({ items }: { items: KpiItem[] }) {
+  return (
+    <div className="digital-wave-kpi-grid">
+      {items.map((item) => {
+        const Icon = item.icon;
+        return (
+          <section className="digital-wave-kpi-card" key={item.label}>
+            <div className="flex items-center gap-4">
+              <span className="digital-wave-kpi-icon" style={{ background: item.tone }}>
+                <Icon size={22} />
+              </span>
+              <div>
+                <p className="text-sm">{item.label}</p>
+                <strong>{item.value}</strong>
+                <small>{item.trend}</small>
+              </div>
+            </div>
+          </section>
+        );
+      })}
+    </div>
+  );
+}
 
 export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
   const { user: clerkUser, isSignedIn } = useUser();
@@ -518,6 +562,34 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
 
   const allSelected = visibleCompanies.length > 0 && visibleCompanies.every((c) => selectedIds.includes(c.id));
   const maxEmployees = Math.max(...companies.map((c) => Number(c.employees || 0)));
+  const totalEmployees = companies.reduce((sum, company) => sum + Number(company.employees || 0), 0);
+  const activeDeals = deals.filter((deal) => !/closed lost/i.test(deal.stage)).length;
+  const totalDealValue = deals.reduce((sum, deal) => sum + Number(String(deal.value || '').replace(/[^0-9.-]/g, '')), 0);
+  const openLeads = leads.filter((lead) => lead.status !== 'Converted').length;
+  const qualifiedLeads = leads.filter((lead) => /qualified/i.test(lead.status)).length;
+  const convertedLeads = leads.filter((lead) => /converted/i.test(lead.status)).length;
+  const customerCount = people.filter((person) => /customer/i.test(person.status)).length;
+  const vendorCount = people.filter((person) => /vendor/i.test(person.status)).length;
+  const inactivePeople = people.filter((person) => /inactive/i.test(person.status)).length;
+  const formatCurrency = (value: number) => value >= 1000000 ? `$${(value / 1000000).toFixed(2)}M` : `$${value.toLocaleString()}`;
+  const companyKpis: KpiItem[] = [
+    { label: 'Total Companies', value: companies.length.toLocaleString(), trend: '+ 20% vs last month', icon: Building2, tone: 'rgba(91,77,245,0.14)' },
+    { label: 'Total Employees', value: totalEmployees.toLocaleString(), trend: '+ 18% vs last month', icon: Users, tone: 'rgba(59,130,246,0.14)' },
+    { label: 'Active Deals', value: activeDeals.toLocaleString(), trend: '+ 12% vs last month', icon: Target, tone: 'rgba(34,197,94,0.14)' },
+    { label: 'Total Revenue', value: formatCurrency(totalDealValue), trend: '+ 25% vs last month', icon: DollarSign, tone: 'rgba(249,115,22,0.14)' },
+  ];
+  const peopleKpis: KpiItem[] = [
+    { label: 'Total People', value: people.length.toLocaleString(), trend: '+ 18.2% vs last month', icon: Users, tone: 'rgba(91,77,245,0.14)' },
+    { label: 'Customers', value: customerCount.toLocaleString(), trend: '+ 14.5% vs last month', icon: Building2, tone: 'rgba(59,130,246,0.14)' },
+    { label: 'Vendors', value: vendorCount.toLocaleString(), trend: '+ 6.3% vs last month', icon: UserRound, tone: 'rgba(249,115,22,0.14)' },
+    { label: 'Inactive', value: inactivePeople.toLocaleString(), trend: '- 8.1% vs last month', icon: Heart, tone: 'rgba(236,72,153,0.14)' },
+  ];
+  const leadKpis: KpiItem[] = [
+    { label: 'Total Leads', value: leads.length.toLocaleString(), trend: '+ 22.1% vs last month', icon: Users, tone: 'rgba(91,77,245,0.14)' },
+    { label: 'New Leads', value: openLeads.toLocaleString(), trend: '+ 18.7% vs last month', icon: Building2, tone: 'rgba(59,130,246,0.14)' },
+    { label: 'Qualified', value: qualifiedLeads.toLocaleString(), trend: '+ 15.3% vs last month', icon: Target, tone: 'rgba(249,115,22,0.14)' },
+    { label: 'Converted', value: convertedLeads.toLocaleString(), trend: '+ 12.5% vs last month', icon: Check, tone: 'rgba(34,197,94,0.14)' },
+  ];
 
   const closeTopmost = useCallback(() => {
     if (deleteConfirm) { setDeleteConfirm(null); return true; }
@@ -1155,9 +1227,17 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
             <header className="digital-wave-topbar">
               <div className="digital-wave-title">
                 {createElement(moduleIcon, { size: 16 })}
-                <h1>{activeModule}</h1>
+                <div className="digital-wave-title-block">
+                  <h1>{activeModule === 'Dashboards' ? 'Dashboard' : activeModule}</h1>
+                  <p>{moduleSubtitleMap[activeModule] || 'Manage CRM records, relationships, and activity.'}</p>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="digital-wave-header-tools">
+                <button className="digital-wave-global-search" onClick={() => setSearchOpen(true)} type="button">
+                  <Search size={17} />
+                  <span>Search anything...</span>
+                  <kbd>Ctrl K</kbd>
+                </button>
                 <SyncStatusPill status={syncStatus} />
                 <NotificationCenter
                   schemaHealth={schemaHealth}
@@ -1177,7 +1257,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
                   {isWorkflowsModule && permissions.canManageWorkflows && (
                     <button onClick={() => setCommandOpen(true)} type="button"><SlidersHorizontal size={12} /> Actions</button>
                   )}
-                  <button onClick={() => setCommandOpen(true)} type="button"><SlidersHorizontal size={12} /> | Ctrl K</button>
+                  <button onClick={() => setCommandOpen(true)} type="button"><SlidersHorizontal size={12} /> Ctrl K</button>
                 </div>
               </div>
             </header>
@@ -1201,67 +1281,70 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
                 onExportAll={permissions.canExport ? exportAllData : undefined}
               />
             ) : activeModule === 'Companies' ? (
-              <div className="digital-wave-table-card">
-                <div className="digital-wave-viewbar">
-                  <div className="digital-wave-view-title">
-                    <List size={14} /> All Companies - {visibleCompanies.length} <ChevronDown size={12} />
-                  </div>
-                  <label className="digital-wave-search">
-                    <Search size={13} />
-                    <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search companies, domains, leads..." />
-                  </label>
-                  <div className="digital-wave-view-actions">
-                    <button onClick={() => setMenuOpen(menuOpen === 'filter' ? null : 'filter')} type="button">Filter</button>
-                    <button onClick={() => setMenuOpen(menuOpen === 'sort' ? null : 'sort')} type="button">Sort</button>
-                    <button onClick={() => setMenuOpen(menuOpen === 'options' ? null : 'options')} type="button">Options</button>
-                  </div>
-                  {menuOpen && (
-                    <div className="digital-wave-dropdown">
-                      {menuOpen === 'filter' && (
-                        <>
-                          <button onClick={() => setEmployeeFilter((v) => !v)} type="button"><Check size={12} /> Filter &gt;1K employees {employeeFilter ? 'on' : 'off'}</button>
-                          <button onClick={saveCurrentFilter} type="button"><Check size={12} /> Save current filter</button>
-                          {savedFilters.map((filter) => (
-                            <button key={filter.id} onClick={() => applySavedFilter(filter.id)} type="button">{filter.name}</button>
-                          ))}
-                        </>
-                      )}
-                      {menuOpen === 'sort' && (
-                        <>
-                          <button onClick={() => runCommand('sort-name')} type="button"><ArrowUpDown size={12} /> Sort by name</button>
-                          <button onClick={() => runCommand('sort-employees')} type="button"><ArrowUpDown size={12} /> Sort by employees</button>
-                        </>
-                      )}
-                      {menuOpen === 'options' && (
-                        <>
-                          <button onClick={() => setCompactRows((v) => !v)} type="button"><List size={12} /> Compact rows</button>
-                          <button onClick={() => setHiddenLinkedin((v) => !v)} type="button"><Linkedin size={12} /> Toggle LinkedIn</button>
-                          <button onClick={mergeSelectedCompanies} type="button"><Check size={12} /> Merge selected</button>
-                          {permissions.canExport && <button onClick={exportView} type="button"><Download size={12} /> Export view</button>}
-                        </>
-                      )}
+              <div className="space-y-5">
+                <ModuleKpiStrip items={companyKpis} />
+                <div className="digital-wave-table-card">
+                  <div className="digital-wave-viewbar">
+                    <div className="digital-wave-view-title">
+                      <List size={14} /> All Companies ({visibleCompanies.length}) <ChevronDown size={12} />
                     </div>
-                  )}
+                    <label className="digital-wave-search">
+                      <Search size={13} />
+                      <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search companies, domains..." />
+                    </label>
+                    <div className="digital-wave-view-actions">
+                      <button onClick={() => setMenuOpen(menuOpen === 'filter' ? null : 'filter')} type="button">Filter</button>
+                      <button onClick={() => setMenuOpen(menuOpen === 'sort' ? null : 'sort')} type="button">Sort</button>
+                      <button onClick={() => setMenuOpen(menuOpen === 'options' ? null : 'options')} type="button">Options</button>
+                    </div>
+                    {menuOpen && (
+                      <div className="digital-wave-dropdown">
+                        {menuOpen === 'filter' && (
+                          <>
+                            <button onClick={() => setEmployeeFilter((v) => !v)} type="button"><Check size={12} /> Filter &gt;1K employees {employeeFilter ? 'on' : 'off'}</button>
+                            <button onClick={saveCurrentFilter} type="button"><Check size={12} /> Save current filter</button>
+                            {savedFilters.map((filter) => (
+                              <button key={filter.id} onClick={() => applySavedFilter(filter.id)} type="button">{filter.name}</button>
+                            ))}
+                          </>
+                        )}
+                        {menuOpen === 'sort' && (
+                          <>
+                            <button onClick={() => runCommand('sort-name')} type="button"><ArrowUpDown size={12} /> Sort by name</button>
+                            <button onClick={() => runCommand('sort-employees')} type="button"><ArrowUpDown size={12} /> Sort by employees</button>
+                          </>
+                        )}
+                        {menuOpen === 'options' && (
+                          <>
+                            <button onClick={() => setCompactRows((v) => !v)} type="button"><List size={12} /> Compact rows</button>
+                            <button onClick={() => setHiddenLinkedin((v) => !v)} type="button"><Linkedin size={12} /> Toggle LinkedIn</button>
+                            <button onClick={mergeSelectedCompanies} type="button"><Check size={12} /> Merge selected</button>
+                            {permissions.canExport && <button onClick={exportView} type="button"><Download size={12} /> Export view</button>}
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <CompanyTable
+                    companies={visibleCompanies}
+                    selectedIds={selectedIds}
+                    allSelected={allSelected}
+                    compactRows={compactRows}
+                    hiddenLinkedin={hiddenLinkedin}
+                    toggleSelected={toggleSelected}
+                    toggleAll={() => setSelectedIds(allSelected ? [] : visibleCompanies.map((c) => c.id))}
+                    onEdit={permissions.canEdit ? handleCompanyEdit : undefined}
+                    onView={(company) => openDetail('Companies', company)}
+                    onDelete={permissions.canDelete ? handleCompanyDelete : undefined}
+                    onDuplicate={permissions.canCreate ? handleCompanyDuplicate : undefined}
+                  />
+                  <footer className="digital-wave-table-footer">
+                    <span>Calculate <ChevronDown size={12} /></span>
+                    <span>Count all <b>{visibleCompanies.length}</b></span>
+                    <span>Max Empl <b>{maxEmployees.toLocaleString()}</b></span>
+                    <span>Selected <b>{selectedIds.length}</b></span>
+                  </footer>
                 </div>
-                <CompanyTable
-                  companies={visibleCompanies}
-                  selectedIds={selectedIds}
-                  allSelected={allSelected}
-                  compactRows={compactRows}
-                  hiddenLinkedin={hiddenLinkedin}
-                  toggleSelected={toggleSelected}
-                  toggleAll={() => setSelectedIds(allSelected ? [] : visibleCompanies.map((c) => c.id))}
-                  onEdit={permissions.canEdit ? handleCompanyEdit : undefined}
-                  onView={(company) => openDetail('Companies', company)}
-                  onDelete={permissions.canDelete ? handleCompanyDelete : undefined}
-                  onDuplicate={permissions.canCreate ? handleCompanyDuplicate : undefined}
-                />
-                <footer className="digital-wave-table-footer">
-                  <span>Calculate <ChevronDown size={12} /></span>
-                  <span>Count all <b>{visibleCompanies.length}</b></span>
-                  <span>Max Empl <b>{maxEmployees.toLocaleString()}</b></span>
-                  <span>Selected <b>{selectedIds.length}</b></span>
-                </footer>
               </div>
             ) : activeModule === 'AI Execute' ? (
               <div className="digital-wave-table-card">
@@ -1286,8 +1369,14 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
                 <DealPipelineBoard deals={deals} onMoveDeal={moveDealStage} onOpenDeal={(deal) => openDetail('Deals', deal)} />
                 {renderModulePanel('Deals')}
               </div>
+            ) : activeModule === 'People' ? (
+              <div className="space-y-5">
+                <ModuleKpiStrip items={peopleKpis} />
+                {renderModulePanel('People')}
+              </div>
             ) : activeModule === 'Leads' ? (
-              <div className="space-y-3">
+              <div className="space-y-5">
+                <ModuleKpiStrip items={leadKpis} />
                 <div className="digital-wave-table-card p-4">
                   <div className="mb-3 flex items-center justify-between">
                     <div>
