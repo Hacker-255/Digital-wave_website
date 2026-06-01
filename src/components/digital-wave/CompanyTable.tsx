@@ -1,6 +1,7 @@
-import { Building2, BriefcaseBusiness, FileEdit, GitBranch, Linkedin, Users } from 'lucide-react';
+import { Building2, BriefcaseBusiness, Copy, Eye, FileEdit, GitBranch, Linkedin, Trash2, Users } from 'lucide-react';
 import type { CompanyTableRow } from '../../constants/data';
 import { TableActions } from './TableActions';
+import type { TableAction } from './TableActions';
 
 interface CompanyTableProps {
   companies: CompanyTableRow[];
@@ -20,6 +21,13 @@ export function CompanyTable({
   companies, selectedIds, allSelected, compactRows, hiddenLinkedin,
   toggleSelected, toggleAll, onEdit, onView, onDelete, onDuplicate,
 }: CompanyTableProps) {
+  const rowActions: TableAction[] = [
+    ...(onView ? [{ key: 'view', label: 'View', icon: Eye }] : []),
+    ...(onEdit ? [{ key: 'edit', label: 'Edit', icon: FileEdit }] : []),
+    ...(onDuplicate ? [{ key: 'duplicate', label: 'Duplicate', icon: Copy }] : []),
+    ...(onDelete ? [{ key: 'delete', label: 'Delete', icon: Trash2, danger: true }] : []),
+  ];
+
   return (
     <div className={compactRows ? 'digital-wave-table compact' : 'digital-wave-table'}>
       <div className="digital-wave-row header">
@@ -63,8 +71,8 @@ export function CompanyTable({
                 <span>Edit</span>
               </button>
             )}
-            {(onEdit || onDelete || onDuplicate) && (
-              <TableActions onAction={(action) => {
+            {rowActions.length > 0 && (
+              <TableActions actions={rowActions} onAction={(action) => {
                 switch (action) {
                   case 'edit': onEdit?.(company); break;
                   case 'delete': onDelete?.(company); break;

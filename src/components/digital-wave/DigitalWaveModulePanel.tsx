@@ -1,6 +1,7 @@
-import { List, Search, Plus } from 'lucide-react';
+import { Copy, FileEdit, List, Plus, Search, Trash2 } from 'lucide-react';
 import { TableActions } from './TableActions';
 import type { ModuleItem } from '../../constants/data';
+import type { TableAction } from './TableActions';
 
 interface DigitalWaveModulePanelProps {
   module: string;
@@ -33,6 +34,11 @@ const fallbackData: Record<string, ModuleItem[]> = {
 
 export function DigitalWaveModulePanel({ module, onOpenCommand, items, onAdd, onEdit, onView, onDelete, onDuplicate }: DigitalWaveModulePanelProps) {
   const displayItems = items ?? fallbackData[module] ?? [];
+  const rowActions: TableAction[] = [
+    ...(onEdit ? [{ key: 'edit', label: 'Edit', icon: FileEdit }] : []),
+    ...(onDuplicate ? [{ key: 'duplicate', label: 'Duplicate', icon: Copy }] : []),
+    ...(onDelete ? [{ key: 'delete', label: 'Delete', icon: Trash2, danger: true }] : []),
+  ];
 
   const handleAction = (item: ModuleItem, action: string) => {
     switch (action) {
@@ -79,8 +85,8 @@ export function DigitalWaveModulePanel({ module, onOpenCommand, items, onAdd, on
               <div className="text-sm font-medium truncate" style={{ color: 'var(--crm-text)' }}>{item.label}</div>
               <div className="text-xs mt-0.5 truncate" style={{ color: 'var(--crm-text-muted)' }}>{item.detail}</div>
             </button>
-            {(onEdit || onDelete || onDuplicate) && (
-              <TableActions onAction={(action) => handleAction(item, action)} />
+            {rowActions.length > 0 && (
+              <TableActions actions={rowActions} onAction={(action) => handleAction(item, action)} />
             )}
           </div>
         ))}

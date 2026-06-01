@@ -20,8 +20,8 @@ interface CrmDashboardProps {
   recordsLoaded: boolean;
   schemaHealth?: { ok: boolean; missing: string[] } | null;
   onNavigate: (module: string) => void;
-  onOpenImport: () => void;
-  onExportAll: () => void;
+  onOpenImport?: () => void;
+  onExportAll?: () => void;
 }
 
 function money(value: number) {
@@ -67,8 +67,8 @@ export function CrmDashboard({
             <p className="text-xs" style={{ color: 'var(--crm-text-muted)' }}>Your sales, tasks, meetings, and setup health in one place.</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <button onClick={onOpenImport} className="digital-wave-btn digital-wave-btn-primary" type="button"><Upload size={13} /> Import CSV</button>
-            <button onClick={onExportAll} className="digital-wave-btn" type="button"><Download size={13} /> Export CRM</button>
+            {onOpenImport && <button onClick={onOpenImport} className="digital-wave-btn digital-wave-btn-primary" type="button"><Upload size={13} /> Import CSV</button>}
+            {onExportAll && <button onClick={onExportAll} className="digital-wave-btn" type="button"><Download size={13} /> Export CRM</button>}
           </div>
         </div>
       </div>

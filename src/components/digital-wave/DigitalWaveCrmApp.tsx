@@ -32,6 +32,8 @@ import { RecordDetailDrawer } from './RecordDetailDrawer';
 import { AuthRequired } from '../crm/AuthRequired';
 import type { ExecuteResult } from '../../services/aiExecutionEngine';
 import { checkCrmSchemaHealth, listAllModuleRecords, listCompanies, saveAllModuleRecords, saveCompanies } from '../../services/supabaseCrmService';
+import { useAuth } from '../../contexts/AuthContext';
+import { getPermissions } from '../../services/permissions';
 
 interface DigitalWaveCrmAppProps {
   clerkMissing: boolean;
@@ -64,6 +66,8 @@ const moduleIconMap: Record<string, typeof Building2> = {
 
 export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
   const { user: clerkUser, isSignedIn } = useUser();
+  const { role } = useAuth();
+  const permissions = useMemo(() => getPermissions(role), [role]);
   const [activeModule, setActiveModule] = useState(() => window.location.pathname.startsWith('/crm/workflows') ? 'Workflows' : 'Dashboards');
   const [companies, setCompanies] = useState(initialCompanies);
   const [companiesLoaded, setCompaniesLoaded] = useState(false);
@@ -440,6 +444,10 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
   }, []);
 
   const createCompany = useCallback(() => {
+    if (!permissions.canCreate) {
+      setLastAction('You do not have permission to create companies');
+      return;
+    }
     const newCompany: CompanyTableRow = {
       id: `new-${Date.now()}`,
       name: `New Company ${companies.length + 1}`,
@@ -455,9 +463,13 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
     setCompanies((current) => [newCompany, ...current]);
     setActiveModule('Companies');
     setLastAction('New company created');
-  }, [companies.length]);
+  }, [companies.length, permissions.canCreate]);
 
   const exportView = useCallback(() => {
+    if (!permissions.canExport) {
+      setLastAction('You do not have permission to export CRM data');
+      return;
+    }
     const blob = new Blob([JSON.stringify(visibleCompanies, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
@@ -466,9 +478,13 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
     anchor.click();
     URL.revokeObjectURL(url);
     setLastAction('Companies exported');
-  }, [visibleCompanies]);
+  }, [permissions.canExport, visibleCompanies]);
 
   const exportAllData = useCallback(() => {
+    if (!permissions.canExport) {
+      setLastAction('You do not have permission to export CRM data');
+      return;
+    }
     const payload = {
       exportedAt: new Date().toISOString(),
       companies,
@@ -489,9 +505,13 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
     anchor.click();
     URL.revokeObjectURL(url);
     setLastAction('CRM data exported');
-  }, [companies, deals, leads, meetings, notes, opportunities, people, projects, tasks]);
+  }, [companies, deals, leads, meetings, notes, opportunities, people, projects, tasks, permissions.canExport]);
 
   const handleCsvImport = useCallback((target: ImportTarget, rows: Array<Record<string, string>>) => {
+    if (!permissions.canCreate) {
+      setLastAction('You do not have permission to import CRM records');
+      return { created: 0, skipped: rows.length, duplicates: rows.map((row) => row.name || row.email || 'Permission denied') };
+    }
     const duplicates: string[] = [];
     let created = 0;
 
@@ -554,25 +574,28 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
 
     setLastAction(`Imported ${created} ${target.toLowerCase()}`);
     return { created, skipped: duplicates.length, duplicates };
-  }, [companies, people]);
+  }, [companies, people, permissions.canCreate]);
 
   const handleExecuteAction = useCallback((result: ExecuteResult) => {
     if (!result.success) { setLastAction(result.message); return; }
     switch (result.action) {
       case 'create_company':
+        if (!permissions.canCreate) { setLastAction('You do not have permission to create companies'); return; }
         if (result.data) { setCompanies((prev) => [result.data as CompanyTableRow, ...prev]); setActiveModule('Companies'); }
         break;
       case 'delete_company':
+        if (!permissions.canDelete) { setLastAction('You do not have permission to delete companies'); return; }
         if (result.data) { setCompanies((prev) => prev.filter((c) => c.id !== (result.data as { id: string }).id)); }
         break;
       case 'assign_owner':
+        if (!permissions.canEdit) { setLastAction('You do not have permission to assign owners'); return; }
         if (result.data) { const d = result.data as { companyId: string; owner: string }; setCompanies((prev) => prev.map((c) => c.id === d.companyId ? { ...c, owner: d.owner } : c)); }
         break;
       case 'filter': if (result.data) setEmployeeFilter(true); break;
       case 'export': exportView(); break;
     }
     setLastAction(result.message);
-  }, [exportView]);
+  }, [exportView, permissions.canCreate, permissions.canDelete, permissions.canEdit]);
 
   const handleQuickAdd = useCallback((type: QuickAddType, data: Record<string, string>) => {
     switch (type) {
@@ -594,26 +617,40 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
   }, []);
 
   const openAdd = useCallback((type: string) => {
+    if (!permissions.canCreate) {
+      setLastAction(`You do not have permission to create ${type.toLowerCase()}`);
+      return;
+    }
     setCrudError('');
     setFieldErrors({});
     setCrudModal({ type, item: undefined });
-  }, []);
+  }, [permissions.canCreate]);
 
   const openEdit = useCallback((type: string, item: CrudEntity) => {
+    if (!permissions.canEdit) {
+      setLastAction(`You do not have permission to edit ${type.toLowerCase()}`);
+      return;
+    }
     setCrudError('');
     setFieldErrors({});
     setCrudModal({ type, item });
-  }, []);
+  }, [permissions.canEdit]);
 
   const requestDelete = useCallback((type: string, item: CrudEntity) => {
+    if (!permissions.canDelete) {
+      setLastAction(`You do not have permission to delete ${type.toLowerCase()}`);
+      return;
+    }
     setDeleteConfirm({ type, item });
-  }, []);
+  }, [permissions.canDelete]);
 
   const handleCrudSave = useCallback((data: Record<string, string>) => {
     if (!crudModal) return;
     const { type, item } = crudModal;
     const config = entityConfigs[type];
     if (!config) return;
+    if (item && !permissions.canEdit) { setCrudError('You do not have permission to edit this record'); return; }
+    if (!item && !permissions.canCreate) { setCrudError('You do not have permission to create records'); return; }
 
     const result = validateForm(type, data, config.fields);
     if (!result.valid) { setFieldErrors(result.errors); return; }
@@ -638,10 +675,15 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
       setCrudSaving(false);
       setCrudModal(null);
     }, 200);
-  }, [crudModal, entityConfigs]);
+  }, [crudModal, entityConfigs, permissions.canCreate, permissions.canEdit]);
 
   const confirmDelete = useCallback(() => {
     if (!deleteConfirm) return;
+    if (!permissions.canDelete) {
+      setLastAction(`You do not have permission to delete ${deleteConfirm.type.toLowerCase()}`);
+      setDeleteConfirm(null);
+      return;
+    }
     const { type, item } = deleteConfirm;
     const id = (item as { id: string }).id;
 
@@ -658,9 +700,13 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
     }
     setLastAction(`${type.slice(0, -1) || type} deleted`);
     setDeleteConfirm(null);
-  }, [deleteConfirm]);
+  }, [deleteConfirm, permissions.canDelete]);
 
   const handleDuplicate = useCallback((type: string, item: CrudEntity) => {
+    if (!permissions.canCreate) {
+      setLastAction(`You do not have permission to duplicate ${type.toLowerCase()}`);
+      return;
+    }
     const config = entityConfigs[type];
     if (!config) return;
     const id = genId();
@@ -668,7 +714,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
     const entity = config.toEntity(data, id);
     config.setter((prev: CrudEntity[]) => [entity, ...prev]);
     setLastAction(`${type.slice(0, -1) || type} duplicated`);
-  }, [entityConfigs]);
+  }, [entityConfigs, permissions.canCreate]);
 
   const handleCompanyEdit = useCallback((company: CompanyTableRow) => {
     setCrudError('');
@@ -698,6 +744,8 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
   const handleCompanyCrudSave = useCallback((data: Record<string, string>) => {
     if (!crudModal) return;
     const item = crudModal.item as CompanyTableRow | undefined;
+    if (item && !permissions.canEdit) { setCrudError('You do not have permission to edit this company'); return; }
+    if (!item && !permissions.canCreate) { setCrudError('You do not have permission to create companies'); return; }
 
     const result = validateForm('Companies', data, companyFields);
     if (!result.valid) { setFieldErrors(result.errors); return; }
@@ -728,7 +776,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
       setCrudSaving(false);
       setCrudModal(null);
     }, 200);
-  }, [crudModal]);
+  }, [crudModal, permissions.canCreate, permissions.canEdit]);
 
   const runCommand = useCallback((action: string) => {
     switch (action) {
@@ -739,6 +787,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
       case 'sort-employees': setCompanies((c) => [...c].sort((a, b) => Number(b.employees || 0) - Number(a.employees || 0))); break;
       case 'export': exportView(); break;
       case 'delete-selected':
+        if (!permissions.canDelete) { setLastAction('You do not have permission to delete selected companies'); break; }
         setCompanies((c) => c.filter((company) => !selectedIds.includes(company.id)));
         setSelectedIds([]);
         setLastAction('Selected companies deleted');
@@ -753,7 +802,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
         else setActiveModule(action);
     }
     setCommandOpen(false);
-  }, [createCompany, exportView, companies, selectedIds]);
+  }, [createCompany, exportView, companies, selectedIds, permissions.canDelete]);
 
   const isAiModule = AI_MODULES.includes(activeModule);
   const isWorkflowsModule = activeModule === 'Workflows';
@@ -767,15 +816,15 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
       module={type}
       onOpenCommand={() => setCommandOpen(true)}
       items={moduleItems[type]}
-      onAdd={() => openAdd(type)}
+      onAdd={permissions.canCreate ? () => openAdd(type) : undefined}
       onView={(item) => {
         const collections: Record<string, CrudEntity[]> = { People: people, Tasks: tasks, Notes: notes, Opportunities: opportunities, Deals: deals, Leads: leads, Meetings: meetings, Projects: projects };
         const entity = collections[type]?.find((record) => (record as { id: string }).id === item.id);
         if (entity) openDetail(type, entity);
       }}
-      onEdit={(item) => openEdit(type, entityConfigs[type]?.toEntity(entityConfigs[type].fromEntity(item as unknown as CrudEntity), (item as { id: string }).id) || (item as unknown as CrudEntity))}
-      onDelete={(item) => requestDelete(type, item as unknown as CrudEntity)}
-      onDuplicate={(item) => handleDuplicate(type, item as unknown as CrudEntity)}
+      onEdit={permissions.canEdit ? (item) => openEdit(type, entityConfigs[type]?.toEntity(entityConfigs[type].fromEntity(item as unknown as CrudEntity), (item as { id: string }).id) || (item as unknown as CrudEntity)) : undefined}
+      onDelete={permissions.canDelete ? (item) => requestDelete(type, item as unknown as CrudEntity) : undefined}
+      onDuplicate={permissions.canCreate ? (item) => handleDuplicate(type, item as unknown as CrudEntity) : undefined}
     />
   );
 
@@ -796,16 +845,16 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
                 <h1>{activeModule}</h1>
               </div>
               <div className="flex items-center gap-2">
-                <QuickActions onAdd={setQuickAddType} />
+                {permissions.canCreate && <QuickActions onAdd={setQuickAddType} />}
                 <div className="digital-wave-top-actions">
-                  <button onClick={() => setImportOpen(true)} type="button"><Upload size={13} /> Import</button>
-                  {activeModule === 'Companies' && (
+                  {permissions.canCreate && <button onClick={() => setImportOpen(true)} type="button"><Upload size={13} /> Import</button>}
+                  {activeModule === 'Companies' && permissions.canCreate && (
                     <button onClick={createCompany} type="button"><Plus size={13} /> New Company</button>
                   )}
-                  {crudModuleTypes.includes(activeModule) && (
+                  {crudModuleTypes.includes(activeModule) && permissions.canCreate && (
                     <button onClick={() => openAdd(activeModule)} type="button"><Plus size={13} /> Add</button>
                   )}
-                  {isWorkflowsModule && (
+                  {isWorkflowsModule && permissions.canManageWorkflows && (
                     <button onClick={() => setCommandOpen(true)} type="button"><SlidersHorizontal size={12} /> Actions</button>
                   )}
                   <button onClick={() => setCommandOpen(true)} type="button"><SlidersHorizontal size={12} /> | Ctrl K</button>
@@ -825,8 +874,8 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
                 recordsLoaded={recordsLoaded}
                 schemaHealth={schemaHealth}
                 onNavigate={setActiveModule}
-                onOpenImport={() => setImportOpen(true)}
-                onExportAll={exportAllData}
+                onOpenImport={permissions.canCreate ? () => setImportOpen(true) : undefined}
+                onExportAll={permissions.canExport ? exportAllData : undefined}
               />
             ) : activeModule === 'Companies' ? (
               <div className="digital-wave-table-card">
@@ -858,7 +907,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
                         <>
                           <button onClick={() => setCompactRows((v) => !v)} type="button"><List size={12} /> Compact rows</button>
                           <button onClick={() => setHiddenLinkedin((v) => !v)} type="button"><Linkedin size={12} /> Toggle LinkedIn</button>
-                          <button onClick={exportView} type="button"><Download size={12} /> Export view</button>
+                          {permissions.canExport && <button onClick={exportView} type="button"><Download size={12} /> Export view</button>}
                         </>
                       )}
                     </div>
@@ -872,10 +921,10 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
                   hiddenLinkedin={hiddenLinkedin}
                   toggleSelected={toggleSelected}
                   toggleAll={() => setSelectedIds(allSelected ? [] : visibleCompanies.map((c) => c.id))}
-                  onEdit={handleCompanyEdit}
+                  onEdit={permissions.canEdit ? handleCompanyEdit : undefined}
                   onView={(company) => openDetail('Companies', company)}
-                  onDelete={handleCompanyDelete}
-                  onDuplicate={handleCompanyDuplicate}
+                  onDelete={permissions.canDelete ? handleCompanyDelete : undefined}
+                  onDuplicate={permissions.canCreate ? handleCompanyDuplicate : undefined}
                 />
                 <footer className="digital-wave-table-footer">
                   <span>Calculate <ChevronDown size={12} /></span>
@@ -947,7 +996,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
           record={detailRecord}
           related={{ companies, people, tasks, notes, deals, meetings }}
           onClose={() => setDetailRecord(null)}
-          onEdit={detailRecord ? () => {
+          onEdit={detailRecord && permissions.canEdit ? () => {
             setCrudModal(detailRecord);
             setDetailRecord(null);
           } : undefined}

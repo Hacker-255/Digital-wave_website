@@ -14,7 +14,7 @@ interface SetupHealthPanelProps {
   schemaHealth?: { ok: boolean; missing: string[] } | null;
   compact?: boolean;
   onNavigate: (module: string) => void;
-  onOpenImport: () => void;
+  onOpenImport?: () => void;
 }
 
 export function SetupHealthPanel({ companiesLoaded, recordsLoaded, counts, schemaHealth, compact, onNavigate, onOpenImport }: SetupHealthPanelProps) {
@@ -45,7 +45,7 @@ export function SetupHealthPanel({ companiesLoaded, recordsLoaded, counts, schem
       done: counts.companies > 3 && counts.people > 3,
       detail: `${counts.companies} companies and ${counts.people} people in this workspace.`,
       action: 'Import CSV',
-      onClick: onOpenImport,
+      onClick: onOpenImport ?? (() => onNavigate('Settings')),
     },
     {
       label: 'Create sales pipeline',
