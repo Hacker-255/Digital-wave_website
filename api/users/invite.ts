@@ -1,5 +1,5 @@
+import { createClerkClient } from '@clerk/backend';
 import {
-  createClerkClient,
   createInvitationToken,
   getOrigin,
   hashToken,
