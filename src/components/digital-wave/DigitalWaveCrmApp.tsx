@@ -33,6 +33,7 @@ import { DealPipelineBoard } from './DealPipelineBoard';
 import { NotificationCenter } from './NotificationCenter';
 import { SyncStatusPill, type SyncStatus } from './SyncStatusPill';
 import { ExactCompaniesView, ExactDashboardView, ExactLeadsView, ExactPeopleView } from './ExactCrmViews';
+import { PixelPerfectCrm } from './PixelPerfectCrm';
 import { AuthRequired } from '../crm/AuthRequired';
 import type { ExecuteResult } from '../../services/aiExecutionEngine';
 import { checkCrmSchemaHealth, listAllModuleRecords, listCompanies, saveAllModuleRecords, saveCompanies } from '../../services/supabaseCrmService';
@@ -49,6 +50,7 @@ interface DigitalWaveCrmAppProps {
 const AI_MODULES = ['AI Execute', 'AI Ask'];
 const MODULE_ACTIONS = ['Companies', 'Workflows', ...AI_MODULES];
 const PERSISTED_MODULES = ['People', 'Tasks', 'Notes', 'Opportunities', 'Deals', 'Leads', 'Meetings', 'Projects', 'Files'];
+const PIXEL_PAGE_MODULES = ['Dashboards', 'Companies', 'People', 'Leads'];
 
 type CrudEntity = CrmPerson | CrmTask | CrmNote | CrmOpportunity | CrmDeal | CrmLead | CrmMeeting | CrmProject | CrmFile | CompanyTableRow;
 
@@ -82,6 +84,24 @@ const moduleSubtitleMap: Record<string, string> = {
   Files: 'Attach proposals, contracts, recordings, and customer documents.',
   Settings: 'Control workspace, team, integrations, billing, and permissions.',
 };
+
+function initialCrmModuleFromPath() {
+  const path = window.location.pathname.toLowerCase();
+  if (path === '/dashboard' || path === '/crm' || path === '/crm/dashboard') return 'Dashboards';
+  if (path === '/companies' || path === '/crm/companies') return 'Companies';
+  if (path === '/people' || path === '/crm/people') return 'People';
+  if (path === '/leads' || path === '/crm/leads') return 'Leads';
+  if (path.startsWith('/crm/workflows') || path === '/workflows') return 'Workflows';
+  return 'Dashboards';
+}
+
+function exactPathForModule(module: string) {
+  if (module === 'Dashboards') return '/dashboard';
+  if (module === 'Companies') return '/companies';
+  if (module === 'People') return '/people';
+  if (module === 'Leads') return '/leads';
+  return `/crm/${module.toLowerCase().replace(/\s+/g, '-')}`;
+}
 
 interface KpiItem {
   label: string;
@@ -129,7 +149,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
       actor: currentUser?.email || clerkUser?.emailAddresses[0]?.emailAddress || 'Unknown user',
     });
   }, [clerkUser, currentUser]);
-  const [activeModule, setActiveModule] = useState(() => window.location.pathname.startsWith('/crm/workflows') ? 'Workflows' : 'Dashboards');
+  const [activeModule, setActiveModule] = useState(initialCrmModuleFromPath);
   const [companies, setCompanies] = useState(() => localSnapshot.companies?.length ? localSnapshot.companies : initialCompanies);
   const [companiesLoaded, setCompaniesLoaded] = useState(false);
   const companiesRef = useRef(companies);
@@ -1256,6 +1276,61 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
       } : undefined}
     />
   );
+
+  const pixelPage = activeModule === 'Dashboards' ? 'Dashboard' : activeModule;
+  const isPixelPage = PIXEL_PAGE_MODULES.includes(activeModule);
+
+  if (isPixelPage) {
+    const navigatePixelPage = (nextPage: string) => {
+      const nextModule = nextPage === 'Dashboard' ? 'Dashboards' : nextPage;
+      setActiveModule(nextModule);
+      window.history.pushState({}, '', exactPathForModule(nextModule));
+    };
+
+    return (
+      <main className="min-h-screen" style={{ backgroundColor: '#fbfcff', color: '#101323' }}>
+        <AuthRequired clerkMissing={clerkMissing}>
+          <PixelPerfectCrm
+            page={pixelPage as 'Dashboard' | 'Companies' | 'People' | 'Leads'}
+            onNavigate={navigatePixelPage}
+            onOpenChat={() => setChatOpen(true)}
+            onOpenCommand={() => setCommandOpen(true)}
+            onImport={() => setImportOpen(true)}
+            onExport={exportAllData}
+            onAdd={(type) => {
+              if (type === 'Companies') createCompany();
+              else openAdd(type);
+            }}
+          />
+          {commandOpen && (
+            <DigitalWaveCommandMenu query={query} setQuery={setQuery} onClose={() => setCommandOpen(false)} onRun={runCommand} activeModule={activeModule} />
+          )}
+          {chatOpen && (
+            <DigitalWaveChatPanel prompt={aiPrompt} setPrompt={setAiPrompt} answer={aiAnswer} loading={aiLoading} onAsk={askAiChat} onClose={() => setChatOpen(false)} />
+          )}
+          {quickAddType && (
+            <QuickAddModal type={quickAddType} onClose={() => setQuickAddType(null)} onSave={handleQuickAdd} />
+          )}
+          {importOpen && (
+            <CsvImportModal onClose={() => setImportOpen(false)} onImport={handleCsvImport} />
+          )}
+          {crudModal && (
+            <CrudModal
+              title={crudModal.item ? `Edit ${crudModal.type.slice(0, -1)}` : `Add ${crudModal.type.slice(0, -1)}`}
+              fields={entityConfigs[crudModal.type]?.fields || []}
+              initial={crudModal.item ? entityConfigs[crudModal.type]?.fromEntity(crudModal.item) || {} : entityConfigs[crudModal.type]?.empty() || {}}
+              onClose={() => setCrudModal(null)}
+              onSave={handleCrudSave}
+              saving={crudSaving}
+              error={crudError}
+              fieldErrors={fieldErrors}
+              entityType={crudModal.type}
+            />
+          )}
+        </AuthRequired>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen" style={{ backgroundColor: 'var(--crm-app-bg)', color: 'var(--crm-text)' }}>

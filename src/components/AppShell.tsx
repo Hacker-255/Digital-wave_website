@@ -9,7 +9,8 @@ interface AppShellProps {
 
 export function AppShell({ clerkMissing }: AppShellProps) {
   const route = usePathRoute();
-  const isCrmPage = route === CRM_ROUTE || route.startsWith(`${CRM_ROUTE}/`) || route === '/workflows';
+  const exactCrmRoutes = new Set(['/dashboard', '/companies', '/people', '/leads']);
+  const isCrmPage = route === CRM_ROUTE || route.startsWith(`${CRM_ROUTE}/`) || route === '/workflows' || exactCrmRoutes.has(route);
 
   return isCrmPage ? (
     <DigitalWaveCrmApp clerkMissing={clerkMissing} />
