@@ -8,3 +8,5 @@ tsconfig.tsbuildinfo
 *.log
 
 .vercel
+.env.local
+.env.*.local
