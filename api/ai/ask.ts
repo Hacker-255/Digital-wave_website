@@ -1,4 +1,4 @@
-import { generateGeminiAnswer } from '../_geminiService.js';
+import { GeminiServiceError, generateGeminiAnswer } from '../_geminiService.js';
 
 type AskRequest = {
   prompt?: string;
@@ -46,7 +46,9 @@ export default async function handler(
       answer,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'AI request failed.';
-    response.status(message.includes('GEMINI_API_KEY') ? 500 : 502).json({ error: message });
+    const message = error instanceof GeminiServiceError ? error.publicMessage : 'AI service failed. Please try again.';
+    const status = error instanceof GeminiServiceError ? error.status : 502;
+    console.error('[AI] Gemini request failed:', error instanceof Error ? error.message : error);
+    response.status(status).json({ error: message });
   }
 }

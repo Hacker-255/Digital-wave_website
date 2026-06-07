@@ -712,7 +712,7 @@ button, input { font: inherit; }
 .pp-crm-root * { box-sizing: border-box; }
 .pp-crm-shell { display: flex; min-height: 100vh; background: #fbfcff; }
 .pp-sidebar {
-  width: 300px;
+  width: 260px;
   background: #fff;
   border-right: 1px solid #e8edf5;
   display: flex;
@@ -722,19 +722,19 @@ button, input { font: inherit; }
   z-index: 20;
 }
 .pp-brand {
-  height: 82px;
+  height: 72px;
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 0 24px;
+  padding: 0 20px;
   border-bottom: 1px solid #e8edf5;
   font-weight: 800;
-  font-size: 20px;
+  font-size: 18px;
   letter-spacing: 0;
 }
 .pp-logo-mark {
-  width: 34px;
-  height: 34px;
+  width: 30px;
+  height: 30px;
   border-radius: 8px;
   background: linear-gradient(135deg, #6d45ff, #4d2fe5);
   position: relative;
@@ -764,18 +764,18 @@ button, input { font: inherit; }
   color: #101323;
 }
 .pp-profile {
-  height: 92px;
+  height: 82px;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 0 24px;
+  padding: 0 20px;
 }
 .pp-profile b { display: block; font-size: 15px; color: #101323; }
 .pp-profile small { display: block; margin-top: 4px; color: #667085; }
 .pp-chev { margin-left: auto; color: #475467; }
 .pp-new-btn {
-  margin: 10px 24px 16px;
-  height: 46px;
+  margin: 8px 20px 14px;
+  height: 44px;
   border: 0;
   border-radius: 10px;
   background: #6038f6;
@@ -791,12 +791,12 @@ button, input { font: inherit; }
 .pp-nav {
   display: flex;
   flex-direction: column;
-  padding: 10px 18px;
+  padding: 8px 16px;
   gap: 5px;
 }
 .pp-nav button,
 .pp-collapse {
-  height: 43px;
+  height: 39px;
   border: 0;
   background: transparent;
   border-radius: 9px;
@@ -807,7 +807,7 @@ button, input { font: inherit; }
   gap: 14px;
   font-weight: 650;
   color: #111827;
-  font-size: 15px;
+  font-size: 14px;
   cursor: pointer;
 }
 .pp-nav button.active {
@@ -845,10 +845,10 @@ button, input { font: inherit; }
   place-items: center;
 }
 .pp-main {
-  margin-left: 300px;
+  margin-left: 260px;
   min-height: 100vh;
-  width: calc(100% - 300px);
-  padding: 24px 30px 36px;
+  width: calc(100% - 260px);
+  padding: 22px 28px 34px;
 }
 .pp-top-row {
   display: flex;
@@ -861,7 +861,7 @@ button, input { font: inherit; }
   display: flex;
   align-items: center;
   gap: 16px;
-  font-size: 30px;
+  font-size: 25px;
   line-height: 1;
   font-weight: 800;
   letter-spacing: 0;
@@ -870,7 +870,7 @@ button, input { font: inherit; }
 .pp-title-wrap p {
   margin: 10px 0 0;
   color: #344054;
-  font-size: 16px;
+  font-size: 15px;
   letter-spacing: 0;
 }
 .pp-top-actions {
@@ -974,34 +974,34 @@ button, input { font: inherit; }
 }
 .pp-stats {
   display: grid;
-  gap: 22px;
-  margin: 22px 0;
+  gap: 18px;
+  margin: 18px 0;
 }
 .pp-stats.pp-five { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 .pp-stats.pp-four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .pp-stats.pp-compact { margin-top: 18px; }
 .pp-stat-card {
-  height: 154px;
+  height: 128px;
   background: #fff;
   border: 1px solid #e3e8f1;
   border-radius: 12px;
   box-shadow: 0 8px 24px rgba(16,24,40,.03);
-  padding: 30px 28px;
+  padding: 22px 20px;
   display: flex;
   align-items: flex-start;
-  gap: 24px;
+  gap: 18px;
   position: relative;
   overflow: hidden;
 }
-.pp-stat-card p { margin: 0 0 7px; color: #344054; font-size: 14px; }
-.pp-stat-card h2 { margin: 0; font-size: 30px; line-height: 1.1; letter-spacing: 0; color: #101323; }
-.pp-stat-card small { display: block; margin-top: 14px; color: #0f9f52; font-weight: 600; }
+.pp-stat-card p { margin: 0 0 6px; color: #344054; font-size: 13px; }
+.pp-stat-card h2 { margin: 0; font-size: 25px; line-height: 1.1; letter-spacing: 0; color: #101323; }
+.pp-stat-card small { display: block; margin-top: 10px; color: #0f9f52; font-weight: 600; font-size: 12px; }
 .pp-stat-card small.down { color: #dc2626; }
 .pp-stat-card small span { color: #344054; margin-left: 5px; font-weight: 500; }
 .pp-stat-ico {
-  width: 58px;
-  height: 58px;
-  border-radius: 18px;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
   display: grid;
   place-items: center;
   font-weight: 800;
@@ -1026,8 +1026,8 @@ button, input { font: inherit; }
   position: absolute;
   right: 20px;
   bottom: 24px;
-  width: 140px;
-  height: 45px;
+  width: 118px;
+  height: 38px;
 }
 .pp-spark polyline { fill: none; stroke: var(--c); stroke-width: 3; }
 .pp-dashboard-grid {
@@ -1128,27 +1128,42 @@ button, input { font: inherit; }
 .pp-deals-donut,
 .pp-insights { display: flex; align-items: center; gap: 42px; }
 .pp-donut,
-.pp-insight-donut {
+.pp-insight-donut,
+.pp-donut-chart,
+.pp-insight-chart {
   width: 180px;
   height: 180px;
   border-radius: 50%;
-  background: conic-gradient(#6038f6 0 32%, #2f90fa 32% 58%, #36c985 58% 77%, #fb8b2c 77% 90%, #d0d5dd 90% 100%);
-  display: grid;
-  place-items: center;
   position: relative;
   flex: 0 0 auto;
 }
-.pp-insight-donut { width: 150px; height: 150px; background: conic-gradient(#2f90fa 0 67%, #98a2b3 67% 84%, #fb8b2c 84% 100%); }
+.pp-donut,
+.pp-insight-donut {
+  background: conic-gradient(#6038f6 0 32%, #2f90fa 32% 58%, #36c985 58% 77%, #fb8b2c 77% 90%, #d0d5dd 90% 100%);
+  display: grid;
+  place-items: center;
+}
+.pp-insight-donut,
+.pp-insight-chart { width: 150px; height: 150px; }
+.pp-insight-donut { background: conic-gradient(#2f90fa 0 67%, #98a2b3 67% 84%, #fb8b2c 84% 100%); }
 .pp-donut::after,
 .pp-insight-donut::after { content: ""; position: absolute; inset: 36px; background: #fff; border-radius: 50%; }
 .pp-donut strong,
 .pp-donut small,
 .pp-insight-donut strong,
-.pp-insight-donut small { z-index: 1; text-align: center; color: #101323; }
+.pp-insight-donut small,
+.pp-donut-chart strong,
+.pp-donut-chart small,
+.pp-insight-chart strong,
+.pp-insight-chart small { z-index: 1; text-align: center; color: #101323; }
 .pp-donut strong,
-.pp-insight-donut strong { font-size: 32px; }
+.pp-insight-donut strong,
+.pp-donut-chart strong,
+.pp-insight-chart strong { font-size: 32px; position: absolute; left: 0; right: 0; top: 66px; }
 .pp-donut small,
-.pp-insight-donut small { font-size: 13px; margin-top: 42px; position: absolute; color: #475467; }
+.pp-insight-donut small,
+.pp-donut-chart small,
+.pp-insight-chart small { font-size: 13px; margin-top: 42px; position: absolute; left: 0; right: 0; top: 54px; color: #475467; }
 .pp-deals-donut ul,
 .pp-insights ul { list-style: none; margin: 0; padding: 0; flex: 1; }
 .pp-deals-donut li,
@@ -1261,9 +1276,7 @@ button, input { font: inherit; }
 .pp-leads-table th:nth-child(2) { width: 280px; }
 .pp-company-table th:nth-child(1) { width: 300px; }
 
-@media (max-width: 1280px) {
-  .pp-sidebar { width: 260px; }
-  .pp-main { margin-left: 260px; width: calc(100% - 260px); }
+@media (max-width: 1180px) {
   .pp-stats.pp-five { grid-template-columns: repeat(3, 1fr); }
   .pp-dashboard-grid,
   .pp-companies-layout { grid-template-columns: 1fr; }

@@ -6,6 +6,7 @@ import {
   Search, Settings, Shield, SlidersHorizontal, SortAsc, Star, Target,
   Upload, Users, Workflow,
 } from 'lucide-react';
+import { Area, AreaChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 
 type Page = 'Dashboard' | 'Companies' | 'People' | 'Leads';
 
@@ -65,6 +66,32 @@ const bottomNav = [
 
 const companyColors = ['purple', 'black', 'blue', 'sky', 'orange', 'red', 'dark', 'green'];
 const avatarClasses = ['male', 'female', 'male2', 'female2'];
+const revenueData = [
+  { month: 'Jan', thisYear: 600, lastYear: 320 },
+  { month: 'Feb', thisYear: 850, lastYear: 420 },
+  { month: 'Mar', thisYear: 920, lastYear: 390 },
+  { month: 'Apr', thisYear: 1450, lastYear: 680 },
+  { month: 'May', thisYear: 1400, lastYear: 620 },
+  { month: 'Jun', thisYear: 1950, lastYear: 980 },
+  { month: 'Jul', thisYear: 2450, lastYear: 1050 },
+  { month: 'Aug', thisYear: undefined, lastYear: 1450 },
+  { month: 'Sep', thisYear: undefined, lastYear: 1650 },
+  { month: 'Oct', thisYear: undefined, lastYear: 1500 },
+  { month: 'Nov', thisYear: undefined, lastYear: 2100 },
+  { month: 'Dec', thisYear: undefined, lastYear: 2450 },
+];
+const sourceData = [
+  { name: 'Website', value: 40, color: '#6038f6' },
+  { name: 'Referral', value: 32, color: '#2f90fa' },
+  { name: 'LinkedIn', value: 24, color: '#36c985' },
+  { name: 'Email', value: 16, color: '#fb8b2c' },
+  { name: 'Other', value: 16, color: '#d0d5dd' },
+];
+const insightData = [
+  { name: 'Active', value: 8, color: '#2f90fa' },
+  { name: 'Inactive', value: 2, color: '#98a2b3' },
+  { name: 'Prospect', value: 2, color: '#fb8b2c' },
+];
 
 export function PixelPerfectCrm({ page, onNavigate, onOpenChat, onOpenCommand, onImport, onExport, onAdd }: PixelPerfectCrmProps) {
   const content = useMemo(() => {
@@ -307,9 +334,31 @@ function Pipeline() {
 }
 
 function RevenueChart() {
-  return <div className="pp-revenue"><h2>$2,450,000</h2><small>↑ 25.3% vs last year</small><div className="pp-chart-legend"><i />This Year <span />Last Year</div><svg viewBox="0 0 520 250" className="pp-big-chart"><g className="grid"><line x1="0" y1="20" x2="520" y2="20" /><line x1="0" y1="70" x2="520" y2="70" /><line x1="0" y1="120" x2="520" y2="120" /><line x1="0" y1="170" x2="520" y2="170" /><line x1="0" y1="220" x2="520" y2="220" /></g><path className="fill" d="M0 220 L0 170 L45 140 L90 138 L135 92 L180 70 L225 73 L270 22 L270 220 Z" /><polyline className="line-now" points="0,170 45,140 90,138 135,92 180,70 225,73 270,22" /><polyline className="line-old" points="0,195 45,178 90,185 135,150 180,160 225,122 270,118 315,84 360,70 405,96 450,46 520,10" /></svg><div className="pp-months">{['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((month) => <span key={month}>{month}</span>)}</div></div>;
+  return (
+    <div className="pp-revenue">
+      <h2>$2,450,000</h2>
+      <small>Up 25.3% vs last year</small>
+      <div className="pp-chart-legend"><i />This Year <span />Last Year</div>
+      <div className="pp-big-chart">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={revenueData} margin={{ top: 12, right: 12, left: -20, bottom: 0 }}>
+            <defs>
+              <linearGradient id="ppRevenueFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#6038f6" stopOpacity={0.24} />
+                <stop offset="100%" stopColor="#6038f6" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid stroke="#d0d5dd" strokeDasharray="4 4" vertical={false} />
+            <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#344054', fontSize: 12 }} />
+            <YAxis axisLine={false} tickLine={false} tick={{ fill: '#344054', fontSize: 12 }} tickFormatter={(value) => `$${Number(value) / 1000}M`} />
+            <Area type="monotone" dataKey="thisYear" stroke="#6038f6" strokeWidth={3} fill="url(#ppRevenueFill)" connectNulls={false} dot={false} />
+            <Area type="monotone" dataKey="lastYear" stroke="#98a2b3" strokeWidth={2} fill="transparent" strokeDasharray="6 6" dot={false} />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
 }
-
 function TaskList() {
   const rows = [['Follow up with NovaGrid Systems', 'Mahmoud Mostafa - May 23, 10:00 AM', 'High'], ['Prepare proposal for Blue Harbor', 'Sarah Lee - May 23, 1:30 PM', 'Medium'], ['Call DataPulse Labs', 'John Doe - May 24, 11:00 AM', 'High'], ['Demo for SkyBridge Tech', 'Mike Ross - May 24, 3:00 PM', 'Medium'], ['Send contract to Apex Software', 'Sarah Lee - May 25, 9:00 AM', 'Low']];
   return <div className="pp-task-list">{rows.map((row) => <div key={row[0]}><span className="pp-empty-round"><CheckCircle2 size={12} /></span><div><b><Building2 size={13} /> {row[0]}</b><small>{row[1]}</small></div><Badge text={row[2]} small /></div>)}</div>;
@@ -321,11 +370,10 @@ function TopCompanies() {
 }
 
 function DealsDonut() {
-  return <div className="pp-deals-donut"><div className="pp-donut"><strong>128</strong><small>Total Deals</small></div><ul><li><i className="dot purple" />Website<span>40 (31.3%)</span></li><li><i className="dot blue" />Referral<span>32 (25.0%)</span></li><li><i className="dot green" />LinkedIn<span>24 (18.8%)</span></li><li><i className="dot orange" />Email<span>16 (12.5%)</span></li><li><i className="dot grey" />Other<span>16 (12.5%)</span></li></ul></div>;
+  return <div className="pp-deals-donut"><div className="pp-donut-chart"><ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={sourceData} dataKey="value" innerRadius={58} outerRadius={88} stroke="none" startAngle={90} endAngle={-270}>{sourceData.map((item) => <Cell key={item.name} fill={item.color} />)}</Pie></PieChart></ResponsiveContainer><strong>128</strong><small>Total Deals</small></div><ul><li><i className="dot purple" />Website<span>40 (31.3%)</span></li><li><i className="dot blue" />Referral<span>32 (25.0%)</span></li><li><i className="dot green" />LinkedIn<span>24 (18.8%)</span></li><li><i className="dot orange" />Email<span>16 (12.5%)</span></li><li><i className="dot grey" />Other<span>16 (12.5%)</span></li></ul></div>;
 }
-
 function CompanyInsights() {
-  return <div className="pp-insights"><div className="pp-insight-donut"><strong>12</strong><small>Companies</small></div><ul><li><i className="dot blue" />Active<span>8 (66.7%)</span></li><li><i className="dot grey" />Inactive<span>2 (16.7%)</span></li><li><i className="dot orange" />Prospect<span>2 (16.7%)</span></li></ul></div>;
+  return <div className="pp-insights"><div className="pp-insight-chart"><ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={insightData} dataKey="value" innerRadius={45} outerRadius={74} stroke="none" startAngle={90} endAngle={-270}>{insightData.map((item) => <Cell key={item.name} fill={item.color} />)}</Pie></PieChart></ResponsiveContainer><strong>12</strong><small>Companies</small></div><ul><li><i className="dot blue" />Active<span>8 (66.7%)</span></li><li><i className="dot grey" />Inactive<span>2 (16.7%)</span></li><li><i className="dot orange" />Prospect<span>2 (16.7%)</span></li></ul></div>;
 }
 
 function Industries() {

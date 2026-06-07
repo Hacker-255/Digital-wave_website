@@ -42,6 +42,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { getPermissions } from '../../services/permissions';
 import { recordAuditEvent } from '../../services/auditLogService';
 import { loadLocalCrmSnapshot, mergeById, saveLocalCrmSnapshot } from '../../services/crmLocalPersistence';
+import { api } from '../../services/apiClient';
 
 interface DigitalWaveCrmAppProps {
   clerkMissing: boolean;
@@ -426,6 +427,10 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
   const meetingFields: CrudField[] = [
     { key: 'title', label: 'Title', required: true },
     { key: 'date', label: 'Date', type: 'date' },
+    { key: 'meetingTime', label: 'Meeting Time', type: 'datetime-local', required: true },
+    { key: 'customerName', label: 'Customer Name', required: true },
+    { key: 'customerEmail', label: 'Customer Email', type: 'email', required: true },
+    { key: 'customerPhone', label: 'Customer Phone', type: 'tel' },
     { key: 'duration', label: 'Duration (minutes)', type: 'number' },
     { key: 'attendees', label: 'Attendees' },
     { key: 'location', label: 'Location' },
@@ -530,12 +535,12 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
     },
     Meetings: {
       fields: meetingFields,
-      empty: () => ({ title: '', date: '', duration: '60', attendees: '', location: '', notes: '' }),
+      empty: () => ({ title: '', date: '', meetingTime: '', customerName: '', customerEmail: '', customerPhone: '', duration: '60', attendees: '', location: '', notes: '' }),
       toItem: (d, id) => ({ id, label: d.title || 'Untitled', detail: `${d.date || 'No date'}${d.duration ? ` - ${d.duration}min` : ''}` }),
       toEntity: (d, id) => ({ id, ...d }) as unknown as CrudEntity,
       fromEntity: (item) => {
         const m = item as CrmMeeting;
-        return { title: m.title || '', date: m.date || '', duration: m.duration || '60', attendees: m.attendees || '', location: m.location || '', notes: m.notes || '' };
+        return { title: m.title || '', date: m.date || '', meetingTime: m.meetingTime || '', customerName: m.customerName || '', customerEmail: m.customerEmail || '', customerPhone: m.customerPhone || '', duration: m.duration || '60', attendees: m.attendees || '', location: m.location || '', notes: m.notes || '' };
       },
       setter: (items) => setMeetings(items as CrmMeeting[]),
     },
@@ -929,6 +934,31 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
     setCrudError('');
 
     setTimeout(() => {
+      const scheduleMeetingReminder = (meetingData: Record<string, string>) => {
+        if (type !== 'Meetings' || !meetingData.customerEmail || !meetingData.meetingTime) return;
+        void api.meetings.schedule({
+          customerName: meetingData.customerName || meetingData.attendees || meetingData.title || 'Customer',
+          customerEmail: meetingData.customerEmail,
+          customerPhone: meetingData.customerPhone,
+          meetingTime: meetingData.meetingTime,
+          title: meetingData.title,
+          notes: meetingData.notes,
+        }).then(({ data: reminderData, error }) => {
+          if (error) {
+            setLastAction(`Meeting saved, but reminder scheduling failed: ${error}`);
+            return;
+          }
+          const reminder = reminderData?.meeting as { reschedule_id?: string; reschedule_url?: string } | undefined;
+          if (reminder?.reschedule_id) {
+            setMeetings((current) => current.map((meeting) => (
+              meeting.title === meetingData.title && meeting.meetingTime === meetingData.meetingTime
+                ? { ...meeting, rescheduleId: reminder.reschedule_id, rescheduleUrl: reminder.reschedule_url }
+                : meeting
+            )));
+          }
+        });
+      };
+
       if (item) {
         const updated = config.fromEntity(item);
         const merged = { ...updated, ...data };
@@ -936,12 +966,14 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
         config.setter((prev: CrudEntity[]) => prev.map((p) => ((p as { id: string }).id === (item as { id: string }).id) ? entity : p));
         setLastAction(`${type} updated`);
         audit('update', type, String(data.name || data.title || 'Record'));
+        scheduleMeetingReminder(merged);
       } else {
         const id = genId();
         const entity = config.toEntity(data, id);
         config.setter((prev: CrudEntity[]) => [entity, ...prev]);
         setLastAction(`${type} created`);
         audit('create', type, String(data.name || data.title || 'Record'));
+        scheduleMeetingReminder(data);
       }
       setCrudSaving(false);
       setCrudModal(null);
@@ -1193,12 +1225,12 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
-        throw new Error(data.error || 'AI request failed. Check GEMINI_API_KEY on the server.');
+        throw new Error(data.error || 'AI service failed. Please try again.');
       }
       setAiAnswer(String(data.answer || 'The AI service returned an empty response.'));
       setLastAction('AI answer ready');
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'AI request failed. Check the server configuration.';
+      const message = error instanceof Error ? error.message : 'AI service failed. Please try again.';
       setAiAnswer(message);
       setLastAction('AI request failed');
     } finally {

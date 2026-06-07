@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { generateGeminiAnswer } from '../services/geminiService';
+import { GeminiServiceError, generateGeminiAnswer } from '../services/geminiService';
 
 export const aiRoutes = Router();
 
@@ -25,7 +25,9 @@ aiRoutes.post('/ask', async (request, response) => {
     });
     return response.json({ answer });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'AI request failed';
-    return response.status(message.includes('GEMINI_API_KEY') ? 500 : 502).json({ error: message });
+    console.error('[AI] Gemini request failed:', error instanceof Error ? error.message : error);
+    const message = error instanceof GeminiServiceError ? error.publicMessage : 'AI service failed. Please try again.';
+    const status = error instanceof GeminiServiceError ? error.status : 502;
+    return response.status(status).json({ error: message });
   }
 });

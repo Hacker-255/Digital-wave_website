@@ -118,6 +118,20 @@ export const api = {
         method: 'POST',
       }),
   },
+  meetings: {
+    schedule: (data: {
+      customerName: string;
+      customerEmail: string;
+      customerPhone?: string;
+      meetingTime: string;
+      title?: string;
+      notes?: string;
+    }) =>
+      request<{ ok: boolean; meeting: any }>('/meetings/schedule', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+  },
   crm: {
     listCompanies: () => request<{ companies: any[] }>('/users/invite?crmResource=companies'),
     saveCompanies: (companies: any[]) =>

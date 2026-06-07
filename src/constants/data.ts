@@ -99,6 +99,12 @@ export type CrmMeeting = {
   leadId?: string;
   title: string;
   date: string;
+  customerName?: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  meetingTime?: string;
+  rescheduleId?: string;
+  rescheduleUrl?: string;
   duration: string;
   attendees: string;
   location: string;

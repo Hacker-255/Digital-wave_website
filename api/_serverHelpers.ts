@@ -13,9 +13,10 @@ export type VercelRequest<TBody = unknown> = {
   headers: Record<string, string | string[] | undefined>;
 };
 
-const clerkClient = createClerkClient({
-  secretKey: process.env.CLERK_SECRET_KEY || '',
-});
+function getClerkClient() {
+  if (!process.env.CLERK_SECRET_KEY) throw new Error('CLERK_SECRET_KEY is not configured');
+  return createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
+}
 
 export function setJsonHeaders(response: VercelResponse) {
   response.setHeader('Access-Control-Allow-Origin', process.env.CLIENT_ORIGIN || '*');
@@ -33,6 +34,7 @@ export function createInvitationToken() {
 }
 
 export function getOrigin(request: VercelRequest) {
+  if (process.env.APP_URL) return process.env.APP_URL.replace(/\/$/, '');
   const proto = headerValue(request, 'x-forwarded-proto') || 'https';
   const host = headerValue(request, 'x-forwarded-host') || headerValue(request, 'host') || 'digital-wave.solutions';
   return `${proto}://${host}`;
@@ -52,6 +54,7 @@ export async function requireClerkUser(request: VercelRequest) {
   const payload = await verifyToken(token, { secretKey: process.env.CLERK_SECRET_KEY });
   const clerkId = payload.sub;
   if (!clerkId) throw new Error('Invalid session token');
+  const clerkClient = getClerkClient();
   const user = await clerkClient.users.getUser(clerkId);
   return {
     token,

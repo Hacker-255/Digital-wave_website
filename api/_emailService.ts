@@ -1,6 +1,6 @@
 import { Resend } from 'resend';
 
-type EmailKind = 'welcome' | 'password-reset' | 'invitation' | 'crm-notification' | 'payment-confirmation' | 'test';
+type EmailKind = 'welcome' | 'password-reset' | 'invitation' | 'crm-notification' | 'payment-confirmation' | 'meeting-reminder' | 'test';
 
 type SendEmailInput = {
   kind: EmailKind;
@@ -20,6 +20,15 @@ export type InvitationEmailInput = {
   inviteLink: string;
   inviterName: string;
   companyName?: string;
+};
+
+export type MeetingReminderEmailInput = {
+  to: string;
+  customerName: string;
+  meetingTime: string;
+  rescheduleId: string;
+  rescheduleUrl: string;
+  minutesBefore: 60 | 30 | 15;
 };
 
 export class EmailDeliveryError extends Error {
@@ -111,10 +120,12 @@ export async function sendDigitalWaveEmail(input: SendEmailInput) {
 
   if (error) {
     const message = error.message || 'Resend failed to send the email.';
+    console.error('[Email] Resend delivery failed:', message);
     const invalidSender = /domain|sender|from/i.test(message);
     throw new EmailDeliveryError(invalidSender ? `Invalid sender email: ${message}` : message, 400);
   }
 
+  console.info(`[Email] Sent ${input.kind} email to ${input.to.trim().toLowerCase()}.`);
   return data;
 }
 
@@ -171,6 +182,25 @@ export function sendPaymentConfirmationEmail(to: string, planName: string, amoun
     heading: 'Subscription confirmed',
     body: `Your ${planName} subscription is active.\n\nAmount: ${amount}`,
     footerNote: 'Digital Wave CRM Billing',
+  });
+}
+
+export function sendMeetingReminderEmail({
+  to,
+  customerName,
+  meetingTime,
+  rescheduleId,
+  rescheduleUrl,
+  minutesBefore,
+}: MeetingReminderEmailInput) {
+  return sendDigitalWaveEmail({
+    kind: 'meeting-reminder',
+    to,
+    subject: `Reminder: your Digital Wave meeting starts in ${minutesBefore} minutes`,
+    heading: 'Meeting reminder',
+    body: `Hi ${customerName || 'there'},\n\nThis is a reminder that your meeting is scheduled for ${meetingTime}.\n\nReschedule ID: ${rescheduleId}\n\nUse the link below if you need to reschedule.`,
+    action: { label: 'Reschedule Meeting', url: rescheduleUrl },
+    footerNote: 'Digital Wave CRM Meeting Reminders',
   });
 }
 

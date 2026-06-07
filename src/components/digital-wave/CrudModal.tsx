@@ -5,7 +5,7 @@ import { SelectDropdown } from './SelectDropdown';
 export interface CrudField {
   key: string;
   label: string;
-  type?: 'text' | 'email' | 'tel' | 'number' | 'date' | 'textarea' | 'select' | 'tags';
+  type?: 'text' | 'email' | 'tel' | 'number' | 'date' | 'datetime-local' | 'textarea' | 'select' | 'tags';
   placeholder?: string;
   options?: string[];
   required?: boolean;

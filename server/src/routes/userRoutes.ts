@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import type { Request } from 'express';
+import { createClerkClient } from '@clerk/backend';
 import { requireAuth, requireManager } from '../middleware/auth';
 import {
   getUsers, getUserById, createUser, updateUserRole, deleteUser,
@@ -47,6 +48,24 @@ router.post('/invite', requireManager, async (req, res) => {
     const invitation = inviteUser(email, role, requester);
     const inviteLink = `${requestOrigin(req)}/crm?invitation_token=${encodeURIComponent(invitation.token)}`;
 
+    if (!process.env.CLERK_SECRET_KEY) {
+      return res.status(500).json({ error: 'CLERK_SECRET_KEY is not configured' });
+    }
+
+    const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
+    await clerk.invitations.createInvitation({
+      emailAddress: invitation.email,
+      expiresInDays: 7,
+      ignoreExisting: true,
+      notify: true,
+      redirectUrl: `${requestOrigin(req)}/crm`,
+      publicMetadata: {
+        role: invitation.role,
+        invitedBy: requester.id,
+        workspace: 'Digital Wave CRM',
+      },
+    });
+
     try {
       await sendInvitationEmail({
         to: invitation.email,
@@ -57,12 +76,12 @@ router.post('/invite', requireManager, async (req, res) => {
       const { token: _token, ...safeInvitation } = invitation;
       const warning = emailError instanceof Error
         ? emailError.message
-        : 'Resend could not send the email. Copy and send the invitation link manually.';
+        : 'Resend could not send the branded email. Clerk sent the invitation email.';
       res.status(202).json({
         invitation: safeInvitation,
         inviteLink,
-        emailSent: false,
-        warning,
+        emailSent: true,
+        warning: `Clerk invitation sent. ${warning}`,
       });
       return;
     }

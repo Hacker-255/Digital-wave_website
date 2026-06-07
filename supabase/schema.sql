@@ -44,6 +44,35 @@ create table if not exists public.invitations (
   accepted_at timestamptz
 );
 
+create table if not exists public.team_invites (
+  id uuid primary key default gen_random_uuid(),
+  email text not null,
+  role text not null default 'Employee',
+  clerk_invitation_id text,
+  invited_by text not null,
+  status text not null default 'pending',
+  expires_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.customer_meetings (
+  id uuid primary key default gen_random_uuid(),
+  customer_name text not null,
+  customer_email text not null,
+  customer_phone text,
+  meeting_time timestamptz not null,
+  reschedule_id text not null unique,
+  reschedule_url text not null,
+  reminder_60_sent boolean not null default false,
+  reminder_30_sent boolean not null default false,
+  reminder_15_sent boolean not null default false,
+  title text,
+  notes text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create table if not exists public.workflows (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users(id) default auth.uid(),
@@ -62,6 +91,8 @@ alter table public.profiles enable row level security;
 alter table public.companies enable row level security;
 alter table public.crm_records enable row level security;
 alter table public.invitations enable row level security;
+alter table public.team_invites enable row level security;
+alter table public.customer_meetings enable row level security;
 alter table public.workflows enable row level security;
 
 grant usage on schema public to anon, authenticated;
@@ -69,6 +100,8 @@ grant select, insert, update, delete on table public.profiles to anon, authentic
 grant select, insert, update, delete on table public.companies to anon, authenticated;
 grant select, insert, update, delete on table public.crm_records to anon, authenticated;
 grant select, insert, update, delete on table public.invitations to anon, authenticated;
+grant select, insert, update, delete on table public.team_invites to authenticated;
+grant select, insert, update, delete on table public.customer_meetings to authenticated;
 grant select, insert, update, delete on table public.workflows to anon, authenticated;
 
 drop policy if exists "Profiles are readable by signed-in users" on public.profiles;
@@ -159,6 +192,66 @@ on public.invitations for update
 using (auth.jwt()->>'sub' is not null)
 with check (auth.jwt()->>'sub' is not null);
 
+drop policy if exists "Managers can read team invites" on public.team_invites;
+create policy "Managers can read team invites"
+on public.team_invites for select
+using (
+  exists (
+    select 1
+    from public.profiles
+    where profiles.id = auth.jwt()->>'sub'
+      and profiles.role in ('Owner', 'Admin', 'Manager')
+  )
+);
+
+drop policy if exists "Managers can create team invites" on public.team_invites;
+create policy "Managers can create team invites"
+on public.team_invites for insert
+with check (
+  exists (
+    select 1
+    from public.profiles
+    where profiles.id = auth.jwt()->>'sub'
+      and profiles.role in ('Owner', 'Admin', 'Manager')
+  )
+);
+
+drop policy if exists "Managers can update team invites" on public.team_invites;
+create policy "Managers can update team invites"
+on public.team_invites for update
+using (
+  exists (
+    select 1
+    from public.profiles
+    where profiles.id = auth.jwt()->>'sub'
+      and profiles.role in ('Owner', 'Admin', 'Manager')
+  )
+)
+with check (
+  exists (
+    select 1
+    from public.profiles
+    where profiles.id = auth.jwt()->>'sub'
+      and profiles.role in ('Owner', 'Admin', 'Manager')
+  )
+);
+
+drop policy if exists "Signed-in users can read customer meetings" on public.customer_meetings;
+create policy "Signed-in users can read customer meetings"
+on public.customer_meetings for select
+using (auth.jwt()->>'sub' is not null);
+
+drop policy if exists "Signed-in users can create customer meetings" on public.customer_meetings;
+create policy "Signed-in users can create customer meetings"
+on public.customer_meetings for insert
+with check (auth.jwt()->>'sub' is not null);
+
+drop policy if exists "Signed-in users can update customer meetings" on public.customer_meetings;
+create policy "Signed-in users can update customer meetings"
+on public.customer_meetings for update
+using (auth.jwt()->>'sub' is not null)
+with check (auth.jwt()->>'sub' is not null);
+
 drop policy if exists "Users can read own workflows" on public.workflows;
 create policy "Users can read own workflows"
 on public.workflows for select
@@ -219,6 +312,16 @@ for each row execute function public.set_updated_at();
 drop trigger if exists crm_records_set_updated_at on public.crm_records;
 create trigger crm_records_set_updated_at
 before update on public.crm_records
+for each row execute function public.set_updated_at();
+
+drop trigger if exists team_invites_set_updated_at on public.team_invites;
+create trigger team_invites_set_updated_at
+before update on public.team_invites
+for each row execute function public.set_updated_at();
+
+drop trigger if exists customer_meetings_set_updated_at on public.customer_meetings;
+create trigger customer_meetings_set_updated_at
+before update on public.customer_meetings
 for each row execute function public.set_updated_at();
 
 drop trigger if exists workflows_set_updated_at on public.workflows;

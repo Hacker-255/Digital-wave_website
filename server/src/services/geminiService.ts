@@ -16,18 +16,31 @@ type GenerateGeminiInput = {
   maxOutputTokens?: number;
 };
 
+export class GeminiServiceError extends Error {
+  status: number;
+  publicMessage: string;
+
+  constructor(publicMessage: string, status = 502, logMessage?: string) {
+    super(logMessage || publicMessage);
+    this.name = 'GeminiServiceError';
+    this.status = status;
+    this.publicMessage = publicMessage;
+  }
+}
+
 export async function generateGeminiAnswer({
   prompt,
   context,
   systemInstruction = 'You are a concise CRM assistant for Digital Wave CRM. Give practical sales and workflow recommendations.',
   maxOutputTokens = 700,
 }: GenerateGeminiInput) {
-  const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GEMINI_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    throw new Error('GEMINI_API_KEY is not configured on the server.');
+    throw new GeminiServiceError('AI service is not configured.', 500, 'GEMINI_API_KEY is not configured on the server.');
   }
 
   const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+  console.info(`[AI] Gemini configured for model ${model}.`);
   const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
     method: 'POST',
     headers: {
@@ -52,7 +65,11 @@ export async function generateGeminiAnswer({
 
   const data = await response.json().catch(() => ({})) as GeminiResponse;
   if (!response.ok) {
-    throw new Error(data.error?.message || `Gemini API returned ${response.status}`);
+    const providerMessage = data.error?.message || `Gemini API returned ${response.status}`;
+    const publicMessage = response.status === 400 || response.status === 401 || response.status === 403
+      ? 'AI service key is invalid or not allowed for this model.'
+      : 'AI service failed. Please try again.';
+    throw new GeminiServiceError(publicMessage, response.status === 401 || response.status === 403 ? 500 : 502, providerMessage);
   }
 
   const answer = data.candidates?.[0]?.content?.parts

@@ -253,33 +253,17 @@ export default async function handler(request: InviteRequest, response: VercelRe
     const inviteLink = `${origin}/crm?invitation_token=${encodeURIComponent(token)}`;
     const companyName = 'Digital Wave CRM';
     const inviterName = requesterProfile.full_name || requester.name;
-    let resendError = '';
+    let resendWarningMessage = '';
 
-    if (process.env.RESEND_API_KEY) {
-      try {
-        await sendInvitationEmail({
-          to: email,
-          inviteLink,
-          inviterName,
-          companyName,
-        });
-        response.status(201).json({
-          invitation,
-          inviteLink,
-          emailSent: true,
-          warning: persistenceWarning || undefined,
-        });
-        return;
-      } catch (error) {
-        resendError = resendWarning(error instanceof Error ? error.message : undefined);
-      }
-    } else {
-      resendError = 'RESEND_API_KEY is not configured.';
+    if (!process.env.CLERK_SECRET_KEY) {
+      response.status(500).json({ error: 'CLERK_SECRET_KEY is not configured' });
+      return;
     }
 
+    let clerkInvitationId = '';
     try {
       const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
-      await clerk.invitations.createInvitation({
+      const clerkInvitation = await clerk.invitations.createInvitation({
         emailAddress: email,
         expiresInDays: 7,
         ignoreExisting: true,
@@ -291,22 +275,51 @@ export default async function handler(request: InviteRequest, response: VercelRe
           workspace: companyName,
         },
       });
-      response.status(201).json({
-        invitation,
-        inviteLink,
-        emailSent: true,
-        warning: persistenceWarning || (resendError ? `Resend failed, so Clerk sent the invitation instead. ${resendError}` : undefined),
-      });
-      return;
+      clerkInvitationId = String((clerkInvitation as { id?: string }).id || '');
     } catch (error) {
       const clerkError = error instanceof Error ? error.message : 'Clerk could not send the invitation.';
-      response.status(202).json({
-        invitation,
-        inviteLink,
-        emailSent: false,
-        warning: `${resendError} ${clerkError} Copy and send the invitation link manually.`.trim(),
-      });
+      response.status(502).json({ error: `Clerk invite failed: ${clerkError}` });
+      return;
     }
+
+    try {
+      await supabaseServiceRequest('team_invites', {
+        method: 'POST',
+        body: JSON.stringify([{
+          email,
+          role,
+          clerk_invitation_id: clerkInvitationId || null,
+          invited_by: requester.id,
+          status: 'pending',
+          expires_at: expiresAt,
+        }]),
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Team invite audit storage is unavailable.';
+      persistenceWarning = [persistenceWarning, message].filter(Boolean).join(' ');
+    }
+
+    if (process.env.RESEND_API_KEY) {
+      try {
+        await sendInvitationEmail({
+          to: email,
+          inviteLink,
+          inviterName,
+          companyName,
+        });
+      } catch (error) {
+        resendWarningMessage = resendWarning(error instanceof Error ? error.message : undefined);
+      }
+    } else {
+      resendWarningMessage = 'RESEND_API_KEY is not configured. Clerk sent the invitation email.';
+    }
+
+    response.status(201).json({
+      invitation,
+      inviteLink,
+      emailSent: true,
+      warning: [persistenceWarning, resendWarningMessage].filter(Boolean).join(' ') || undefined,
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to invite user';
     const status = message.includes('Authorization')
