@@ -8,16 +8,16 @@ import type { ReactNode } from 'react';
 import { Area, AreaChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 import logoUrl from '../../assets/digital-wave-brand-logo.png';
 
-type Page = 'Dashboard' | 'Companies' | 'People' | 'Leads' | 'Deals';
-
 type PixelPerfectCrmProps = {
-  page: Page;
+  page: string;
   onNavigate: (page: string) => void;
   onOpenChat?: () => void;
   onOpenCommand?: () => void;
   onImport?: () => void;
   onExport?: () => void;
-  onAdd?: (type: 'Companies' | 'People' | 'Leads' | 'Deals') => void;
+  onAdd?: (type: string) => void;
+  onSaveView?: () => void;
+  onSort?: () => void;
 };
 
 const companies = [
@@ -69,13 +69,115 @@ const topNav = [
   ['Automation', 'Workflows'], ['Reports', 'Dashboards'],
 ] as const;
 
-const sideViews = {
+const sideViews: Record<string, string[]> = {
   Dashboard: ['Sales overview', 'Pipeline forecast', 'Team productivity', 'Recent activity'],
   Companies: ['All companies', 'My companies', 'Recently created', 'Active customers', 'Needs follow-up'],
   People: ['All contacts', 'My contacts', 'Customers', 'Leads', 'Inactive contacts'],
   Leads: ['All leads', 'New leads', 'Contacted', 'Qualified', 'Proposal', 'Closed won'],
   Deals: ['All deals', 'My deals', 'Open deals', 'Closing this month', 'Closed won'],
-} as const;
+  Tasks: ['All tasks', 'Due today', 'Overdue', 'Assigned to me', 'Completed'],
+  Meetings: ['All meetings', 'Upcoming', 'This week', 'Customer calls', 'Completed'],
+  Projects: ['All projects', 'Active projects', 'At risk', 'Completed', 'Owned by me'],
+  Notes: ['All notes', 'Customer notes', 'Sales notes', 'Support notes', 'Pinned'],
+  Files: ['All files', 'Contracts', 'Proposals', 'Invoices', 'Recently uploaded'],
+  Opportunities: ['All opportunities', 'Open opportunities', 'High value', 'Closing soon'],
+  Workflows: ['All workflows', 'Active workflows', 'Drafts', 'Recently triggered'],
+  Settings: ['Workspace settings', 'Team permissions', 'Email setup', 'Billing', 'Integrations'],
+  'AI Ask': ['CRM assistant', 'Recent questions', 'Pipeline summary', 'Next actions'],
+  'AI Execute': ['Command center', 'Bulk actions', 'AI actions', 'Recent runs'],
+};
+
+const moduleMeta: Record<string, { title: string; subtitle: string; eyebrow: string; cta: string; filters: string[]; views: string[] }> = {
+  Tasks: {
+    title: 'Tasks',
+    subtitle: 'Prioritize follow-ups, overdue work, owners, and next actions.',
+    eyebrow: 'Productivity',
+    cta: 'Create Task',
+    filters: ['Task owner', 'Due date', 'Priority', 'Status', 'Related record'],
+    views: ['All tasks', 'Due today', 'Overdue', 'Assigned to me', 'Completed'],
+  },
+  Meetings: {
+    title: 'Meetings',
+    subtitle: 'Schedule customer calls, demos, reminders, and follow-up activity.',
+    eyebrow: 'Calendar',
+    cta: 'Create Meeting',
+    filters: ['Host', 'Meeting date', 'Company', 'Reminder status', 'Outcome'],
+    views: ['All meetings', 'Upcoming', 'This week', 'Customer calls', 'Completed'],
+  },
+  Projects: {
+    title: 'Projects',
+    subtitle: 'Track delivery work, owners, status, and customer implementation progress.',
+    eyebrow: 'Delivery',
+    cta: 'Create Project',
+    filters: ['Project owner', 'Status', 'Due date', 'Company', 'Priority'],
+    views: ['All projects', 'Active projects', 'At risk', 'Completed', 'Owned by me'],
+  },
+  Notes: {
+    title: 'Notes',
+    subtitle: 'Capture account context, customer conversations, and internal handoff details.',
+    eyebrow: 'Activity',
+    cta: 'Create Note',
+    filters: ['Author', 'Company', 'Category', 'Created date', 'Pinned'],
+    views: ['All notes', 'Customer notes', 'Sales notes', 'Support notes', 'Pinned'],
+  },
+  Files: {
+    title: 'Files',
+    subtitle: 'Organize proposals, contracts, invoices, recordings, and customer documents.',
+    eyebrow: 'Documents',
+    cta: 'Upload File',
+    filters: ['Owner', 'File type', 'Company', 'Uploaded date', 'Tags'],
+    views: ['All files', 'Contracts', 'Proposals', 'Invoices', 'Recently uploaded'],
+  },
+  Opportunities: {
+    title: 'Opportunities',
+    subtitle: 'Manage qualified revenue opportunities before they become active deals.',
+    eyebrow: 'Pipeline',
+    cta: 'Create Opportunity',
+    filters: ['Owner', 'Stage', 'Value', 'Source', 'Close date'],
+    views: ['All opportunities', 'Open opportunities', 'High value', 'Closing soon'],
+  },
+  Workflows: {
+    title: 'Workflows',
+    subtitle: 'Review automation rules, recent runs, and workflow health.',
+    eyebrow: 'Automation',
+    cta: 'Create Workflow',
+    filters: ['Status', 'Trigger', 'Owner', 'Last run', 'Errors'],
+    views: ['All workflows', 'Active workflows', 'Drafts', 'Recently triggered'],
+  },
+  Settings: {
+    title: 'Settings',
+    subtitle: 'Control team access, integrations, billing, email, data, and workspace behavior.',
+    eyebrow: 'Administration',
+    cta: 'Open Command',
+    filters: ['Workspace', 'Team', 'Integrations', 'Billing', 'Security'],
+    views: ['Workspace settings', 'Team permissions', 'Email setup', 'Billing', 'Integrations'],
+  },
+  'AI Ask': {
+    title: 'AI Ask',
+    subtitle: 'Ask Gemini about CRM changes, deals, tasks, customers, and next actions.',
+    eyebrow: 'Artificial intelligence',
+    cta: 'Open AI',
+    filters: ['CRM context', 'Companies', 'Deals', 'Tasks', 'Meetings'],
+    views: ['CRM assistant', 'Recent questions', 'Pipeline summary', 'Next actions'],
+  },
+  'AI Execute': {
+    title: 'AI Execute',
+    subtitle: 'Run guided CRM commands, summaries, and safe operational actions.',
+    eyebrow: 'Artificial intelligence',
+    cta: 'Open Commands',
+    filters: ['Action type', 'Module', 'Owner', 'Status', 'Date'],
+    views: ['Command center', 'Bulk actions', 'AI actions', 'Recent runs'],
+  },
+};
+
+const genericRows = [
+  ['Follow up with NovaGrid Systems', 'NovaGrid Systems', 'High', 'Mahmoud Mostafa', 'Today', 'Open'],
+  ['Prepare proposal for Blue Harbor', 'Blue Harbor Logistics', 'Medium', 'Asmaa Hassan', 'Tomorrow', 'Open'],
+  ['Schedule onboarding call', 'DataPulse Labs', 'High', 'Omar Khaled', 'Jun 12, 2026', 'Planned'],
+  ['Upload signed contract', 'Apex Software', 'Low', 'Mahmoud Mostafa', 'Jun 14, 2026', 'Waiting'],
+  ['Review renewal opportunity', 'CloudBase Corp', 'Medium', 'Asmaa Hassan', 'Jun 18, 2026', 'Open'],
+  ['Document customer notes', 'Arcanum Systems', 'Low', 'Omar Khaled', 'Jun 20, 2026', 'Draft'],
+] as const;
 
 const revenueData = [
   { month: 'Jan', revenue: 600, forecast: 480 },
@@ -95,25 +197,40 @@ const sourceData = [
   { name: 'Other', value: 16, color: '#cbd5e1' },
 ];
 
-export function PixelPerfectCrm({ page, onNavigate, onOpenChat, onOpenCommand, onImport, onExport, onAdd }: PixelPerfectCrmProps) {
+export function PixelPerfectCrm({ page, onNavigate, onOpenChat, onOpenCommand, onImport, onExport, onAdd, onSaveView, onSort }: PixelPerfectCrmProps) {
   return (
     <div className="hub-crm">
       <HubTopbar activePage={page} onNavigate={onNavigate} onOpenChat={onOpenChat} onOpenCommand={onOpenCommand} />
       <div className="hub-body">
-        <HubSidebar page={page} onNavigate={onNavigate} />
+        <HubSidebar page={page} onNavigate={onNavigate} onCreate={() => onAdd?.(page)} onSaveView={onSaveView} />
         <main className="hub-main">
           {page === 'Dashboard' && <DashboardPage onOpenCommand={onOpenCommand} onAdd={() => onAdd?.('People')} />}
           {page === 'Companies' && <CompaniesPage onImport={onImport} onExport={onExport} onAdd={() => onAdd?.('Companies')} />}
           {page === 'People' && <PeoplePage onImport={onImport} onExport={onExport} onAdd={() => onAdd?.('People')} />}
           {page === 'Leads' && <LeadsPage onImport={onImport} onExport={onExport} onAdd={() => onAdd?.('Leads')} />}
           {page === 'Deals' && <DealsPage onImport={onImport} onExport={onExport} onAdd={() => onAdd?.('Deals')} />}
+          {!['Dashboard', 'Companies', 'People', 'Leads', 'Deals'].includes(page) && (
+            <GenericModulePage
+              page={page}
+              onImport={onImport}
+              onExport={onExport}
+              onAdd={() => {
+                if (page === 'Settings' || page.startsWith('AI')) onOpenCommand?.();
+                else onAdd?.(page);
+              }}
+              onOpenChat={onOpenChat}
+              onOpenCommand={onOpenCommand}
+              onSaveView={onSaveView}
+              onSort={onSort}
+            />
+          )}
         </main>
       </div>
     </div>
   );
 }
 
-function HubTopbar({ activePage, onNavigate, onOpenChat, onOpenCommand }: { activePage: Page; onNavigate: (page: string) => void; onOpenChat?: () => void; onOpenCommand?: () => void }) {
+function HubTopbar({ activePage, onNavigate, onOpenChat, onOpenCommand }: { activePage: string; onNavigate: (page: string) => void; onOpenChat?: () => void; onOpenCommand?: () => void }) {
   return (
     <header className="hub-topbar">
       <button className="hub-menu" type="button" aria-label="Menu"><Menu size={20} /></button>
@@ -123,7 +240,7 @@ function HubTopbar({ activePage, onNavigate, onOpenChat, onOpenCommand }: { acti
       </button>
       <nav className="hub-topnav">
         {topNav.map(([label, target]) => (
-          <button key={label} className={target === activePage || (activePage === 'Dashboard' && target === 'Dashboards') ? 'active' : ''} onClick={() => onNavigate(target)} type="button">
+          <button key={label} className={target === activePage || (activePage === 'Dashboard' && target === 'Dashboards') || (label === 'Service' && ['Tasks', 'Meetings', 'Notes'].includes(activePage)) ? 'active' : ''} onClick={() => onNavigate(target)} type="button">
             {label}<ChevronDown size={13} />
           </button>
         ))}
@@ -141,39 +258,46 @@ function HubTopbar({ activePage, onNavigate, onOpenChat, onOpenCommand }: { acti
   );
 }
 
-function HubSidebar({ page, onNavigate }: { page: Page; onNavigate: (page: string) => void }) {
+function HubSidebar({ page, onNavigate, onCreate, onSaveView }: { page: string; onNavigate: (page: string) => void; onCreate?: () => void; onSaveView?: () => void }) {
+  const views = sideViews[page] || ['All records', 'Assigned to me', 'Recently updated', 'Needs attention'];
   return (
     <aside className="hub-sidebar">
-      <button className="hub-create" type="button"><Plus size={16} /> Create</button>
+      <button className="hub-create" type="button" onClick={onCreate}><Plus size={16} /> Create</button>
       <nav className="hub-sidebar-nav">
         <SideButton icon={<Home size={17} />} label="Dashboard" active={page === 'Dashboard'} onClick={() => onNavigate('Dashboards')} />
         <SideButton icon={<Contact size={17} />} label="Contacts" active={page === 'People'} onClick={() => onNavigate('People')} />
         <SideButton icon={<Building2 size={17} />} label="Companies" active={page === 'Companies'} onClick={() => onNavigate('Companies')} />
         <SideButton icon={<Target size={17} />} label="Leads" active={page === 'Leads'} onClick={() => onNavigate('Leads')} />
         <SideButton icon={<BriefcaseBusiness size={17} />} label="Deals" active={page === 'Deals'} onClick={() => onNavigate('Deals')} />
-        <SideButton icon={<CalendarDays size={17} />} label="Tasks" onClick={() => onNavigate('Tasks')} />
+        <SideButton icon={<CalendarDays size={17} />} label="Tasks" active={page === 'Tasks'} onClick={() => onNavigate('Tasks')} />
+        <SideButton icon={<CalendarDays size={17} />} label="Meetings" active={page === 'Meetings'} onClick={() => onNavigate('Meetings')} />
+        <SideButton icon={<FileTextIcon />} label="Notes" active={page === 'Notes'} onClick={() => onNavigate('Notes')} />
         <SideButton icon={<Mail size={17} />} label="Email" onClick={() => onNavigate('Settings')} />
-        <SideButton icon={<Workflow size={17} />} label="Workflows" onClick={() => onNavigate('Workflows')} />
+        <SideButton icon={<Workflow size={17} />} label="Workflows" active={page === 'Workflows'} onClick={() => onNavigate('Workflows')} />
         <SideButton icon={<BarChart3 size={17} />} label="Reports" onClick={() => onNavigate('Dashboards')} />
       </nav>
       <div className="hub-sidebar-section">
         <p>Saved views</p>
-        {sideViews[page].map((view, index) => <button key={view} className={index === 0 ? 'active-view' : ''} type="button">{view}</button>)}
+        {views.map((view, index) => <button key={view} className={index === 0 ? 'active-view' : ''} type="button" onClick={index === 0 ? undefined : onSaveView}>{view}</button>)}
       </div>
       <div className="hub-sidebar-section">
         <p>Workspace</p>
-        <button type="button"><Settings size={14} /> Settings</button>
-        <button type="button"><CreditCard size={14} /> Billing</button>
+        <button type="button" onClick={() => onNavigate('Settings')}><Settings size={14} /> Settings</button>
+        <button type="button" onClick={() => onNavigate('Settings')}><CreditCard size={14} /> Billing</button>
       </div>
     </aside>
   );
+}
+
+function FileTextIcon() {
+  return <span className="hub-file-icon">N</span>;
 }
 
 function SideButton({ icon, label, active, onClick }: { icon: ReactNode; label: string; active?: boolean; onClick: () => void }) {
   return <button className={active ? 'active' : ''} type="button" onClick={onClick}>{icon}<span>{label}</span></button>;
 }
 
-function PageHeader({ title, subtitle, object, onImport, onExport, onAdd }: { title: string; subtitle: string; object: 'Company' | 'Person' | 'Lead' | 'Deal'; onImport?: () => void; onExport?: () => void; onAdd?: () => void }) {
+function PageHeader({ title, subtitle, object, ctaLabel, onImport, onExport, onAdd }: { title: string; subtitle: string; object: string; ctaLabel?: string; onImport?: () => void; onExport?: () => void; onAdd?: () => void }) {
   return (
     <section className="hub-page-head">
       <div>
@@ -184,7 +308,7 @@ function PageHeader({ title, subtitle, object, onImport, onExport, onAdd }: { ti
       <div className="hub-page-actions">
         <button type="button" onClick={onImport}><Upload size={15} /> Import</button>
         <button type="button" onClick={onExport}><Download size={15} /> Export</button>
-        <button className="primary" type="button" onClick={onAdd}><Plus size={16} /> Create {object}</button>
+        <button className="primary" type="button" onClick={onAdd}><Plus size={16} /> {ctaLabel || `Create ${object}`}</button>
       </div>
     </section>
   );
@@ -226,7 +350,7 @@ function CompaniesPage({ onImport, onExport, onAdd }: { onImport?: () => void; o
     <>
       <PageHeader title="Companies" subtitle="Manage accounts, owners, domains, lifecycle stage, and revenue." object="Company" onImport={onImport} onExport={onExport} onAdd={onAdd} />
       <ObjectPageLayout filters={['Owner', 'Lifecycle stage', 'Industry', 'Employees', 'Last activity']}>
-        <ObjectToolbar views={['All companies', 'My companies', 'Active customers', 'Recently created']} placeholder="Search companies" />
+        <ObjectToolbar views={['All companies', 'My companies', 'Active customers', 'Recently created']} placeholder="Search companies" onFilter={onImport} onSort={onExport} />
         <table className="hub-table">
           <thead><tr><th><Check /></th><th>Company name</th><th>Domain</th><th>Industry</th><th>Employees</th><th>Owner</th><th>Status</th><th>Revenue</th><th /></tr></thead>
           <tbody>{companies.map((row, index) => <tr key={row[0]}><td><Check /></td><td><CompanyCell name={row[0]} index={index} /></td><td>{row[2]}</td><td>{row[1]}</td><td>{row[3]}</td><td>{row[4]}</td><td><Badge label={row[5]} /></td><td>{row[6]}</td><td><MoreHorizontal size={17} /></td></tr>)}</tbody>
@@ -242,7 +366,7 @@ function PeoplePage({ onImport, onExport, onAdd }: { onImport?: () => void; onEx
     <>
       <PageHeader title="Contacts" subtitle="Track every customer, lead, vendor, and relationship touchpoint." object="Person" onImport={onImport} onExport={onExport} onAdd={onAdd} />
       <ObjectPageLayout filters={['Contact owner', 'Lead status', 'Company', 'Tags', 'Last contacted']}>
-        <ObjectToolbar views={['All contacts', 'Customers', 'Leads', 'Vendors', 'Inactive']} placeholder="Search contacts" />
+        <ObjectToolbar views={['All contacts', 'Customers', 'Leads', 'Vendors', 'Inactive']} placeholder="Search contacts" onFilter={onImport} onSort={onExport} />
         <table className="hub-table">
           <thead><tr><th><Check /></th><th>Name</th><th>Email</th><th>Company</th><th>Job title</th><th>Phone</th><th>Status</th><th>Tags</th><th>Last contact</th><th /></tr></thead>
           <tbody>{people.map((row, index) => <tr key={row[0]}><td><Check /></td><td><PersonCell name={row[0]} index={index} /></td><td>{row[1]}</td><td>{row[2]}</td><td>{row[3]}</td><td>{row[4]}</td><td><Badge label={row[5]} /></td><td><Tags tags={row[6]} /></td><td>{row[7]}</td><td><MoreHorizontal size={17} /></td></tr>)}</tbody>
@@ -258,7 +382,7 @@ function LeadsPage({ onImport, onExport, onAdd }: { onImport?: () => void; onExp
     <>
       <PageHeader title="Leads" subtitle="Prioritize pipeline work with lead score, source, owner, and last activity." object="Lead" onImport={onImport} onExport={onExport} onAdd={onAdd} />
       <ObjectPageLayout filters={['Lead owner', 'Lead status', 'Lead score', 'Source', 'Last contacted']}>
-        <ObjectToolbar views={['All leads', 'New', 'Contacted', 'Qualified', 'Proposal', 'Negotiation', 'Closed won']} placeholder="Search leads" />
+        <ObjectToolbar views={['All leads', 'New', 'Contacted', 'Qualified', 'Proposal', 'Negotiation', 'Closed won']} placeholder="Search leads" onFilter={onImport} onSort={onExport} />
         <table className="hub-table">
           <thead><tr><th><Check /></th><th>Lead</th><th>Company</th><th>Status</th><th>Score</th><th>Source</th><th>Owner</th><th>Last contact</th><th /></tr></thead>
           <tbody>{leads.map((row, index) => <tr key={row[0]}><td><Check /></td><td><PersonCell name={row[0]} meta={`${row[1]} - ${row[2]}`} index={index} /></td><td>{row[3]}</td><td><Badge label={row[4]} /></td><td><strong className="hub-score">{row[5]}</strong></td><td>{row[6]}</td><td>{row[7]}</td><td>{row[8]}</td><td><MoreHorizontal size={17} /></td></tr>)}</tbody>
@@ -280,7 +404,7 @@ function DealsPage({ onImport, onExport, onAdd }: { onImport?: () => void; onExp
         <Kpi icon={<CheckCircle2 size={22} />} label="Won This Month" value="12" trend="+18.1%" />
       </section>
       <ObjectPageLayout filters={['Deal owner', 'Deal stage', 'Close date', 'Amount', 'Forecast category']}>
-        <ObjectToolbar views={['All deals', 'My deals', 'Open deals', 'Closing this month', 'Closed won']} placeholder="Search deals" />
+        <ObjectToolbar views={['All deals', 'My deals', 'Open deals', 'Closing this month', 'Closed won']} placeholder="Search deals" onFilter={onImport} onSort={onExport} />
         <div className="hub-deal-stage-strip">
           {['New Lead', 'Qualified', 'Proposal', 'Negotiation', 'Closed Won'].map((stage, index) => (
             <div key={stage}>
@@ -300,6 +424,101 @@ function DealsPage({ onImport, onExport, onAdd }: { onImport?: () => void; onExp
   );
 }
 
+function GenericModulePage({
+  page,
+  onImport,
+  onExport,
+  onAdd,
+  onOpenChat,
+  onOpenCommand,
+  onSaveView,
+  onSort,
+}: {
+  page: string;
+  onImport?: () => void;
+  onExport?: () => void;
+  onAdd?: () => void;
+  onOpenChat?: () => void;
+  onOpenCommand?: () => void;
+  onSaveView?: () => void;
+  onSort?: () => void;
+}) {
+  const meta = moduleMeta[page] || {
+    title: page,
+    subtitle: 'Manage CRM records, ownership, activity, and business context.',
+    eyebrow: 'Workspace',
+    cta: `Create ${page.replace(/s$/, '')}`,
+    filters: ['Owner', 'Status', 'Company', 'Date', 'Priority'],
+    views: ['All records', 'Assigned to me', 'Recently updated', 'Needs attention'],
+  };
+
+  if (page === 'Settings') {
+    return (
+      <>
+        <PageHeader title="Settings" subtitle={meta.subtitle} object="Setting" ctaLabel="Open Command" onImport={onOpenCommand} onExport={onExport} onAdd={onOpenCommand} />
+        <section className="hub-settings-grid">
+          {[
+            ['Team & permissions', 'Invite users, assign roles, and control CRM access.', 'Open team settings'],
+            ['Email & notifications', 'Configure Resend, CRM notifications, and meeting reminders.', 'Send test email'],
+            ['Integrations', 'Manage Gemini, Supabase, Clerk, calendar, WhatsApp, and webhooks.', 'Open integrations'],
+            ['Billing', 'Review subscription, invoices, payment methods, and plan limits.', 'Open billing'],
+            ['Data management', 'Import, export, rollback, and validate CRM records.', 'Open import center'],
+            ['Security audit', 'Review activity logs, sessions, audit trails, and account health.', 'Open audit logs'],
+          ].map((card, index) => (
+            <article className="hub-settings-card" key={card[0]}>
+              <span>{index + 1}</span>
+              <h2>{card[0]}</h2>
+              <p>{card[1]}</p>
+              <button type="button" onClick={index === 1 ? onImport : onOpenCommand}>{card[2]}</button>
+            </article>
+          ))}
+        </section>
+      </>
+    );
+  }
+
+  if (page.startsWith('AI')) {
+    return (
+      <>
+        <PageHeader title={meta.title} subtitle={meta.subtitle} object="AI" ctaLabel="Open AI Ask" onImport={onOpenCommand} onExport={onExport} onAdd={onOpenChat} />
+        <section className="hub-ai-panel">
+          <div>
+            <Sparkles size={26} />
+            <h2>Digital Wave AI is ready</h2>
+            <p>Use the AI button to ask about recent CRM activity, deals, leads, tasks, meetings, and next actions.</p>
+            <button type="button" onClick={onOpenChat}>Open AI Ask</button>
+          </div>
+          <div className="hub-ai-prompts">
+            {['What changed recently in my CRM?', 'Which deals need follow-up?', 'Summarize overdue tasks', 'What should sales do next?'].map((prompt) => (
+              <button type="button" key={prompt} onClick={onOpenChat}>{prompt}</button>
+            ))}
+          </div>
+        </section>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <PageHeader title={meta.title} subtitle={meta.subtitle} object={meta.title.replace(/s$/, '')} ctaLabel={meta.cta} onImport={onImport} onExport={onExport} onAdd={onAdd} />
+      <section className="hub-kpi-grid">
+        <Kpi icon={<CheckCircle2 size={22} />} label="Open Records" value="128" trend="+14.2%" />
+        <Kpi icon={<Target size={22} />} label="High Priority" value="24" trend="+6.8%" />
+        <Kpi icon={<CalendarDays size={22} />} label="Due This Week" value="36" trend="+9.1%" />
+        <Kpi icon={<Activity size={22} />} label="Completed" value="256" trend="+15.3%" />
+      </section>
+      <ObjectPageLayout filters={meta.filters}>
+        <ObjectToolbar views={meta.views} placeholder={`Search ${meta.title.toLowerCase()}`} onFilter={onOpenCommand} onSort={onSort || onOpenCommand} onColumns={onOpenCommand} onSaveView={onSaveView} />
+        <table className="hub-table">
+          <thead><tr><th><Check /></th><th>Name</th><th>Company</th><th>Priority</th><th>Owner</th><th>Due date</th><th>Status</th><th /></tr></thead>
+          <tbody>{genericRows.map((row, index) => <tr key={`${page}-${row[0]}`}><td><Check /></td><td><CompanyCell name={row[0]} index={index} /></td><td>{row[1]}</td><td><Badge label={row[2]} /></td><td>{row[3]}</td><td>{row[4]}</td><td><Badge label={row[5]} /></td><td><MoreHorizontal size={17} /></td></tr>)}</tbody>
+        </table>
+        <Pagination label={`Showing 1-6 of 128 ${meta.title.toLowerCase()}`} />
+      </ObjectPageLayout>
+    </>
+  );
+}
+
 function ObjectPageLayout({ filters, children }: { filters: string[]; children: ReactNode }) {
   return (
     <section className="hub-object-layout">
@@ -313,16 +532,16 @@ function ObjectPageLayout({ filters, children }: { filters: string[]; children: 
   );
 }
 
-function ObjectToolbar({ views, placeholder }: { views: string[]; placeholder: string }) {
+function ObjectToolbar({ views, placeholder, onFilter, onSort, onColumns, onSaveView }: { views: string[]; placeholder: string; onFilter?: () => void; onSort?: () => void; onColumns?: () => void; onSaveView?: () => void }) {
   return (
     <>
-      <div className="hub-view-tabs">{views.map((view, index) => <button className={index === 0 ? 'active' : ''} type="button" key={view}>{view}</button>)}</div>
+      <div className="hub-view-tabs">{views.map((view, index) => <button className={index === 0 ? 'active' : ''} type="button" key={view} onClick={index === 0 ? undefined : onSaveView}>{view}</button>)}</div>
       <div className="hub-object-tools">
         <label><Search size={16} /><input placeholder={placeholder} /></label>
         <span />
-        <button type="button"><Filter size={15} /> Filter</button>
-        <button type="button"><SortAsc size={15} /> Sort</button>
-        <button type="button"><Columns3 size={15} /> Edit columns</button>
+        <button type="button" onClick={onFilter}><Filter size={15} /> Filter</button>
+        <button type="button" onClick={onSort}><SortAsc size={15} /> Sort</button>
+        <button type="button" onClick={onColumns || onFilter}><Columns3 size={15} /> Edit columns</button>
       </div>
     </>
   );

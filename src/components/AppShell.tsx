@@ -9,7 +9,11 @@ interface AppShellProps {
 
 export function AppShell({ clerkMissing }: AppShellProps) {
   const route = usePathRoute();
-  const exactCrmRoutes = new Set(['/dashboard', '/companies', '/people', '/leads']);
+  const exactCrmRoutes = new Set([
+    '/dashboard', '/companies', '/people', '/leads', '/deals', '/tasks',
+    '/meetings', '/projects', '/notes', '/files', '/opportunities',
+    '/settings', '/ai-ask', '/ai-execute',
+  ]);
   const isCrmPage = route === CRM_ROUTE || route.startsWith(`${CRM_ROUTE}/`) || route === '/workflows' || exactCrmRoutes.has(route);
 
   return isCrmPage ? (

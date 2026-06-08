@@ -51,7 +51,11 @@ interface DigitalWaveCrmAppProps {
 const AI_MODULES = ['AI Execute', 'AI Ask'];
 const MODULE_ACTIONS = ['Companies', 'Workflows', ...AI_MODULES];
 const PERSISTED_MODULES = ['People', 'Tasks', 'Notes', 'Opportunities', 'Deals', 'Leads', 'Meetings', 'Projects', 'Files'];
-const PIXEL_PAGE_MODULES = ['Dashboards', 'Companies', 'People', 'Leads', 'Deals'];
+const PIXEL_PAGE_MODULES = [
+  'Dashboards', 'Companies', 'People', 'Leads', 'Deals', 'Tasks', 'Meetings',
+  'Projects', 'Notes', 'Files', 'Opportunities', 'Workflows', 'Settings',
+  'AI Ask', 'AI Execute',
+];
 
 type CrudEntity = CrmPerson | CrmTask | CrmNote | CrmOpportunity | CrmDeal | CrmLead | CrmMeeting | CrmProject | CrmFile | CompanyTableRow;
 
@@ -93,6 +97,15 @@ function initialCrmModuleFromPath() {
   if (path === '/people' || path === '/crm/people') return 'People';
   if (path === '/leads' || path === '/crm/leads') return 'Leads';
   if (path === '/deals' || path === '/crm/deals') return 'Deals';
+  if (path === '/tasks' || path === '/crm/tasks') return 'Tasks';
+  if (path === '/meetings' || path === '/crm/meetings') return 'Meetings';
+  if (path === '/projects' || path === '/crm/projects') return 'Projects';
+  if (path === '/notes' || path === '/crm/notes') return 'Notes';
+  if (path === '/files' || path === '/crm/files') return 'Files';
+  if (path === '/opportunities' || path === '/crm/opportunities') return 'Opportunities';
+  if (path === '/settings' || path === '/crm/settings') return 'Settings';
+  if (path === '/ai-ask' || path === '/crm/ai-ask') return 'AI Ask';
+  if (path === '/ai-execute' || path === '/crm/ai-execute') return 'AI Execute';
   if (path.startsWith('/crm/workflows') || path === '/workflows') return 'Workflows';
   return 'Dashboards';
 }
@@ -103,6 +116,16 @@ function exactPathForModule(module: string) {
   if (module === 'People') return '/people';
   if (module === 'Leads') return '/leads';
   if (module === 'Deals') return '/deals';
+  if (module === 'Tasks') return '/tasks';
+  if (module === 'Meetings') return '/meetings';
+  if (module === 'Projects') return '/projects';
+  if (module === 'Notes') return '/notes';
+  if (module === 'Files') return '/files';
+  if (module === 'Opportunities') return '/opportunities';
+  if (module === 'Settings') return '/settings';
+  if (module === 'AI Ask') return '/ai-ask';
+  if (module === 'AI Execute') return '/ai-execute';
+  if (module === 'Workflows') return '/workflows';
   return `/crm/${module.toLowerCase().replace(/\s+/g, '-')}`;
 }
 
@@ -1325,7 +1348,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
       <main className="min-h-screen" style={{ backgroundColor: '#fbfcff', color: '#101323' }}>
         <AuthRequired clerkMissing={clerkMissing}>
           <PixelPerfectCrm
-            page={pixelPage as 'Dashboard' | 'Companies' | 'People' | 'Leads' | 'Deals'}
+            page={pixelPage}
             onNavigate={navigatePixelPage}
             onOpenChat={() => setChatOpen(true)}
             onOpenCommand={() => setCommandOpen(true)}
@@ -1333,8 +1356,11 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
             onExport={exportAllData}
             onAdd={(type) => {
               if (type === 'Companies') createCompany();
-              else openAdd(type);
+              else if (crudModuleTypes.includes(type)) openAdd(type);
+              else setCommandOpen(true);
             }}
+            onSaveView={saveCurrentFilter}
+            onSort={() => runCommand('sort-name')}
           />
           {commandOpen && (
             <DigitalWaveCommandMenu query={query} setQuery={setQuery} onClose={() => setCommandOpen(false)} onRun={runCommand} activeModule={activeModule} />
