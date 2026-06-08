@@ -62,6 +62,16 @@ function sendError(response: VercelResponse, error: unknown, fallback: string) {
   response.status(status).json({ error: message });
 }
 
+function clerkErrorMessage(error: unknown) {
+  if (typeof error === 'object' && error) {
+    const clerkErrors = (error as { errors?: Array<{ longMessage?: string; message?: string; code?: string }> }).errors;
+    const firstError = Array.isArray(clerkErrors) ? clerkErrors[0] : undefined;
+    const detailed = firstError?.longMessage || firstError?.message;
+    if (detailed) return firstError?.code ? `${detailed} (${firstError.code})` : detailed;
+  }
+  return error instanceof Error ? error.message : 'Clerk could not create the invitation.';
+}
+
 function queryValue(request: InviteRequest, name: string) {
   const value = request.query?.[name];
   return Array.isArray(value) ? value[0] : value;
@@ -313,7 +323,7 @@ export default async function handler(request: InviteRequest, response: VercelRe
         emailAddress: email,
         expiresInDays: 2,
         ignoreExisting: true,
-        notify: true,
+        notify: false,
         redirectUrl: `${origin}/crm`,
         publicMetadata: {
           role,
@@ -323,7 +333,7 @@ export default async function handler(request: InviteRequest, response: VercelRe
       });
       clerkInvitationId = String((clerkInvitation as { id?: string }).id || '');
     } catch (error) {
-      const clerkError = error instanceof Error ? error.message : 'Clerk could not send the invitation.';
+      const clerkError = clerkErrorMessage(error);
       response.status(502).json({ error: `Clerk invite failed: ${clerkError}` });
       return;
     }
