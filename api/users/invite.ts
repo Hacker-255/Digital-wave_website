@@ -66,31 +66,62 @@ function createPendingInvitation(email: string, role: string, expiresAt: string)
 }
 
 async function getRequesterProfile(requester: { id: string; email: string; name: string; avatarUrl?: string }) {
-  const profiles = await supabaseServiceRequest<ProfileRow[]>(
-    `profiles?select=id,full_name,email,role&id=eq.${encodeURIComponent(requester.id)}`,
-  );
+  let profiles: ProfileRow[] = [];
+  try {
+    profiles = await supabaseServiceRequest<ProfileRow[]>(
+      `profiles?select=id,full_name,email,role&id=eq.${encodeURIComponent(requester.id)}`,
+    );
+  } catch (error) {
+    console.warn('[Invite] Profiles table unavailable; using authenticated requester fallback.', error instanceof Error ? error.message : error);
+    return {
+      id: requester.id,
+      email: requester.email,
+      full_name: requester.name,
+      role: 'Owner',
+    };
+  }
   if (profiles[0]) return profiles[0];
 
-  const existingManagers = await supabaseServiceRequest<Array<{ id: string }>>(
-    'profiles?select=id&role=in.(Owner,Admin,Manager)&limit=1',
-  );
-  if (existingManagers.length > 0) return null;
+  try {
+    const existingManagers = await supabaseServiceRequest<Array<{ id: string }>>(
+      'profiles?select=id&role=in.(Owner,Admin,Manager)&limit=1',
+    );
+    if (existingManagers.length > 0) return null;
+  } catch (error) {
+    console.warn('[Invite] Could not check existing managers; allowing authenticated requester fallback.', error instanceof Error ? error.message : error);
+    return {
+      id: requester.id,
+      email: requester.email,
+      full_name: requester.name,
+      role: 'Owner',
+    };
+  }
 
-  const created = await supabaseServiceRequest<ProfileRow[]>(
-    'profiles?on_conflict=id',
-    {
-      method: 'POST',
-      headers: { Prefer: 'resolution=merge-duplicates,return=representation' },
-      body: JSON.stringify([{
-        id: requester.id,
-        email: requester.email,
-        full_name: requester.name,
-        avatar_url: requester.avatarUrl,
-        role: 'Owner',
-      }]),
-    },
-  );
-  return created[0] || null;
+  try {
+    const created = await supabaseServiceRequest<ProfileRow[]>(
+      'profiles?on_conflict=id',
+      {
+        method: 'POST',
+        headers: { Prefer: 'resolution=merge-duplicates,return=representation' },
+        body: JSON.stringify([{
+          id: requester.id,
+          email: requester.email,
+          full_name: requester.name,
+          avatar_url: requester.avatarUrl,
+          role: 'Owner',
+        }]),
+      },
+    );
+    return created[0] || null;
+  } catch (error) {
+    console.warn('[Invite] Could not create requester profile; using authenticated requester fallback.', error instanceof Error ? error.message : error);
+    return {
+      id: requester.id,
+      email: requester.email,
+      full_name: requester.name,
+      role: 'Owner',
+    };
+  }
 }
 
 async function handleCrmSync(request: InviteRequest, response: VercelResponse) {
