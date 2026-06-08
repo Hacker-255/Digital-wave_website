@@ -8,7 +8,7 @@ import type { ReactNode } from 'react';
 import { Area, AreaChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 import logoUrl from '../../assets/digital-wave-brand-logo.png';
 
-type Page = 'Dashboard' | 'Companies' | 'People' | 'Leads';
+type Page = 'Dashboard' | 'Companies' | 'People' | 'Leads' | 'Deals';
 
 type PixelPerfectCrmProps = {
   page: Page;
@@ -17,7 +17,7 @@ type PixelPerfectCrmProps = {
   onOpenCommand?: () => void;
   onImport?: () => void;
   onExport?: () => void;
-  onAdd?: (type: 'Companies' | 'People' | 'Leads') => void;
+  onAdd?: (type: 'Companies' | 'People' | 'Leads' | 'Deals') => void;
 };
 
 const companies = [
@@ -53,6 +53,17 @@ const leads = [
   ['Daniel Kim', 'IT Manager', 'daniel@arcanum.com', 'Arcanum Systems', 'New', '40', 'Website', 'Omar Khaled', '1 week ago'],
 ] as const;
 
+const deals = [
+  ['NovaGrid Expansion', 'NovaGrid Systems', 'New Lead', '$420,000', 'Mahmoud Mostafa', 'May 24, 2026', 'High'],
+  ['Blue Harbor Logistics Rollout', 'Blue Harbor Logistics', 'Qualified', '$280,000', 'Asmaa Hassan', 'May 27, 2026', 'Medium'],
+  ['Apex Software Renewal', 'Apex Software', 'Proposal', '$210,000', 'Omar Khaled', 'May 29, 2026', 'High'],
+  ['DataPulse Analytics Suite', 'DataPulse Labs', 'Negotiation', '$180,000', 'Mahmoud Mostafa', 'Jun 2, 2026', 'Medium'],
+  ['SkyBridge Support Plan', 'SkyBridge Tech', 'Closed Won', '$160,000', 'Asmaa Hassan', 'Jun 4, 2026', 'Low'],
+  ['CloudBase Migration', 'CloudBase Corp', 'Qualified', '$140,000', 'Omar Khaled', 'Jun 7, 2026', 'Medium'],
+  ['Arcanum Security Package', 'Arcanum Systems', 'New Lead', '$120,000', 'Mahmoud Mostafa', 'Jun 9, 2026', 'High'],
+  ['Northstar Automation Upgrade', 'Northstar Automation', 'Proposal', '$98,000', 'Asmaa Hassan', 'Jun 12, 2026', 'Low'],
+] as const;
+
 const topNav = [
   ['Contacts', 'People'], ['Companies', 'Companies'], ['Sales', 'Leads'], ['Service', 'Tasks'],
   ['Automation', 'Workflows'], ['Reports', 'Dashboards'],
@@ -63,6 +74,7 @@ const sideViews = {
   Companies: ['All companies', 'My companies', 'Recently created', 'Active customers', 'Needs follow-up'],
   People: ['All contacts', 'My contacts', 'Customers', 'Leads', 'Inactive contacts'],
   Leads: ['All leads', 'New leads', 'Contacted', 'Qualified', 'Proposal', 'Closed won'],
+  Deals: ['All deals', 'My deals', 'Open deals', 'Closing this month', 'Closed won'],
 } as const;
 
 const revenueData = [
@@ -94,6 +106,7 @@ export function PixelPerfectCrm({ page, onNavigate, onOpenChat, onOpenCommand, o
           {page === 'Companies' && <CompaniesPage onImport={onImport} onExport={onExport} onAdd={() => onAdd?.('Companies')} />}
           {page === 'People' && <PeoplePage onImport={onImport} onExport={onExport} onAdd={() => onAdd?.('People')} />}
           {page === 'Leads' && <LeadsPage onImport={onImport} onExport={onExport} onAdd={() => onAdd?.('Leads')} />}
+          {page === 'Deals' && <DealsPage onImport={onImport} onExport={onExport} onAdd={() => onAdd?.('Deals')} />}
         </main>
       </div>
     </div>
@@ -137,7 +150,7 @@ function HubSidebar({ page, onNavigate }: { page: Page; onNavigate: (page: strin
         <SideButton icon={<Contact size={17} />} label="Contacts" active={page === 'People'} onClick={() => onNavigate('People')} />
         <SideButton icon={<Building2 size={17} />} label="Companies" active={page === 'Companies'} onClick={() => onNavigate('Companies')} />
         <SideButton icon={<Target size={17} />} label="Leads" active={page === 'Leads'} onClick={() => onNavigate('Leads')} />
-        <SideButton icon={<BriefcaseBusiness size={17} />} label="Deals" onClick={() => onNavigate('Deals')} />
+        <SideButton icon={<BriefcaseBusiness size={17} />} label="Deals" active={page === 'Deals'} onClick={() => onNavigate('Deals')} />
         <SideButton icon={<CalendarDays size={17} />} label="Tasks" onClick={() => onNavigate('Tasks')} />
         <SideButton icon={<Mail size={17} />} label="Email" onClick={() => onNavigate('Settings')} />
         <SideButton icon={<Workflow size={17} />} label="Workflows" onClick={() => onNavigate('Workflows')} />
@@ -160,7 +173,7 @@ function SideButton({ icon, label, active, onClick }: { icon: ReactNode; label: 
   return <button className={active ? 'active' : ''} type="button" onClick={onClick}>{icon}<span>{label}</span></button>;
 }
 
-function PageHeader({ title, subtitle, object, onImport, onExport, onAdd }: { title: string; subtitle: string; object: 'Company' | 'Person' | 'Lead'; onImport?: () => void; onExport?: () => void; onAdd?: () => void }) {
+function PageHeader({ title, subtitle, object, onImport, onExport, onAdd }: { title: string; subtitle: string; object: 'Company' | 'Person' | 'Lead' | 'Deal'; onImport?: () => void; onExport?: () => void; onAdd?: () => void }) {
   return (
     <section className="hub-page-head">
       <div>
@@ -251,6 +264,37 @@ function LeadsPage({ onImport, onExport, onAdd }: { onImport?: () => void; onExp
           <tbody>{leads.map((row, index) => <tr key={row[0]}><td><Check /></td><td><PersonCell name={row[0]} meta={`${row[1]} - ${row[2]}`} index={index} /></td><td>{row[3]}</td><td><Badge label={row[4]} /></td><td><strong className="hub-score">{row[5]}</strong></td><td>{row[6]}</td><td>{row[7]}</td><td>{row[8]}</td><td><MoreHorizontal size={17} /></td></tr>)}</tbody>
         </table>
         <Pagination label="Showing 1-8 of 256 leads" />
+      </ObjectPageLayout>
+    </>
+  );
+}
+
+function DealsPage({ onImport, onExport, onAdd }: { onImport?: () => void; onExport?: () => void; onAdd?: () => void }) {
+  return (
+    <>
+      <PageHeader title="Deals" subtitle="Manage opportunities, stages, close dates, ownership, and forecast value." object="Deal" onImport={onImport} onExport={onExport} onAdd={onAdd} />
+      <section className="hub-kpi-grid">
+        <Kpi icon={<BriefcaseBusiness size={22} />} label="Open Deals" value="42" trend="+12.5%" />
+        <Kpi icon={<LineChart size={22} />} label="Pipeline Value" value="$2.45M" trend="+25.3%" />
+        <Kpi icon={<Target size={22} />} label="Weighted Forecast" value="$860K" trend="+9.4%" />
+        <Kpi icon={<CheckCircle2 size={22} />} label="Won This Month" value="12" trend="+18.1%" />
+      </section>
+      <ObjectPageLayout filters={['Deal owner', 'Deal stage', 'Close date', 'Amount', 'Forecast category']}>
+        <ObjectToolbar views={['All deals', 'My deals', 'Open deals', 'Closing this month', 'Closed won']} placeholder="Search deals" />
+        <div className="hub-deal-stage-strip">
+          {['New Lead', 'Qualified', 'Proposal', 'Negotiation', 'Closed Won'].map((stage, index) => (
+            <div key={stage}>
+              <b>{stage}</b>
+              <span>{[128, 64, 34, 18, 12][index]} records</span>
+              <strong>{['$420,000', '$280,000', '$210,000', '$180,000', '$160,000'][index]}</strong>
+            </div>
+          ))}
+        </div>
+        <table className="hub-table">
+          <thead><tr><th><Check /></th><th>Deal name</th><th>Company</th><th>Stage</th><th>Amount</th><th>Owner</th><th>Close date</th><th>Priority</th><th /></tr></thead>
+          <tbody>{deals.map((row, index) => <tr key={row[0]}><td><Check /></td><td><CompanyCell name={row[0]} index={index} /></td><td>{row[1]}</td><td><Badge label={row[2]} /></td><td><strong className="hub-score">{row[3]}</strong></td><td>{row[4]}</td><td>{row[5]}</td><td><Badge label={row[6]} /></td><td><MoreHorizontal size={17} /></td></tr>)}</tbody>
+        </table>
+        <Pagination label="Showing 1-8 of 42 deals" />
       </ObjectPageLayout>
     </>
   );

@@ -697,6 +697,40 @@
   flex: 1;
 }
 
+.hub-deal-stage-strip {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(150px, 1fr));
+  gap: 10px;
+  border-bottom: 1px solid var(--hub-border);
+  padding: 14px 16px;
+  overflow-x: auto;
+}
+
+.hub-deal-stage-strip div {
+  display: grid;
+  gap: 3px;
+  min-width: 150px;
+  border: 1px solid rgba(2, 132, 255, 0.16);
+  border-radius: 9px;
+  background: linear-gradient(135deg, rgba(2, 132, 255, 0.1), rgba(6, 200, 220, 0.04));
+  padding: 10px 12px;
+}
+
+.hub-deal-stage-strip b {
+  color: var(--hub-text);
+  font-size: 13px;
+}
+
+.hub-deal-stage-strip span {
+  color: var(--hub-muted);
+  font-size: 12px;
+}
+
+.hub-deal-stage-strip strong {
+  color: var(--hub-blue);
+  font-size: 15px;
+}
+
 .hub-table {
   width: 100%;
   min-width: 1060px;

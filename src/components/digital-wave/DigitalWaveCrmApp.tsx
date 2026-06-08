@@ -51,7 +51,7 @@ interface DigitalWaveCrmAppProps {
 const AI_MODULES = ['AI Execute', 'AI Ask'];
 const MODULE_ACTIONS = ['Companies', 'Workflows', ...AI_MODULES];
 const PERSISTED_MODULES = ['People', 'Tasks', 'Notes', 'Opportunities', 'Deals', 'Leads', 'Meetings', 'Projects', 'Files'];
-const PIXEL_PAGE_MODULES = ['Dashboards', 'Companies', 'People', 'Leads'];
+const PIXEL_PAGE_MODULES = ['Dashboards', 'Companies', 'People', 'Leads', 'Deals'];
 
 type CrudEntity = CrmPerson | CrmTask | CrmNote | CrmOpportunity | CrmDeal | CrmLead | CrmMeeting | CrmProject | CrmFile | CompanyTableRow;
 
@@ -92,6 +92,7 @@ function initialCrmModuleFromPath() {
   if (path === '/companies' || path === '/crm/companies') return 'Companies';
   if (path === '/people' || path === '/crm/people') return 'People';
   if (path === '/leads' || path === '/crm/leads') return 'Leads';
+  if (path === '/deals' || path === '/crm/deals') return 'Deals';
   if (path.startsWith('/crm/workflows') || path === '/workflows') return 'Workflows';
   return 'Dashboards';
 }
@@ -101,6 +102,7 @@ function exactPathForModule(module: string) {
   if (module === 'Companies') return '/companies';
   if (module === 'People') return '/people';
   if (module === 'Leads') return '/leads';
+  if (module === 'Deals') return '/deals';
   return `/crm/${module.toLowerCase().replace(/\s+/g, '-')}`;
 }
 
@@ -1323,7 +1325,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
       <main className="min-h-screen" style={{ backgroundColor: '#fbfcff', color: '#101323' }}>
         <AuthRequired clerkMissing={clerkMissing}>
           <PixelPerfectCrm
-            page={pixelPage as 'Dashboard' | 'Companies' | 'People' | 'Leads'}
+            page={pixelPage as 'Dashboard' | 'Companies' | 'People' | 'Leads' | 'Deals'}
             onNavigate={navigatePixelPage}
             onOpenChat={() => setChatOpen(true)}
             onOpenCommand={() => setCommandOpen(true)}
