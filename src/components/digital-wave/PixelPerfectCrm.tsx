@@ -4,9 +4,10 @@ import {
   Filter, Home, LineChart, Mail, Menu, MoreHorizontal, Plus, Search, Settings,
   SlidersHorizontal, SortAsc, Sparkles, Target, Upload, Workflow,
 } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Area, AreaChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 import logoUrl from '../../assets/digital-wave-brand-logo.png';
+import { useAuth } from '../../contexts/AuthContext';
 
 type PixelPerfectCrmProps = {
   page: string;
@@ -198,11 +199,13 @@ const sourceData = [
 ];
 
 export function PixelPerfectCrm({ page, onNavigate, onOpenChat, onOpenCommand, onImport, onExport, onAdd, onSaveView, onSort }: PixelPerfectCrmProps) {
+  const [inviteOpen, setInviteOpen] = useState(false);
+
   return (
     <div className="hub-crm">
       <HubTopbar activePage={page} onNavigate={onNavigate} onOpenChat={onOpenChat} onOpenCommand={onOpenCommand} />
       <div className="hub-body">
-        <HubSidebar page={page} onNavigate={onNavigate} onCreate={() => onAdd?.(page)} onSaveView={onSaveView} />
+        <HubSidebar page={page} onNavigate={onNavigate} onCreate={() => onAdd?.(page)} onSaveView={onSaveView} onInvite={() => setInviteOpen(true)} />
         <main className="hub-main">
           {page === 'Dashboard' && <DashboardPage onOpenCommand={onOpenCommand} onAdd={() => onAdd?.('People')} />}
           {page === 'Companies' && <CompaniesPage onImport={onImport} onExport={onExport} onAdd={() => onAdd?.('Companies')} />}
@@ -220,12 +223,14 @@ export function PixelPerfectCrm({ page, onNavigate, onOpenChat, onOpenCommand, o
               }}
               onOpenChat={onOpenChat}
               onOpenCommand={onOpenCommand}
+              onInvite={() => setInviteOpen(true)}
               onSaveView={onSaveView}
               onSort={onSort}
             />
           )}
         </main>
       </div>
+      {inviteOpen && <InviteTeamModal onClose={() => setInviteOpen(false)} />}
     </div>
   );
 }
@@ -258,7 +263,7 @@ function HubTopbar({ activePage, onNavigate, onOpenChat, onOpenCommand }: { acti
   );
 }
 
-function HubSidebar({ page, onNavigate, onCreate, onSaveView }: { page: string; onNavigate: (page: string) => void; onCreate?: () => void; onSaveView?: () => void }) {
+function HubSidebar({ page, onNavigate, onCreate, onSaveView, onInvite }: { page: string; onNavigate: (page: string) => void; onCreate?: () => void; onSaveView?: () => void; onInvite?: () => void }) {
   const views = sideViews[page] || ['All records', 'Assigned to me', 'Recently updated', 'Needs attention'];
   return (
     <aside className="hub-sidebar">
@@ -282,6 +287,7 @@ function HubSidebar({ page, onNavigate, onCreate, onSaveView }: { page: string; 
       </div>
       <div className="hub-sidebar-section">
         <p>Workspace</p>
+        <button type="button" onClick={onInvite}><Contact size={14} /> Invite to team</button>
         <button type="button" onClick={() => onNavigate('Settings')}><Settings size={14} /> Settings</button>
         <button type="button" onClick={() => onNavigate('Settings')}><CreditCard size={14} /> Billing</button>
       </div>
@@ -431,6 +437,7 @@ function GenericModulePage({
   onAdd,
   onOpenChat,
   onOpenCommand,
+  onInvite,
   onSaveView,
   onSort,
 }: {
@@ -440,6 +447,7 @@ function GenericModulePage({
   onAdd?: () => void;
   onOpenChat?: () => void;
   onOpenCommand?: () => void;
+  onInvite?: () => void;
   onSaveView?: () => void;
   onSort?: () => void;
 }) {
@@ -455,10 +463,10 @@ function GenericModulePage({
   if (page === 'Settings') {
     return (
       <>
-        <PageHeader title="Settings" subtitle={meta.subtitle} object="Setting" ctaLabel="Open Command" onImport={onOpenCommand} onExport={onExport} onAdd={onOpenCommand} />
+        <PageHeader title="Settings" subtitle={meta.subtitle} object="Setting" ctaLabel="Invite to team" onImport={onOpenCommand} onExport={onExport} onAdd={onInvite} />
         <section className="hub-settings-grid">
           {[
-            ['Team & permissions', 'Invite users, assign roles, and control CRM access.', 'Open team settings'],
+            ['Team & permissions', 'Invite users, assign roles, and control CRM access.', 'Invite to team'],
             ['Email & notifications', 'Configure Resend, CRM notifications, and meeting reminders.', 'Send test email'],
             ['Integrations', 'Manage Gemini, Supabase, Clerk, calendar, WhatsApp, and webhooks.', 'Open integrations'],
             ['Billing', 'Review subscription, invoices, payment methods, and plan limits.', 'Open billing'],
@@ -469,7 +477,7 @@ function GenericModulePage({
               <span>{index + 1}</span>
               <h2>{card[0]}</h2>
               <p>{card[1]}</p>
-              <button type="button" onClick={index === 1 ? onImport : onOpenCommand}>{card[2]}</button>
+              <button type="button" onClick={index === 0 ? onInvite : index === 1 ? onImport : onOpenCommand}>{card[2]}</button>
             </article>
           ))}
         </section>
@@ -621,4 +629,81 @@ function Check() {
 
 function Pagination({ label }: { label: string }) {
   return <div className="hub-pagination"><span>{label}</span><div><button type="button">Prev</button><button className="active" type="button">1</button><button type="button">2</button><button type="button">Next</button></div></div>;
+}
+
+function InviteTeamModal({ onClose }: { onClose: () => void }) {
+  const { inviteUser, isManager } = useAuth();
+  const [email, setEmail] = useState('');
+  const [role, setRole] = useState('Employee');
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const [inviteLink, setInviteLink] = useState('');
+  const [error, setError] = useState('');
+
+  const submit = async () => {
+    setError('');
+    setMessage('');
+    setInviteLink('');
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      setError('Enter a valid email address.');
+      return;
+    }
+    if (!isManager) {
+      setError('Only owners, admins, and managers can invite teammates.');
+      return;
+    }
+    setLoading(true);
+    const result = await inviteUser(cleanEmail, role as any);
+    setLoading(false);
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
+    setMessage(result.warning || 'Invitation sent successfully.');
+    setInviteLink(result.inviteLink || '');
+    setEmail('');
+    setRole('Employee');
+  };
+
+  return (
+    <div className="hub-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="invite-team-title">
+      <section className="hub-invite-modal">
+        <div className="hub-invite-head">
+          <div>
+            <p className="hub-eyebrow">Team access</p>
+            <h2 id="invite-team-title">Invite to team</h2>
+            <span>Send a secure Digital Wave CRM invitation with the correct role.</span>
+          </div>
+          <button type="button" onClick={onClose} aria-label="Close">x</button>
+        </div>
+
+        <label className="hub-form-field">
+          <span>Email address</span>
+          <input value={email} onChange={(event) => setEmail(event.target.value)} placeholder="teammate@company.com" type="email" />
+        </label>
+
+        <label className="hub-form-field">
+          <span>Role</span>
+          <select value={role} onChange={(event) => setRole(event.target.value)}>
+            {['Admin', 'Manager', 'Employee', 'Viewer'].map((item) => <option key={item} value={item}>{item}</option>)}
+          </select>
+        </label>
+
+        <div className="hub-role-note">
+          <b>{role}</b>
+          <p>{role === 'Admin' ? 'Can manage workspace settings, users, data, and CRM records.' : role === 'Manager' ? 'Can invite users and manage team CRM work.' : role === 'Employee' ? 'Can create and manage assigned CRM records.' : 'Can view CRM data without making changes.'}</p>
+        </div>
+
+        {error && <div className="hub-invite-alert error">{error}</div>}
+        {message && <div className="hub-invite-alert success">{message}</div>}
+        {inviteLink && <div className="hub-invite-link"><span>Invite link</span><code>{inviteLink}</code></div>}
+
+        <div className="hub-invite-actions">
+          <button type="button" onClick={onClose}>Cancel</button>
+          <button className="primary" type="button" onClick={submit} disabled={loading || !email.trim()}>{loading ? 'Sending...' : 'Send invite'}</button>
+        </div>
+      </section>
+    </div>
+  );
 }
