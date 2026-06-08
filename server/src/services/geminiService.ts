@@ -34,9 +34,9 @@ export async function generateGeminiAnswer({
   systemInstruction = 'You are a concise CRM assistant for Digital Wave CRM. Give practical sales and workflow recommendations.',
   maxOutputTokens = 700,
 }: GenerateGeminiInput) {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
   if (!apiKey) {
-    throw new GeminiServiceError('AI service is not configured.', 500, 'GEMINI_API_KEY is not configured on the server.');
+    throw new GeminiServiceError('AI service is not configured.', 500, 'Gemini API key is not configured on the server.');
   }
 
   const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
