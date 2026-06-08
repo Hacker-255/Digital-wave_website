@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Github, Mail, Menu, X } from 'lucide-react';
-import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton, useUser } from '@clerk/clerk-react';
+import { SignInButton, SignUpButton, UserButton, useAuth, useUser } from '@clerk/clerk-react';
 import { cn } from '../../utils/cn';
 import { APP_NAME, CRM_ROUTE } from '../../constants/design';
 import { NAV_LINKS } from '../../constants/data';
@@ -12,6 +12,8 @@ interface NavbarProps {
 }
 
 function AuthControls({ clerkMissing }: NavbarProps) {
+  const { isSignedIn } = useAuth();
+
   if (clerkMissing) {
     return (
       <div className="flex items-center gap-2">
@@ -20,22 +22,19 @@ function AuthControls({ clerkMissing }: NavbarProps) {
       </div>
     );
   }
+  if (isSignedIn) {
+    return <UserButton afterSignOutUrl="/" />;
+  }
+
   return (
-    <>
-      <SignedOut>
-        <div className="flex items-center gap-3">
-          <SignInButton mode="modal" forceRedirectUrl={CRM_ROUTE}>
-            <button className="landing-ghost">Sign In</button>
-          </SignInButton>
-          <SignUpButton mode="modal" forceRedirectUrl={CRM_ROUTE}>
-            <button className="landing-primary">Get Started</button>
-          </SignUpButton>
-        </div>
-      </SignedOut>
-      <SignedIn>
-        <UserButton afterSignOutUrl="/" />
-      </SignedIn>
-    </>
+    <div className="flex items-center gap-3">
+      <SignInButton mode="modal" forceRedirectUrl={CRM_ROUTE}>
+        <button className="landing-ghost">Sign In</button>
+      </SignInButton>
+      <SignUpButton mode="modal" forceRedirectUrl={CRM_ROUTE}>
+        <button className="landing-primary">Get Started</button>
+      </SignUpButton>
+    </div>
   );
 }
 
