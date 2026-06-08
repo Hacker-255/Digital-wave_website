@@ -1375,17 +1375,31 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
             <CsvImportModal onClose={() => setImportOpen(false)} onImport={handleCsvImport} />
           )}
           {crudModal && (
-            <CrudModal
-              title={crudModal.item ? `Edit ${crudModal.type.slice(0, -1)}` : `Add ${crudModal.type.slice(0, -1)}`}
-              fields={entityConfigs[crudModal.type]?.fields || []}
-              initial={crudModal.item ? entityConfigs[crudModal.type]?.fromEntity(crudModal.item) || {} : entityConfigs[crudModal.type]?.empty() || {}}
-              onClose={() => setCrudModal(null)}
-              onSave={handleCrudSave}
-              saving={crudSaving}
-              error={crudError}
-              fieldErrors={fieldErrors}
-              entityType={crudModal.type}
-            />
+            crudModal.type === 'Companies' ? (
+              <CrudModal
+                title={crudModal.item ? 'Edit Company' : 'Add Company'}
+                fields={companyFields}
+                initial={crudModal.item ? { name: (crudModal.item as CompanyTableRow).name, domain: (crudModal.item as CompanyTableRow).domain, employees: String((crudModal.item as CompanyTableRow).employees || ''), owner: (crudModal.item as CompanyTableRow).owner, linkedin: (crudModal.item as CompanyTableRow).linkedin } : { name: '', domain: '', employees: '', owner: '', linkedin: '' }}
+                onClose={() => setCrudModal(null)}
+                onSave={handleCompanyCrudSave}
+                saving={crudSaving}
+                error={crudError}
+                fieldErrors={fieldErrors}
+                entityType="Companies"
+              />
+            ) : (
+              <CrudModal
+                title={crudModal.item ? `Edit ${crudModal.type.slice(0, -1)}` : `Add ${crudModal.type.slice(0, -1)}`}
+                fields={entityConfigs[crudModal.type]?.fields || []}
+                initial={crudModal.item ? entityConfigs[crudModal.type]?.fromEntity(crudModal.item) || {} : entityConfigs[crudModal.type]?.empty() || {}}
+                onClose={() => setCrudModal(null)}
+                onSave={handleCrudSave}
+                saving={crudSaving}
+                error={crudError}
+                fieldErrors={fieldErrors}
+                entityType={crudModal.type}
+              />
+            )
           )}
         </AuthRequired>
       </main>
