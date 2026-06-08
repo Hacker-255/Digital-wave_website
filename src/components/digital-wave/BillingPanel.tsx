@@ -50,6 +50,25 @@ export function BillingPanel({ settings, onChange }: { settings: BillingSettings
     onChange({ ...settings, billingCycle: settings.billingCycle === 'monthly' ? 'yearly' : 'monthly' });
   };
 
+  const downloadInvoice = (invoice: InvoiceRecord) => {
+    const contents = [
+      'Digital Wave CRM Invoice',
+      `Invoice: ${invoice.id}`,
+      `Date: ${invoice.date}`,
+      `Plan: ${invoice.plan}`,
+      `Amount: ${invoice.currency} ${invoice.amount}`,
+      `Status: ${invoice.status}`,
+      `Period: ${invoice.periodStart} to ${invoice.periodEnd}`,
+    ].join('\n');
+    const blob = new Blob([contents], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${invoice.id}.txt`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-5">
       {/* Current Plan */}
@@ -184,7 +203,7 @@ export function BillingPanel({ settings, onChange }: { settings: BillingSettings
               <div className="flex items-center gap-3">
                 <div>
                   <p className="text-xs font-medium" style={{ color: 'var(--crm-text)' }}>{inv.plan} - ${inv.amount}</p>
-                  <p className="text-[10px]" style={{ color: 'var(--crm-text-muted)' }}>{inv.date} - {inv.periodStart} �' {inv.periodEnd}</p>
+                  <p className="text-[10px]" style={{ color: 'var(--crm-text-muted)' }}>{inv.date} - {inv.periodStart} to {inv.periodEnd}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -192,7 +211,7 @@ export function BillingPanel({ settings, onChange }: { settings: BillingSettings
                   style={{ background: inv.status === 'paid' ? 'rgba(34,197,94,0.1)' : inv.status === 'failed' ? 'rgba(248,113,113,0.1)' : 'rgba(250,204,21,0.1)', color: inv.status === 'paid' ? '#22c55e' : inv.status === 'failed' ? '#f87171' : '#eab308' }}>
                   {inv.status}
                 </span>
-                <button type="button" className="p-1 rounded hover:bg-white/10"><Download size={12} style={{ color: 'var(--crm-text-muted)' }} /></button>
+                <button type="button" onClick={() => downloadInvoice(inv)} className="p-1 rounded hover:bg-white/10" title="Download invoice"><Download size={12} style={{ color: 'var(--crm-text-muted)' }} /></button>
               </div>
             </div>
           ))}

@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Check, ChevronDown, ChevronLeft, ChevronRight, Sparkles, Star, Quote, Brain, Zap, Workflow, GitBranch, LayoutDashboard, Bell, Send } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { SignInButton, SignUpButton } from '@clerk/clerk-react';
+import { SignUpButton } from '@clerk/clerk-react';
 import { cn } from '../../utils/cn';
 import { CRM_ROUTE } from '../../constants/design';
 import { companies, FEATURES, iconMap, PRICING_PLANS, TESTIMONIALS, FAQ_ITEMS, NAV_LINKS } from '../../constants/data';
@@ -17,7 +17,7 @@ function openCheckout(planName: string) {
   const checkoutUrl = CHECKOUT_URLS[planName];
 
   if (!checkoutUrl) {
-    window.alert(`Checkout is not configured for the ${planName} plan.`);
+    window.location.href = `mailto:contact@digital-wave.solutions?subject=${encodeURIComponent(`${planName} plan request`)}`;
     return;
   }
 
@@ -284,17 +284,15 @@ export function CtaSection({ clerkMissing }: LandingSectionProps) {
         <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
           {clerkMissing ? (
             <>
-              <button className="landing-primary" onClick={() => window.alert('Set VITE_CLERK_PUBLISHABLE_KEY in .env to enable Clerk authentication.')}>Start Free Trial <ArrowRight size={16} /></button>
-              <button className="landing-ghost" onClick={() => window.alert('Set VITE_CLERK_PUBLISHABLE_KEY in .env to enable Clerk authentication.')}>Book a Demo</button>
+              <a className="landing-primary" href={CRM_ROUTE}>Start Free Trial <ArrowRight size={16} /></a>
+              <a className="landing-ghost" href="mailto:contact@digital-wave.solutions?subject=Book%20a%20Digital%20Wave%20CRM%20demo">Book a Demo</a>
             </>
           ) : (
             <>
               <SignUpButton mode="modal" forceRedirectUrl={CRM_ROUTE}>
                 <button className="landing-primary">Start Free Trial <ArrowRight size={16} /></button>
               </SignUpButton>
-              <SignInButton mode="modal" forceRedirectUrl={CRM_ROUTE}>
-                <button className="landing-ghost">Book a Demo</button>
-              </SignInButton>
+              <a className="landing-ghost" href="mailto:contact@digital-wave.solutions?subject=Book%20a%20Digital%20Wave%20CRM%20demo">Book a Demo</a>
             </>
           )}
         </div>
@@ -304,6 +302,12 @@ export function CtaSection({ clerkMissing }: LandingSectionProps) {
 }
 
 export function Footer() {
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const requestNewsletter = () => {
+    const body = newsletterEmail ? `Please add ${newsletterEmail} to the Digital Wave CRM updates list.` : 'Please add me to the Digital Wave CRM updates list.';
+    window.location.href = `mailto:contact@digital-wave.solutions?subject=Digital%20Wave%20CRM%20updates&body=${encodeURIComponent(body)}`;
+  };
+
   return (
     <footer className="relative border-t border-white/5 bg-[#050816]">
       <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 via-transparent to-transparent" />
@@ -322,8 +326,8 @@ export function Footer() {
           <div>
             <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-300">Stay Updated</h4>
             <div className="flex gap-2">
-              <input placeholder="Enter your email" className="block h-8 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-gray-300 placeholder:text-gray-500 transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" />
-              <button className="inline-flex h-8 shrink-0 items-center justify-center rounded-xl bg-blue-600 px-2.5 py-1 text-xs font-medium text-white transition-all hover:bg-blue-500"><Send size={12} /></button>
+              <input value={newsletterEmail} onChange={(event) => setNewsletterEmail(event.target.value)} placeholder="Enter your email" className="block h-8 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-gray-300 placeholder:text-gray-500 transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" />
+              <button type="button" onClick={requestNewsletter} className="inline-flex h-8 shrink-0 items-center justify-center rounded-xl bg-blue-600 px-2.5 py-1 text-xs font-medium text-white transition-all hover:bg-blue-500"><Send size={12} /></button>
             </div>
           </div>
         </div>

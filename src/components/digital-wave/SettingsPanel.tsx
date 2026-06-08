@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useClerk } from '@clerk/clerk-react';
 import {
   User, Building2, Palette, Bell, Shield, Users, Bot, Workflow,
   Puzzle, CreditCard, Database, Key, Mail, SlidersHorizontal, Settings2,
@@ -22,6 +23,7 @@ import { api } from '../../services/apiClient';
 import {
   loadSettings, saveSettings, resetSettings,
   type CrmSettings, type ProfileSettings, type AppearanceSettings,
+  type WorkspaceSettings,
   type NotificationSettings, type SecuritySettings, type AiSettings,
   type WorkflowSettings, type IntegrationSettings, type IntegrationItem,
   type BillingSettings, type DataBackupSettings, type ApiWebhookSettings,
@@ -124,6 +126,7 @@ export function SettingsPanel({ onNavigate }: SettingsPanelProps) {
   const [passwordSuccess, setPasswordSuccess] = useState(false);
   const { theme, setTheme } = useTheme();
   const { isManager } = useAuth();
+  const { openUserProfile } = useClerk();
 
   const categories = useMemo(() => buildCategories(isManager), [isManager]);
 
@@ -153,6 +156,10 @@ export function SettingsPanel({ onNavigate }: SettingsPanelProps) {
 
   const updateAppearance = useCallback((patch: Partial<AppearanceSettings>) => {
     persist({ ...settings, appearance: { ...settings.appearance, ...patch } });
+  }, [settings, persist]);
+
+  const updateWorkspace = useCallback((patch: Partial<WorkspaceSettings>) => {
+    persist({ ...settings, workspace: { ...settings.workspace, ...patch } });
   }, [settings, persist]);
 
   const updateNotifications = useCallback((patch: Partial<NotificationSettings>) => {
@@ -214,10 +221,15 @@ export function SettingsPanel({ onNavigate }: SettingsPanelProps) {
     if (!passwordForm.current) { setPasswordError('Current password is required'); return; }
     if (passwordForm.newPass.length < 6) { setPasswordError('New password must be at least 6 characters'); return; }
     if (passwordForm.newPass !== passwordForm.confirm) { setPasswordError('Passwords do not match'); return; }
+    openUserProfile();
     setPasswordSuccess(true);
     setPasswordForm({ current: '', newPass: '', confirm: '' });
     setTimeout(() => setPasswordSuccess(false), 3000);
-  }, [passwordForm]);
+  }, [openUserProfile, passwordForm]);
+
+  const revokeSession = useCallback((id: string) => {
+    updateSecurity({ sessions: settings.security.sessions.filter((session) => session.id !== id) });
+  }, [settings.security.sessions, updateSecurity]);
 
   const renderContent = () => {
     switch (activeCategory) {
@@ -299,7 +311,7 @@ export function SettingsPanel({ onNavigate }: SettingsPanelProps) {
                 <Input value={passwordForm.newPass} onChange={(v) => setPasswordForm((p) => ({ ...p, newPass: v }))} placeholder="New password" type={showPassword ? 'text' : 'password'} />
                 <Input value={passwordForm.confirm} onChange={(v) => setPasswordForm((p) => ({ ...p, confirm: v }))} placeholder="Confirm new password" type={showPassword ? 'text' : 'password'} />
                 {passwordError && <p className="text-xs text-red-400">{passwordError}</p>}
-                {passwordSuccess && <p className="text-xs text-emerald-400 flex items-center gap-1"><Check size={12} /> Password updated successfully</p>}
+                {passwordSuccess && <p className="text-xs text-emerald-400 flex items-center gap-1"><Check size={12} /> Opened account security to finish password update</p>}
                 <button onClick={handlePasswordChange} type="button" className="digital-wave-btn digital-wave-btn-primary">Update Password</button>
               </div>
             </div>
@@ -322,7 +334,7 @@ export function SettingsPanel({ onNavigate }: SettingsPanelProps) {
                         <p className="text-[10px]" style={{ color: 'var(--crm-text-muted)' }}>{s.location} - {s.lastActive}</p>
                       </div>
                     </div>
-                    {!s.current && <button type="button" className="digital-wave-btn-ghost digital-wave-btn-danger text-xs hover:underline">Revoke</button>}
+                    {!s.current && <button type="button" onClick={() => revokeSession(s.id)} className="digital-wave-btn-ghost digital-wave-btn-danger text-xs hover:underline">Revoke</button>}
                   </div>
                 ))}
               </div>
@@ -392,10 +404,10 @@ export function SettingsPanel({ onNavigate }: SettingsPanelProps) {
         <>
           <SectionHeader title="Workspace" desc="Manage your workspace settings." />
           <div className="space-y-1">
-            <Field label="Workspace Name"><Input value="Digital Wave CRM" onChange={() => {}} placeholder="Workspace name" /></Field>
-            <Field label="Workspace URL"><Input value="digitalwave.crm.com" onChange={() => {}} placeholder="workspace URL" /></Field>
-            <Field label="Industry"><Select value="Technology" onChange={() => {}} options={['Technology', 'Finance', 'Healthcare', 'Education', 'E-commerce', 'Other']} /></Field>
-            <Field label="Workspace Size"><Select value="10-50" onChange={() => {}} options={['1-10', '10-50', '50-200', '200-1000', '1000+']} /></Field>
+            <Field label="Workspace Name"><Input value={settings.workspace.name} onChange={(v) => updateWorkspace({ name: v })} placeholder="Workspace name" /></Field>
+            <Field label="Workspace URL"><Input value={settings.workspace.url} onChange={(v) => updateWorkspace({ url: v })} placeholder="workspace URL" /></Field>
+            <Field label="Industry"><Select value={settings.workspace.industry} onChange={(v) => updateWorkspace({ industry: v })} options={['Technology', 'Finance', 'Healthcare', 'Education', 'E-commerce', 'Other']} /></Field>
+            <Field label="Workspace Size"><Select value={settings.workspace.size} onChange={(v) => updateWorkspace({ size: v })} options={['1-10', '10-50', '50-200', '200-1000', '1000+']} /></Field>
           </div>
         </>
       );

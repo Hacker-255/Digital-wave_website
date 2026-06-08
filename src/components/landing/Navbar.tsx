@@ -92,8 +92,8 @@ export function Navbar({ clerkMissing }: NavbarProps) {
               <div className="mt-3 flex flex-col gap-2 border-t border-white/10 pt-3">
                 {clerkMissing ? (
                   <>
-                    <button className="landing-ghost w-full" onClick={() => window.alert('Set VITE_CLERK_PUBLISHABLE_KEY in .env to enable Clerk authentication.')}>Sign In</button>
-                    <button className="landing-primary w-full" onClick={() => window.alert('Set VITE_CLERK_PUBLISHABLE_KEY in .env to enable Clerk authentication.')}>Get Started</button>
+                    <a className="landing-ghost w-full" href={CRM_ROUTE} onClick={() => setMobileOpen(false)}>Sign In</a>
+                    <a className="landing-primary w-full" href={CRM_ROUTE} onClick={() => setMobileOpen(false)}>Get Started</a>
                   </>
                 ) : (
                   <>

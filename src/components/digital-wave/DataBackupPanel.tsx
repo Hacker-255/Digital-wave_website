@@ -6,6 +6,7 @@ import type { DataBackupSettings, BackupRecord } from '../../services/settingsSe
 export function DataBackupPanel({ settings, onChange }: { settings: DataBackupSettings; onChange: (s: DataBackupSettings) => void }) {
   const [exporting, setExporting] = useState(false);
   const [restoreId, setRestoreId] = useState<string | null>(null);
+  const [restoreMessage, setRestoreMessage] = useState('');
 
   const handleExport = () => {
     setExporting(true);
@@ -31,6 +32,15 @@ export function DataBackupPanel({ settings, onChange }: { settings: DataBackupSe
 
   const deleteBackup = (id: string) => {
     onChange({ ...settings, backups: settings.backups.filter((b) => b.id !== id) });
+  };
+
+  const restoreBackup = () => {
+    const backup = settings.backups.find((b) => b.id === restoreId);
+    if (!backup) return;
+    onChange({ ...settings, lastRestore: new Date().toISOString() });
+    setRestoreMessage(`${backup.name} restored successfully.`);
+    setRestoreId(null);
+    setTimeout(() => setRestoreMessage(''), 3000);
   };
 
   return (
@@ -103,6 +113,11 @@ export function DataBackupPanel({ settings, onChange }: { settings: DataBackupSe
                 <span className="text-[10px] rounded-full px-2 py-0.5" style={{ background: b.status === 'completed' ? 'rgba(34,197,94,0.1)' : 'rgba(248,113,113,0.1)', color: b.status === 'completed' ? '#22c55e' : '#f87171' }}>
                   {b.status}
                 </span>
+                {b.status === 'completed' && (
+                  <button onClick={() => { setRestoreId(b.id); setRestoreMessage(''); }} type="button" className="p-1 rounded hover:bg-white/10" title="Restore backup">
+                    <Upload size={11} style={{ color: 'var(--crm-text-muted)' }} />
+                  </button>
+                )}
                 <button onClick={() => deleteBackup(b.id)} type="button" className="p-1 rounded hover:bg-red-500/10"><Trash2 size={11} style={{ color: '#f87171' }} /></button>
               </div>
             </div>
@@ -116,15 +131,19 @@ export function DataBackupPanel({ settings, onChange }: { settings: DataBackupSe
         {restoreId ? (
           <div className="space-y-2">
             <p className="text-xs rounded-lg px-3 py-2" style={{ background: 'rgba(250,204,21,0.1)', color: '#eab308' }}>
-              Are you sure you want to restore this backup? Current data will be overwritten.
+              Are you sure you want to restore {settings.backups.find((b) => b.id === restoreId)?.name || 'this backup'}? Current data will be overwritten.
             </p>
             <div className="flex gap-2">
-              <button onClick={() => { setRestoreId(null); setTimeout(() => onChange({ ...settings }), 100); }} type="button" className="rounded-lg px-3 py-1.5 text-xs font-medium" style={{ background: '#f87171', color: '#fff' }}>Confirm Restore</button>
+              <button onClick={restoreBackup} type="button" className="rounded-lg px-3 py-1.5 text-xs font-medium" style={{ background: '#f87171', color: '#fff' }}>Confirm Restore</button>
               <button onClick={() => setRestoreId(null)} type="button" className="rounded-lg px-3 py-1.5 text-xs border" style={{ borderColor: 'var(--crm-border)', color: 'var(--crm-text-muted)' }}>Cancel</button>
             </div>
           </div>
         ) : (
-          <p className="text-xs" style={{ color: 'var(--crm-text-muted)' }}>Select a backup from the list above and click restore to recover your data.</p>
+          <div className="space-y-2">
+            <p className="text-xs" style={{ color: 'var(--crm-text-muted)' }}>Select a backup from the list above and click restore to recover your data.</p>
+            {settings.lastRestore && <p className="text-[10px]" style={{ color: 'var(--crm-text-muted)' }}>Last restore: {new Date(settings.lastRestore).toLocaleString()}</p>}
+            {restoreMessage && <p className="text-xs text-emerald-400 flex items-center gap-1">{restoreMessage}</p>}
+          </div>
         )}
       </div>
     </div>

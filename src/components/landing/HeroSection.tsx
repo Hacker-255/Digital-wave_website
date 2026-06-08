@@ -65,8 +65,8 @@ export function HeroSection({ clerkMissing }: HeroSectionProps) {
           <motion.div variants={{ hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0 } }} className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
             {clerkMissing ? (
               <>
-                <button className="landing-primary" onClick={() => window.alert('Set VITE_CLERK_PUBLISHABLE_KEY in .env to enable Clerk authentication.')}>Start Free Trial <ArrowRight size={16} /></button>
-                <button className="landing-ghost" onClick={() => window.alert('Set VITE_CLERK_PUBLISHABLE_KEY in .env to enable Clerk authentication.')}>CRM Login</button>
+                <a className="landing-primary" href={CRM_ROUTE}>Start Free Trial <ArrowRight size={16} /></a>
+                <a className="landing-ghost" href={CRM_ROUTE}>CRM Login</a>
               </>
             ) : (
               <>
