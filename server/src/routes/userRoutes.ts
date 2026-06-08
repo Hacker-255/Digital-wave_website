@@ -55,7 +55,7 @@ router.post('/invite', requireManager, async (req, res) => {
     const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
     await clerk.invitations.createInvitation({
       emailAddress: invitation.email,
-      expiresInDays: 7,
+      expiresInDays: 2,
       ignoreExisting: true,
       notify: true,
       redirectUrl: `${requestOrigin(req)}/crm`,
@@ -90,7 +90,11 @@ router.post('/invite', requireManager, async (req, res) => {
     res.status(201).json({ invitation: safeInvitation, inviteLink, emailSent: true });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Failed to invite user';
-    res.status(400).json({ error: message });
+    if (/jwt.*expired|token.*expired|session.*expired/i.test(message)) {
+      res.status(401).json({ error: 'Your session expired. Please sign in again.' });
+      return;
+    }
+    res.status(message.includes('configured') ? 500 : 400).json({ error: message });
   }
 });
 
@@ -107,6 +111,10 @@ router.post('/accept-invitation', (req, res) => {
     res.json({ ok: true, role: user.role });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Failed to accept invitation';
+    if (message === 'Invite expired. Request a new invite.') {
+      res.status(410).json({ error: message });
+      return;
+    }
     res.status(400).json({ error: message });
   }
 });

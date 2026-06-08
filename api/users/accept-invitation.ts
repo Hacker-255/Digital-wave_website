@@ -1,4 +1,5 @@
 import {
+  ApiError,
   hashToken,
   requireClerkUser,
   setJsonHeaders,
@@ -18,6 +19,20 @@ type InvitationRow = {
   status: string;
   expires_at: string;
 };
+
+function sendError(response: VercelResponse, error: unknown, fallback: string) {
+  if (error instanceof ApiError) {
+    response.status(error.status).json({ error: error.publicMessage });
+    return;
+  }
+  const message = error instanceof Error ? error.message : fallback;
+  if (/jwt.*expired|token.*expired|session.*expired/i.test(message)) {
+    response.status(401).json({ error: 'Your session expired. Please sign in again.' });
+    return;
+  }
+  const status = message.includes('environment') || message.includes('configured') ? 500 : 400;
+  response.status(status).json({ error: message });
+}
 
 export default async function handler(request: VercelRequest<AcceptBody>, response: VercelResponse) {
   setJsonHeaders(response);
@@ -50,7 +65,7 @@ export default async function handler(request: VercelRequest<AcceptBody>, respon
       return;
     }
     if (new Date(invitation.expires_at).getTime() < Date.now()) {
-      response.status(410).json({ error: 'Invitation has expired' });
+      response.status(410).json({ error: 'Invite expired. Request a new invite.' });
       return;
     }
     if (invitation.email.toLowerCase() !== user.email.toLowerCase()) {
@@ -87,12 +102,6 @@ export default async function handler(request: VercelRequest<AcceptBody>, respon
 
     response.status(200).json({ ok: true, role: invitation.role });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to accept invitation';
-    const status = message.includes('Authorization')
-      ? 401
-      : message.includes('environment') || message.includes('configured')
-        ? 500
-        : 400;
-    response.status(status).json({ error: message });
+    sendError(response, error, 'Failed to accept invitation');
   }
 }

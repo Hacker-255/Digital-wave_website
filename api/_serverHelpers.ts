@@ -13,8 +13,20 @@ export type VercelRequest<TBody = unknown> = {
   headers: Record<string, string | string[] | undefined>;
 };
 
+export class ApiError extends Error {
+  status: number;
+  publicMessage: string;
+
+  constructor(status: number, publicMessage: string, internalMessage = publicMessage) {
+    super(internalMessage);
+    this.name = 'ApiError';
+    this.status = status;
+    this.publicMessage = publicMessage;
+  }
+}
+
 function getClerkClient() {
-  if (!process.env.CLERK_SECRET_KEY) throw new Error('CLERK_SECRET_KEY is not configured');
+  if (!process.env.CLERK_SECRET_KEY) throw new ApiError(500, 'CLERK_SECRET_KEY is not configured');
   return createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
 }
 
@@ -47,13 +59,22 @@ export function headerValue(request: VercelRequest, name: string) {
 
 export async function requireClerkUser(request: VercelRequest) {
   const authHeader = headerValue(request, 'authorization');
-  if (!authHeader?.startsWith('Bearer ')) throw new Error('Missing Authorization header');
-  if (!process.env.CLERK_SECRET_KEY) throw new Error('CLERK_SECRET_KEY is not configured');
+  if (!authHeader?.startsWith('Bearer ')) throw new ApiError(401, 'Please sign in again.');
+  if (!process.env.CLERK_SECRET_KEY) throw new ApiError(500, 'CLERK_SECRET_KEY is not configured');
 
   const token = authHeader.slice(7);
-  const payload = await verifyToken(token, { secretKey: process.env.CLERK_SECRET_KEY });
+  let payload: Awaited<ReturnType<typeof verifyToken>>;
+  try {
+    payload = await verifyToken(token, { secretKey: process.env.CLERK_SECRET_KEY });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (/jwt.*expired|token.*expired|expired/i.test(message)) {
+      throw new ApiError(401, 'Your session expired. Please sign in again.', message);
+    }
+    throw new ApiError(401, 'Invalid session. Please sign in again.', message);
+  }
   const clerkId = payload.sub;
-  if (!clerkId) throw new Error('Invalid session token');
+  if (!clerkId) throw new ApiError(401, 'Invalid session. Please sign in again.');
   const clerkClient = getClerkClient();
   const user = await clerkClient.users.getUser(clerkId);
   return {

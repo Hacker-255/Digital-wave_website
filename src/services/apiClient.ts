@@ -1,11 +1,11 @@
 const API_BASE = '/api';
 
-let tokenProvider: (() => Promise<string | null>) | null = null;
-let cachedToken: string | null = null;
+type TokenProvider = (options?: { fresh?: boolean }) => Promise<string | null>;
 
-export function configureApiAuth(getToken: () => Promise<string | null>) {
+let tokenProvider: TokenProvider | null = null;
+
+export function configureApiAuth(getToken: TokenProvider) {
   tokenProvider = getToken;
-  cachedToken = null;
 }
 
 async function request<T = unknown>(
@@ -13,18 +13,11 @@ async function request<T = unknown>(
   options: RequestInit = {},
 ): Promise<{ data?: T; error?: string }> {
   try {
-    const token = await getSessionToken();
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...(options.headers as Record<string, string> || {}),
-    };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
+    let res = await fetchWithAuth(path, options);
+    if (res.status === 401) {
+      res = await fetchWithAuth(path, options, true);
     }
-    const res = await fetch(`${API_BASE}${path}`, {
-      ...options,
-      headers,
-    });
+
     if (!res.ok) {
       const raw = await res.text().catch(() => '');
       let body: { error?: string; message?: string; details?: string } = {};
@@ -33,36 +26,53 @@ async function request<T = unknown>(
       } catch {
         body = { error: raw };
       }
-      return { error: body.error || body.message || body.details || res.statusText || `Request failed (${res.status})` };
+      return { error: cleanApiError(body.error || body.message || body.details || res.statusText || `Request failed (${res.status})`, res.status) };
     }
     const data = await res.json();
     return { data: data as T };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Network error';
-    return { error: message };
+    return { error: cleanApiError(message) };
   }
 }
 
-async function getSessionToken(): Promise<string | null> {
+async function fetchWithAuth(path: string, options: RequestInit, fresh = false) {
+  const token = await getSessionToken(fresh);
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string> || {}),
+  };
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+  return fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers,
+  });
+}
+
+async function getSessionToken(fresh = false): Promise<string | null> {
   try {
     if (tokenProvider) {
-      if (!cachedToken) {
-        cachedToken = await tokenProvider();
-        setTimeout(() => { cachedToken = null; }, 1000 * 60 * 5);
-      }
-      return cachedToken;
+      return tokenProvider({ fresh });
     }
 
     const clerk = (window as any).Clerk;
     if (clerk?.session) {
-      if (!cachedToken) {
-        cachedToken = await clerk.session.getToken();
-        setTimeout(() => { cachedToken = null; }, 1000 * 60 * 5);
-      }
-      return cachedToken;
+      return clerk.session.getToken(fresh ? { skipCache: true } : undefined);
     }
   } catch { /* Clerk not available */ }
   return null;
+}
+
+function cleanApiError(message: string, status?: number) {
+  if (status === 401 || /jwt.*expired|session.*expired|token.*expired|authorization/i.test(message)) {
+    return 'Your session expired. Please sign in again and retry.';
+  }
+  if (status === 410 || /invite expired|invitation has expired/i.test(message)) {
+    return 'Invite expired. Request a new invite.';
+  }
+  return message;
 }
 
 export const api = {

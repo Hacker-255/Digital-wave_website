@@ -1,5 +1,6 @@
 import { createClerkClient } from '@clerk/backend';
 import {
+  ApiError,
   createInvitationToken,
   getOrigin,
   hashToken,
@@ -41,9 +42,24 @@ type InvitationRow = {
 
 const ALLOWED_ROLES = new Set(['Admin', 'Manager', 'Employee', 'Viewer']);
 const MANAGER_ROLES = new Set(['Owner', 'Admin', 'Manager']);
+const INVITE_EXPIRES_HOURS = 48;
 
 function resendWarning(message?: string) {
   return message || 'Resend could not send the email. Copy and send the invitation link manually.';
+}
+
+function sendError(response: VercelResponse, error: unknown, fallback: string) {
+  if (error instanceof ApiError) {
+    response.status(error.status).json({ error: error.publicMessage });
+    return;
+  }
+  const message = error instanceof Error ? error.message : fallback;
+  if (/jwt.*expired|token.*expired|session.*expired/i.test(message)) {
+    response.status(401).json({ error: 'Your session expired. Please sign in again.' });
+    return;
+  }
+  const status = message.includes('environment') || message.includes('configured') ? 500 : 400;
+  response.status(status).json({ error: message });
 }
 
 function queryValue(request: InviteRequest, name: string) {
@@ -229,8 +245,7 @@ export default async function handler(request: InviteRequest, response: VercelRe
       await requireClerkUser(request);
       await handleCrmSync(request, response);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'CRM sync failed';
-      response.status(message.includes('Authorization') ? 401 : 400).json({ error: message });
+      sendError(response, error, 'CRM sync failed');
     }
     return;
   }
@@ -257,7 +272,7 @@ export default async function handler(request: InviteRequest, response: VercelRe
 
     const token = createInvitationToken();
     const tokenHash = hashToken(token);
-    const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7).toISOString();
+    const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * INVITE_EXPIRES_HOURS).toISOString();
     let invitation = createPendingInvitation(email, role, expiresAt);
     let persistenceWarning = '';
     try {
@@ -296,7 +311,7 @@ export default async function handler(request: InviteRequest, response: VercelRe
       const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
       const clerkInvitation = await clerk.invitations.createInvitation({
         emailAddress: email,
-        expiresInDays: 7,
+        expiresInDays: 2,
         ignoreExisting: true,
         notify: true,
         redirectUrl: `${origin}/crm`,
@@ -352,12 +367,6 @@ export default async function handler(request: InviteRequest, response: VercelRe
       warning: [persistenceWarning, resendWarningMessage].filter(Boolean).join(' ') || undefined,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to invite user';
-    const status = message.includes('Authorization')
-      ? 401
-      : message.includes('environment') || message.includes('configured')
-        ? 500
-        : 400;
-    response.status(status).json({ error: message });
+    sendError(response, error, 'Failed to invite user');
   }
 }
