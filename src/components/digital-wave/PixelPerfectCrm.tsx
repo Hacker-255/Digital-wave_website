@@ -4,7 +4,7 @@ import {
   Filter, Home, LineChart, Mail, Menu, MoreHorizontal, Plus, Search, Settings,
   SlidersHorizontal, SortAsc, Sparkles, Target, Upload, Workflow,
 } from 'lucide-react';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Area, AreaChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 import logoUrl from '../../assets/digital-wave-brand-logo.png';
 import { useAuth } from '../../contexts/AuthContext';
@@ -200,13 +200,19 @@ const sourceData = [
 
 export function PixelPerfectCrm({ page, onNavigate, onOpenChat, onOpenCommand, onImport, onExport, onAdd, onSaveView, onSort }: PixelPerfectCrmProps) {
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [notice, setNotice] = useState('');
+  const showNotice = (message: string) => {
+    setNotice(message);
+    window.setTimeout(() => setNotice(''), 2200);
+  };
 
   return (
     <div className="hub-crm">
-      <HubTopbar activePage={page} onNavigate={onNavigate} onOpenChat={onOpenChat} onOpenCommand={onOpenCommand} />
+      <HubTopbar activePage={page} onNavigate={onNavigate} onOpenChat={onOpenChat} onOpenCommand={onOpenCommand} onNotify={showNotice} />
       <div className="hub-body">
-        <HubSidebar page={page} onNavigate={onNavigate} onCreate={() => onAdd?.(page)} onSaveView={onSaveView} onInvite={() => setInviteOpen(true)} />
+        <HubSidebar page={page} onNavigate={onNavigate} onCreate={() => onAdd?.(page)} onSaveView={onSaveView || (() => showNotice('View saved.'))} onInvite={() => setInviteOpen(true)} />
         <main className="hub-main">
+          {notice && <div className="hub-inline-notice">{notice}</div>}
           {page === 'Dashboard' && <DashboardPage onOpenCommand={onOpenCommand} onAdd={() => onAdd?.('People')} />}
           {page === 'Companies' && <CompaniesPage onImport={onImport} onExport={onExport} onAdd={() => onAdd?.('Companies')} />}
           {page === 'People' && <PeoplePage onImport={onImport} onExport={onExport} onAdd={() => onAdd?.('People')} />}
@@ -224,8 +230,8 @@ export function PixelPerfectCrm({ page, onNavigate, onOpenChat, onOpenCommand, o
               onOpenChat={onOpenChat}
               onOpenCommand={onOpenCommand}
               onInvite={() => setInviteOpen(true)}
-              onSaveView={onSaveView}
-              onSort={onSort}
+              onSaveView={onSaveView || (() => showNotice('View saved.'))}
+              onSort={onSort || (() => showNotice('Sorted by latest activity.'))}
             />
           )}
         </main>
@@ -235,10 +241,10 @@ export function PixelPerfectCrm({ page, onNavigate, onOpenChat, onOpenCommand, o
   );
 }
 
-function HubTopbar({ activePage, onNavigate, onOpenChat, onOpenCommand }: { activePage: string; onNavigate: (page: string) => void; onOpenChat?: () => void; onOpenCommand?: () => void }) {
+function HubTopbar({ activePage, onNavigate, onOpenChat, onOpenCommand, onNotify }: { activePage: string; onNavigate: (page: string) => void; onOpenChat?: () => void; onOpenCommand?: () => void; onNotify: (message: string) => void }) {
   return (
     <header className="hub-topbar">
-      <button className="hub-menu" type="button" aria-label="Menu"><Menu size={20} /></button>
+      <button className="hub-menu" type="button" aria-label="Menu" onClick={() => onNavigate('Dashboards')}><Menu size={20} /></button>
       <button className="hub-brand" type="button" onClick={() => onNavigate('Dashboards')}>
         <img src={logoUrl} alt="Digital Wave" />
         <span>Digital Wave</span>
@@ -256,15 +262,18 @@ function HubTopbar({ activePage, onNavigate, onOpenChat, onOpenCommand }: { acti
         <kbd>Ctrl K</kbd>
       </div>
       <button className="hub-icon-btn" type="button" onClick={onOpenChat} aria-label="AI Ask"><Sparkles size={18} /></button>
-      <button className="hub-icon-btn" type="button" aria-label="Notifications"><Bell size={18} /><em>3</em></button>
+      <button className="hub-icon-btn" type="button" onClick={() => onNotify('You have 3 unread CRM notifications.')} aria-label="Notifications"><Bell size={18} /><em>3</em></button>
       <button className="hub-icon-btn" type="button" onClick={onOpenCommand} aria-label="Help"><CircleHelp size={18} /></button>
-      <div className="hub-user"><Avatar name="Mahmoud Mostafa" /><span>Mahmoud</span><ChevronDown size={13} /></div>
+      <button className="hub-user" type="button" onClick={() => onNavigate('Settings')}><Avatar name="Mahmoud Mostafa" /><span>Mahmoud</span><ChevronDown size={13} /></button>
     </header>
   );
 }
 
 function HubSidebar({ page, onNavigate, onCreate, onSaveView, onInvite }: { page: string; onNavigate: (page: string) => void; onCreate?: () => void; onSaveView?: () => void; onInvite?: () => void }) {
   const views = sideViews[page] || ['All records', 'Assigned to me', 'Recently updated', 'Needs attention'];
+  const [activeView, setActiveView] = useState(views[0] || '');
+  useEffect(() => { setActiveView(views[0] || ''); }, [page]);
+
   return (
     <aside className="hub-sidebar">
       <button className="hub-create" type="button" onClick={onCreate}><Plus size={16} /> Create</button>
@@ -283,7 +292,16 @@ function HubSidebar({ page, onNavigate, onCreate, onSaveView, onInvite }: { page
       </nav>
       <div className="hub-sidebar-section">
         <p>Saved views</p>
-        {views.map((view, index) => <button key={view} className={index === 0 ? 'active-view' : ''} type="button" onClick={index === 0 ? undefined : onSaveView}>{view}</button>)}
+        {views.map((view) => (
+          <button
+            key={view}
+            className={activeView === view ? 'active-view' : ''}
+            type="button"
+            onClick={() => { setActiveView(view); onSaveView?.(); }}
+          >
+            {view}
+          </button>
+        ))}
       </div>
       <div className="hub-sidebar-section">
         <p>Workspace</p>
@@ -528,12 +546,18 @@ function GenericModulePage({
 }
 
 function ObjectPageLayout({ filters, children }: { filters: string[]; children: ReactNode }) {
+  const [activeFilters, setActiveFilters] = useState<string[]>([]);
+  const toggleFilter = (filter: string) => {
+    setActiveFilters((current) => current.includes(filter) ? current.filter((item) => item !== filter) : [...current, filter]);
+  };
+  const clearFilters = () => setActiveFilters([]);
+
   return (
     <section className="hub-object-layout">
       <aside className="hub-filter-panel">
         <div className="hub-filter-head"><Filter size={15} /> Filters</div>
-        {filters.map((filter) => <button type="button" key={filter}>{filter}<ChevronDown size={14} /></button>)}
-        <button className="hub-save-filter" type="button">Save view</button>
+        {filters.map((filter) => <button type="button" key={filter} className={activeFilters.includes(filter) ? 'active' : ''} onClick={() => toggleFilter(filter)}>{filter}<ChevronDown size={14} /></button>)}
+        <button className="hub-save-filter" type="button" onClick={clearFilters}>{activeFilters.length ? `Clear ${activeFilters.length} filter${activeFilters.length === 1 ? '' : 's'}` : 'Save view'}</button>
       </aside>
       <div className="hub-object-card">{children}</div>
     </section>
@@ -541,9 +565,11 @@ function ObjectPageLayout({ filters, children }: { filters: string[]; children: 
 }
 
 function ObjectToolbar({ views, placeholder, onFilter, onSort, onColumns, onSaveView }: { views: string[]; placeholder: string; onFilter?: () => void; onSort?: () => void; onColumns?: () => void; onSaveView?: () => void }) {
+  const [activeView, setActiveView] = useState(views[0] || '');
+
   return (
     <>
-      <div className="hub-view-tabs">{views.map((view, index) => <button className={index === 0 ? 'active' : ''} type="button" key={view} onClick={index === 0 ? undefined : onSaveView}>{view}</button>)}</div>
+      <div className="hub-view-tabs">{views.map((view) => <button className={activeView === view ? 'active' : ''} type="button" key={view} onClick={() => { setActiveView(view); onSaveView?.(); }}>{view}</button>)}</div>
       <div className="hub-object-tools">
         <label><Search size={16} /><input placeholder={placeholder} /></label>
         <span />
@@ -560,7 +586,8 @@ function Kpi({ icon, label, value, trend }: { icon: ReactNode; label: string; va
 }
 
 function Panel({ title, action, className = '', children }: { title: string; action?: string; className?: string; children: ReactNode }) {
-  return <section className={`hub-panel ${className}`}><div className="hub-panel-head"><h2>{title}</h2>{action && <button type="button">{action}<ChevronDown size={13} /></button>}</div>{children}</section>;
+  const [expanded, setExpanded] = useState(false);
+  return <section className={`hub-panel ${className}`}><div className="hub-panel-head"><h2>{title}</h2>{action && <button type="button" onClick={() => setExpanded((value) => !value)} className={expanded ? 'active' : ''}>{expanded ? 'Expanded' : action}<ChevronDown size={13} /></button>}</div>{children}</section>;
 }
 
 function RevenueChart() {
@@ -628,7 +655,18 @@ function Check() {
 }
 
 function Pagination({ label }: { label: string }) {
-  return <div className="hub-pagination"><span>{label}</span><div><button type="button">Prev</button><button className="active" type="button">1</button><button type="button">2</button><button type="button">Next</button></div></div>;
+  const [page, setPage] = useState(1);
+  return (
+    <div className="hub-pagination">
+      <span>{label}</span>
+      <div>
+        <button type="button" onClick={() => setPage((value) => Math.max(1, value - 1))}>Prev</button>
+        <button className={page === 1 ? 'active' : ''} type="button" onClick={() => setPage(1)}>1</button>
+        <button className={page === 2 ? 'active' : ''} type="button" onClick={() => setPage(2)}>2</button>
+        <button type="button" onClick={() => setPage((value) => Math.min(2, value + 1))}>Next</button>
+      </div>
+    </div>
+  );
 }
 
 function InviteTeamModal({ onClose }: { onClose: () => void }) {

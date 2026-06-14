@@ -64,8 +64,12 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
   try {
     req.authUser = await verifyClerkToken(authHeader.slice(7));
     next();
-  } catch {
-    return res.status(401).json({ error: 'Authentication failed' });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (/jwt.*expired|token.*expired|expired/i.test(message)) {
+      return res.status(401).json({ error: 'Your session expired. Please sign in again.' });
+    }
+    return res.status(401).json({ error: 'Invalid session. Please sign in again.' });
   }
 }
 

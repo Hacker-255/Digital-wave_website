@@ -1,6 +1,6 @@
 import { Navbar, RedirectSignedInToCrm } from './Navbar';
 import { HeroSection } from './HeroSection';
-import { TrustedBySection, FeaturesSection, CrmPreviewSection, WhyChooseUsSection, TestimonialsSection, PricingSection, FaqSection, CtaSection, Footer } from './LandingSections';
+import { TrustedBySection, HomeSeoSection, FeaturesSection, CrmPreviewSection, WhyChooseUsSection, TestimonialsSection, PricingSection, FaqSection, CtaSection, Footer } from './LandingSections';
 
 interface LandingPageProps {
   clerkMissing: boolean;
@@ -13,6 +13,7 @@ export function LandingPage({ clerkMissing }: LandingPageProps) {
       <Navbar clerkMissing={clerkMissing} />
       <HeroSection clerkMissing={clerkMissing} />
       <TrustedBySection />
+      <HomeSeoSection />
       <FeaturesSection />
       <CrmPreviewSection />
       <WhyChooseUsSection />

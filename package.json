@@ -8,6 +8,7 @@
     "dev:client": "vite --host 127.0.0.1",
     "dev:server": "tsx watch server/src/index.ts",
     "build": "tsc -b && vite build",
+    "test:invite": "node --test scripts/invite-flow.test.mjs",
     "preview": "vite preview --host 127.0.0.1",
     "typecheck": "tsc --noEmit",
     "seed": "tsx server/src/seed.ts",

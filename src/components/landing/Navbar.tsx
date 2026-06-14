@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Github, Mail, Menu, X } from 'lucide-react';
-import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton, useUser } from '@clerk/clerk-react';
+import { SignInButton, SignUpButton, UserButton, useAuth, useUser } from '@clerk/clerk-react';
 import { cn } from '../../utils/cn';
 import { APP_NAME, CRM_ROUTE } from '../../constants/design';
 import { NAV_LINKS } from '../../constants/data';
@@ -12,6 +12,8 @@ interface NavbarProps {
 }
 
 function AuthControls({ clerkMissing }: NavbarProps) {
+  const { isSignedIn } = useAuth();
+
   if (clerkMissing) {
     return (
       <div className="flex items-center gap-2">
@@ -20,22 +22,19 @@ function AuthControls({ clerkMissing }: NavbarProps) {
       </div>
     );
   }
+  if (isSignedIn) {
+    return <UserButton afterSignOutUrl="/" />;
+  }
+
   return (
-    <>
-      <SignedOut>
-        <div className="flex items-center gap-3">
-          <SignInButton mode="modal" forceRedirectUrl={CRM_ROUTE}>
-            <button className="landing-ghost">Sign In</button>
-          </SignInButton>
-          <SignUpButton mode="modal" forceRedirectUrl={CRM_ROUTE}>
-            <button className="landing-primary">Get Started</button>
-          </SignUpButton>
-        </div>
-      </SignedOut>
-      <SignedIn>
-        <UserButton afterSignOutUrl="/" />
-      </SignedIn>
-    </>
+    <div className="flex items-center gap-3">
+      <SignInButton mode="modal" forceRedirectUrl={CRM_ROUTE}>
+        <button className="landing-ghost">Sign In</button>
+      </SignInButton>
+      <SignUpButton mode="modal" forceRedirectUrl={CRM_ROUTE}>
+        <button className="landing-primary">Get Started</button>
+      </SignUpButton>
+    </div>
   );
 }
 
@@ -61,7 +60,7 @@ export function Navbar({ clerkMissing }: NavbarProps) {
     >
       <div className="mx-auto flex h-12 max-w-7xl items-center justify-between px-4 sm:px-6">
         <a href="/" className="flex items-center gap-2">
-          <img src={logo} alt={APP_NAME} className="h-[22px] w-[22px] rounded object-cover brightness-0 invert" />
+          <img src={logo} alt="Digital Wave logo" className="h-[22px] w-[22px] rounded object-cover brightness-0 invert" />
           <span className="text-sm font-bold text-white">{APP_NAME}</span>
         </a>
         <nav className="hidden items-center gap-1 md:flex">
@@ -93,8 +92,8 @@ export function Navbar({ clerkMissing }: NavbarProps) {
               <div className="mt-3 flex flex-col gap-2 border-t border-white/10 pt-3">
                 {clerkMissing ? (
                   <>
-                    <button className="landing-ghost w-full" onClick={() => window.alert('Set VITE_CLERK_PUBLISHABLE_KEY in .env to enable Clerk authentication.')}>Sign In</button>
-                    <button className="landing-primary w-full" onClick={() => window.alert('Set VITE_CLERK_PUBLISHABLE_KEY in .env to enable Clerk authentication.')}>Get Started</button>
+                    <a className="landing-ghost w-full" href={CRM_ROUTE} onClick={() => setMobileOpen(false)}>Sign In</a>
+                    <a className="landing-primary w-full" href={CRM_ROUTE} onClick={() => setMobileOpen(false)}>Get Started</a>
                   </>
                 ) : (
                   <>

@@ -55,18 +55,20 @@ export function HeroSection({ clerkMissing }: HeroSectionProps) {
             <span className="animate-pulse-glow flex h-1.5 w-1.5 rounded-full bg-blue-400" />
             Trusted by 2,000+ businesses worldwide
           </motion.div>
-          <motion.h1 variants={{ hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0 } }} className="text-4xl font-bold leading-[1.1] tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
-            <span className="text-white">Modern CRM &</span><br />
-            <span className="bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-300 bg-clip-text text-transparent">Software Solutions</span>
+          <motion.h1 variants={{ hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0 } }} className="text-4xl font-bold leading-[1.1] tracking-tight text-white sm:text-5xl md:text-6xl lg:text-7xl">
+            Digital Wave
           </motion.h1>
+          <motion.p variants={{ hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0 } }} className="mt-3 bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-300 bg-clip-text text-3xl font-bold leading-tight text-transparent sm:text-4xl md:text-5xl lg:text-6xl">
+            AI Automation, Websites & Digital Solutions
+          </motion.p>
           <motion.p variants={{ hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0 } }} className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-gray-400 sm:text-base">
-            Manage clients, teams, workflows, and business operations in one powerful platform. Powered by AI. Built for scale.
+            Digital Wave builds websites, automation systems, AI chatbots, CRM tools, booking systems, loyalty systems, and digital marketing systems for businesses that want practical growth.
           </motion.p>
           <motion.div variants={{ hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0 } }} className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
             {clerkMissing ? (
               <>
-                <button className="landing-primary" onClick={() => window.alert('Set VITE_CLERK_PUBLISHABLE_KEY in .env to enable Clerk authentication.')}>Start Free Trial <ArrowRight size={16} /></button>
-                <button className="landing-ghost" onClick={() => window.alert('Set VITE_CLERK_PUBLISHABLE_KEY in .env to enable Clerk authentication.')}>CRM Login</button>
+                <a className="landing-primary" href={CRM_ROUTE}>Start Free Trial <ArrowRight size={16} /></a>
+                <a className="landing-ghost" href={CRM_ROUTE}>CRM Login</a>
               </>
             ) : (
               <>

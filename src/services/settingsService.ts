@@ -35,6 +35,13 @@ export interface SecuritySettings {
   apiTokens: Array<{ id: string; name: string; createdAt: string; lastUsed: string }>;
 }
 
+export interface WorkspaceSettings {
+  name: string;
+  url: string;
+  industry: string;
+  size: string;
+}
+
 export interface AiSettings {
   executionEnabled: boolean;
   assistantEnabled: boolean;
@@ -116,6 +123,7 @@ export interface DataBackupSettings {
   encryptBackups: boolean;
   backups: BackupRecord[];
   lastExport: string | null;
+  lastRestore: string | null;
   includeActivity: boolean;
   includeAiLogs: boolean;
 }
@@ -253,6 +261,7 @@ export interface IntegrationSettings {
 
 export interface CrmSettings {
   profile: ProfileSettings;
+  workspace: WorkspaceSettings;
   appearance: AppearanceSettings;
   notifications: NotificationSettings;
   security: SecuritySettings;
@@ -298,7 +307,7 @@ const defaultDataBackup: DataBackupSettings = {
     { id: 'b1', name: 'Pre-upgrade Backup', createdAt: '2026-04-28 03:00', size: '156 MB', status: 'completed', type: 'scheduled', encrypted: true },
     { id: 'b2', name: 'Weekly Backup', createdAt: '2026-04-21 03:00', size: '148 MB', status: 'completed', type: 'scheduled', encrypted: true },
   ],
-  lastExport: null, includeActivity: true, includeAiLogs: false,
+  lastExport: null, lastRestore: null, includeActivity: true, includeAiLogs: false,
 };
 
 const defaultApiWebhook: ApiWebhookSettings = {
@@ -341,6 +350,7 @@ const defaultAdvanced: AdvancedSettings = {
 
 export const defaultSettings: CrmSettings = {
   profile: { name: 'Digital Wave Admin', email: 'info@digital-wave.solutions', phone: '+20 100 000 0000', role: 'Owner', timezone: 'UTC+2', language: 'English', bio: 'Digital Wave CRM owner and workflow automation administrator.' },
+  workspace: { name: 'Digital Wave CRM', url: 'digital-wave.solutions', industry: 'Technology', size: '10-50' },
   appearance: { theme: 'dark', compactMode: false, sidebarStyle: 'default', dashboardDensity: 'comfortable', fontSize: 'medium', accentColor: '#0086ff' },
   notifications: { email: true, crmAlerts: true, taskReminders: true, workflowAlerts: false, mentions: true, aiNotifications: false, desktop: true },
   security: { twoFactorEnabled: false, sessions: [{ id: 's1', device: 'Chrome on Windows', location: 'Cairo, Egypt', lastActive: 'Just now', current: true }], apiTokens: [] },

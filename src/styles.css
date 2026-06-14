@@ -300,6 +300,17 @@
   padding: 24px;
 }
 
+.hub-inline-notice {
+  margin-bottom: 12px;
+  border: 1px solid rgba(2, 132, 255, 0.24);
+  border-radius: 8px;
+  background: rgba(2, 132, 255, 0.1);
+  padding: 9px 12px;
+  color: var(--hub-blue);
+  font-size: 13px;
+  font-weight: 750;
+}
+
 .hub-page-head,
 .hub-dashboard-hero {
   display: flex;
@@ -909,6 +920,12 @@
   color: var(--hub-muted);
   font-size: 13px;
   font-weight: 750;
+}
+
+.hub-filter-panel button.active {
+  border-color: rgba(2, 132, 255, 0.34);
+  background: rgba(2, 132, 255, 0.12);
+  color: var(--hub-blue);
 }
 
 .hub-filter-panel .hub-save-filter {

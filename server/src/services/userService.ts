@@ -1,3 +1,5 @@
+import { randomBytes } from 'crypto';
+
 export type Role = 'Owner' | 'Admin' | 'Manager' | 'Employee' | 'Viewer';
 
 export interface StoredUser {
@@ -41,6 +43,7 @@ const loginSessions: LoginSession[] = [];
 const invitations: Invitation[] = [];
 
 const MANAGER_ROLES: Role[] = ['Owner', 'Admin'];
+const INVITE_EXPIRES_MS = 1000 * 60 * 60 * 48;
 
 function isManager(role: Role): boolean {
   return MANAGER_ROLES.includes(role);
@@ -132,17 +135,18 @@ export function inviteUser(email: string, role: Role, invitedBy: StoredUser): In
     throw new Error('Use ownership transfer to assign Owner');
   }
   const existing = invitations.find((item) => item.email.toLowerCase() === email.toLowerCase() && item.status === 'pending');
-  if (existing) return existing;
+  if (existing && new Date(existing.expiresAt).getTime() > Date.now()) return existing;
+  if (existing) existing.status = 'accepted';
 
   const invitation: Invitation = {
     id: `inv-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
     email,
     role,
     invitedBy: invitedBy.id,
-    token: `inv_${Date.now()}_${Math.random().toString(36).slice(2, 18)}`,
+    token: randomBytes(32).toString('base64url'),
     status: 'pending',
     createdAt: new Date().toISOString(),
-    expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7).toISOString(),
+    expiresAt: new Date(Date.now() + INVITE_EXPIRES_MS).toISOString(),
   };
   invitations.push(invitation);
   return invitation;
@@ -165,7 +169,7 @@ export function acceptInvitation(token: string, data: { clerkId: string; email: 
     throw new Error('Invitation was not found or has already been used');
   }
   if (new Date(invitation.expiresAt).getTime() < Date.now()) {
-    throw new Error('Invitation has expired');
+    throw new Error('Invite expired. Request a new invite.');
   }
   if (invitation.email.toLowerCase() !== data.email.toLowerCase()) {
     throw new Error('This invitation belongs to a different email address');

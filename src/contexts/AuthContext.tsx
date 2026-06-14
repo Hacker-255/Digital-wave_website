@@ -139,7 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [refreshUsers]);
 
   useEffect(() => {
-    configureApiAuth(() => getToken().catch(() => null));
+    configureApiAuth(({ fresh } = {}) => getToken(fresh ? { skipCache: true } : undefined).catch(() => null));
     configureSupabaseAuth(() => getToken({ template: 'supabase' }).catch(() => getToken().catch(() => null)));
   }, [getToken]);
 

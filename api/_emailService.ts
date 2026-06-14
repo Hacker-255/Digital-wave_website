@@ -159,7 +159,7 @@ export function sendInvitationEmail({ to, inviteLink, inviterName, companyName =
     heading: `You are invited to ${companyName}`,
     body: `${inviterName} invited you to join the ${companyName} workspace.\n\nUse the secure invitation link below to sign in and access shared CRM data.`,
     action: { label: 'Accept Invitation', url: inviteLink },
-    footerNote: 'This invitation expires in 7 days. Digital Wave CRM.',
+    footerNote: 'This invitation expires in 48 hours. Digital Wave CRM.',
   });
 }
 
