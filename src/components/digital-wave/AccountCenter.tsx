@@ -89,7 +89,7 @@ export function AccountCenter() {
       >
         <div className="relative flex-shrink-0">
           {currentUser.avatar ? (
-            <img src={currentUser.avatar} alt="" className="h-5 w-5 rounded-full" />
+            <img src={currentUser.avatar} alt={`${currentUser.name || 'Current user'} avatar`} className="h-5 w-5 rounded-full" />
           ) : (
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-lime-600 text-[9px] font-bold text-[#061b15]">
               {currentUser.name[0]?.toUpperCase() || '?'}
@@ -121,7 +121,7 @@ export function AccountCenter() {
               <div className="flex items-center gap-2 rounded-lg px-2 py-2">
                 <div className="relative">
                   {currentUser.avatar ? (
-                    <img src={currentUser.avatar} alt="" className="h-7 w-7 rounded-full" />
+                    <img src={currentUser.avatar} alt={`${currentUser.name || 'Current user'} avatar`} className="h-7 w-7 rounded-full" />
                   ) : (
                     <span className="flex h-7 w-7 items-center justify-center rounded-full bg-lime-600 text-xs font-bold text-[#061b15]">
                       {currentUser.name[0]?.toUpperCase() || '?'}

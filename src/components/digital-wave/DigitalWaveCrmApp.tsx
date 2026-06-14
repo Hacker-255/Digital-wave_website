@@ -1461,7 +1461,7 @@ export function DigitalWaveCrmApp({ clerkMissing }: DigitalWaveCrmAppProps) {
                   lastAction={lastAction}
                 />
                 <button className="exact-help-button" onClick={() => setCommandOpen(true)} type="button">?</button>
-                {currentUser?.avatar ? <img className="exact-top-avatar" src={currentUser.avatar} alt="" /> : <span className="exact-top-avatar">{currentUser?.name?.[0] || 'M'}</span>}
+                {currentUser?.avatar ? <img className="exact-top-avatar" src={currentUser.avatar} alt={`${currentUser.name || 'Current user'} avatar`} /> : <span className="exact-top-avatar">{currentUser?.name?.[0] || 'M'}</span>}
               </div>
             </header>
 

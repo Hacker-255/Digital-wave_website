@@ -60,7 +60,7 @@ export function Navbar({ clerkMissing }: NavbarProps) {
     >
       <div className="mx-auto flex h-12 max-w-7xl items-center justify-between px-4 sm:px-6">
         <a href="/" className="flex items-center gap-2">
-          <img src={logo} alt={APP_NAME} className="h-[22px] w-[22px] rounded object-cover brightness-0 invert" />
+          <img src={logo} alt="Digital Wave logo" className="h-[22px] w-[22px] rounded object-cover brightness-0 invert" />
           <span className="text-sm font-bold text-white">{APP_NAME}</span>
         </a>
         <nav className="hidden items-center gap-1 md:flex">

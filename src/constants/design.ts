@@ -41,5 +41,5 @@ export const THEME = {
   },
 } as const;
 
-export const APP_NAME = 'Digital Wave CRM';
+export const APP_NAME = 'Digital Wave';
 export const CRM_ROUTE = '/crm';
